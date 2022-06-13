@@ -1,0 +1,3 @@
+[submodule "konbinein-backend"]
+	path = konbinein-backend
+	url = git@github.com:kinoubenkyou/konbinein-backend.git

@@ -1,0 +1,35 @@
+services:
+
+  backend:
+    build: ./konbinein-backend
+    stdin_open: true
+    tty: true
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DJANGO_SECRET_KEY
+      - POSTGRES_DB=backend
+      - POSTGRES_PASSWORD
+      - POSTGRES_USER=konbinein
+    ports:
+      - 50000:8000
+    volumes:
+      - ./konbinein-backend:/home/konbinein-backend
+
+  db:
+    image: postgres:14.3
+    stdin_open: true
+    tty: true
+    environment:
+      - POSTGRES_DB=backend
+      - POSTGRES_PASSWORD
+      - POSTGRES_USER=konbinein
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d backend -U konbinein"]
+      interval: 5s
+      retries: 12
+      start_period: 5s
+      timeout: 2s
+    ports:
+      - 50099:5432
