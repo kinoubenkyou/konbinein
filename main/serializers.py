@@ -2,7 +2,7 @@ from django.db import transaction
 from rest_framework.fields import DecimalField, IntegerField
 from rest_framework.serializers import ModelSerializer
 
-from main.models import Order, OrderItem
+from main.models import Order, OrderItem, Organization
 
 
 class OrderItemSerializer(ModelSerializer):
@@ -23,7 +23,7 @@ class OrderSerializer(ModelSerializer):
     )
 
     class Meta:
-        fields = ["code", "created_at", "id", "orderitem_set", "total"]
+        fields = ["code", "created_at", "id", "orderitem_set", "organization", "total"]
         model = Order
 
     @transaction.atomic
@@ -51,3 +51,9 @@ class OrderSerializer(ModelSerializer):
             if _id not in (data.get("id", None) for data in data_list):
                 order_item.delete()
         return instance
+
+
+class OrganizationSerializer(ModelSerializer):
+    class Meta:
+        fields = ["id", "name"]
+        model = Organization
