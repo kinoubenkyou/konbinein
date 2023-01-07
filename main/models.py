@@ -9,9 +9,14 @@ from django.db.models import (
 )
 
 
+class Organization(Model):
+    name = CharField(max_length=255, unique=True)
+
+
 class Order(Model):
     code = CharField(max_length=255, unique=True)
     created_at = DateTimeField()
+    organization = ForeignKey(Organization, on_delete=CASCADE)
 
 
 class OrderItem(Model):
