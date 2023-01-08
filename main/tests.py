@@ -2,14 +2,15 @@ from django.urls import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
 from rest_framework.test import APITestCase
 
-from main.factories import OrderFactory, OrderItemFactory
+from main.factories import OrderFactory, OrderItemFactory, OrganizationFactory
 
 
 class OrderViewSetTestCase(APITestCase):
     def test_create(self):
-        url = reverse("order-list")
         order = OrderFactory.build()
         order_items = OrderItemFactory.build_batch(2)
+        organization = OrganizationFactory.create()
+        url = reverse("order-list")
         data = {
             "code": order.code,
             "created_at": order.created_at,
@@ -21,16 +22,18 @@ class OrderViewSetTestCase(APITestCase):
                 }
                 for order_item in order_items
             ),
+            "organization": organization.id,
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, HTTP_201_CREATED)
 
     def test_partial_update(self):
-        order = OrderFactory()
-        order_items = OrderItemFactory.create_batch(2, order=order)
-        url = reverse("order-detail", kwargs={"pk": order.id})
+        order = OrderFactory.create()
         built_order = OrderFactory.build()
         built_order_items = OrderItemFactory.build_batch(2)
+        order_items = OrderItemFactory.create_batch(2, order=order)
+        organization = OrganizationFactory.create()
+        url = reverse("order-detail", kwargs={"pk": order.id})
         data = {
             "code": built_order.code,
             "created_at": built_order.created_at,
@@ -47,6 +50,7 @@ class OrderViewSetTestCase(APITestCase):
                     "unit_price": built_order_items[1].unit_price,
                 },
             ),
+            "organization": organization.id,
         }
         response = self.client.patch(url, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
