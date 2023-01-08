@@ -3,7 +3,15 @@ from datetime import timezone
 from factory import Faker, Sequence, SubFactory
 from factory.django import DjangoModelFactory
 
-from main.models import Order, OrderItem
+from main.models import Order, OrderItem, Organization
+
+
+class OrganizationFactory(DjangoModelFactory):
+    class Meta:
+        model = Organization
+
+    code = Sequence(lambda n: f"code{n}")
+    name = Sequence(lambda n: f"name{n}")
 
 
 class OrderFactory(DjangoModelFactory):
@@ -12,6 +20,7 @@ class OrderFactory(DjangoModelFactory):
 
     code = Sequence(lambda n: f"code{n}")
     created_at = Faker("past_datetime", tzinfo=timezone.utc)
+    organization = SubFactory(OrganizationFactory)
 
 
 class OrderItemFactory(DjangoModelFactory):
