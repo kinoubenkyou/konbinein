@@ -73,6 +73,7 @@ class UserViewSetTestCase(APITestCase):
         url = reverse("user-list")
         data = {
             "email": built_user.email,
+            "name": built_user.name,
             "password": f"password{self.faker_.unique.random_int()}",
         }
         response = self.client.post(url, data, format="json")
@@ -84,6 +85,7 @@ class UserViewSetTestCase(APITestCase):
         url = reverse("user-detail", kwargs={"pk": user.id})
         data = {
             "email": built_user.email,
+            "name": built_user.name,
             "password": f"password{self.faker_.unique.random_int()}",
         }
         response = self.client.patch(url, data, format="json")

@@ -39,3 +39,4 @@ class UserFactory(DjangoModelFactory):
 
     email = Sequence(lambda n: f"email{n}@email.com")
     hashed_password = Sequence(lambda n: make_password(f"password{n}"))
+    name = Sequence(lambda n: f"name{n}")
