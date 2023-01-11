@@ -10,7 +10,6 @@ class OrganizationFactory(DjangoModelFactory):
     class Meta:
         model = Organization
 
-    code = Sequence(lambda n: f"code{n}")
     name = Sequence(lambda n: f"name{n}")
 
 
