@@ -3,6 +3,7 @@ from django.db.models import (
     CharField,
     DateTimeField,
     DecimalField,
+    EmailField,
     ForeignKey,
     IntegerField,
     Model,
@@ -24,3 +25,10 @@ class OrderItem(Model):
     order = ForeignKey(Order, on_delete=CASCADE)
     quantity = IntegerField()
     unit_price = DecimalField(decimal_places=4, max_digits=19)
+
+
+class User(Model):
+    email = EmailField(unique=True)
+    name = CharField(max_length=255, null=True)
+    hashed_password = CharField(max_length=255)
+    USERNAME_FIELD = "email"

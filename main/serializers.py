@@ -1,8 +1,9 @@
+from django.contrib.auth.hashers import make_password
 from django.db import transaction
-from rest_framework.fields import DecimalField, IntegerField
+from rest_framework.fields import CharField, DecimalField, IntegerField
 from rest_framework.serializers import ModelSerializer
 
-from main.models import Order, OrderItem, Organization
+from main.models import Order, OrderItem, Organization, User
 
 
 class OrderItemSerializer(ModelSerializer):
@@ -57,3 +58,27 @@ class OrganizationSerializer(ModelSerializer):
     class Meta:
         fields = ["id", "name"]
         model = Organization
+
+
+class UserSerializer(ModelSerializer):
+    password = CharField(max_length=255, write_only=True)
+
+    class Meta:
+        fields = ["email", "id", "name", "password"]
+        model = User
+
+    @staticmethod
+    def _hash_password(validated_data):
+        password = validated_data.pop("password")
+        validated_data["hashed_password"] = make_password(password)
+
+    @transaction.atomic
+    def create(self, validated_data):
+        self._hash_password(validated_data)
+        return super().create(validated_data)
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        self._hash_password(validated_data)
+        super().update(instance, validated_data)
+        return instance
