@@ -1,9 +1,10 @@
 from datetime import timezone
 
+from django.contrib.auth.hashers import make_password
 from factory import Faker, Sequence, SubFactory
 from factory.django import DjangoModelFactory
 
-from main.models import Order, OrderItem, Organization
+from main.models import Order, OrderItem, Organization, User
 
 
 class OrganizationFactory(DjangoModelFactory):
@@ -30,3 +31,11 @@ class OrderItemFactory(DjangoModelFactory):
     order = SubFactory(OrderFactory)
     quantity = Faker("pyint", max_value=100, min_value=1)
     unit_price = Faker("pydecimal", left_digits=2, positive=True, right_digits=2)
+
+
+class UserFactory(DjangoModelFactory):
+    class Meta:
+        model = User
+
+    email = Sequence(lambda n: f"email{n}@email.com")
+    hashed_password = Sequence(lambda n: make_password(f"password{n}"))

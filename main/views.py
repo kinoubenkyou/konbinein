@@ -1,8 +1,8 @@
 from django.db.models import F, Prefetch, Sum
 from rest_framework.viewsets import ModelViewSet
 
-from main.models import Order, OrderItem, Organization
-from main.serializers import OrderSerializer, OrganizationSerializer
+from main.models import Order, OrderItem, Organization, User
+from main.serializers import OrderSerializer, OrganizationSerializer, UserSerializer
 
 
 class OrderViewSet(ModelViewSet):
@@ -24,3 +24,8 @@ class OrderViewSet(ModelViewSet):
 class OrganizationViewSet(ModelViewSet):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
+
+
+class UserViewSet(ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
