@@ -10,7 +10,6 @@ from django.db.models import (
 
 
 class Organization(Model):
-    code = CharField(max_length=255, unique=True)
     name = CharField(max_length=255)
 
 
