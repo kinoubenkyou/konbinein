@@ -1,5 +1,6 @@
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
+from rest_framework.exceptions import ValidationError
 from rest_framework.fields import CharField, DecimalField, IntegerField
 from rest_framework.serializers import ModelSerializer
 
@@ -62,23 +63,33 @@ class OrganizationSerializer(ModelSerializer):
 
 class UserSerializer(ModelSerializer):
     password = CharField(max_length=255, write_only=True)
+    password_confirmation = CharField(max_length=255, write_only=True)
 
     class Meta:
-        fields = ["email", "id", "name", "password"]
+        fields = ["email", "id", "name", "password", "password_confirmation"]
         model = User
 
     @staticmethod
-    def _hash_password(validated_data):
+    def _modify_to_hashed_password(validated_data):
+        del validated_data["password_confirmation"]
         password = validated_data.pop("password")
         validated_data["hashed_password"] = make_password(password)
 
     @transaction.atomic
     def create(self, validated_data):
-        self._hash_password(validated_data)
+        self._modify_to_hashed_password(validated_data)
         return super().create(validated_data)
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        self._hash_password(validated_data)
+        self._modify_to_hashed_password(validated_data)
         super().update(instance, validated_data)
         return instance
+
+    def validate(self, attrs):
+        if attrs["password"] != attrs["password_confirmation"]:
+            raise ValidationError(
+                "Password must match the confirmation.",
+                "password_not_match_confirmation",
+            )
+        return attrs

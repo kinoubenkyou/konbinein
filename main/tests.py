@@ -1,6 +1,6 @@
 from django.urls import reverse
 from faker import Faker
-from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
+from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from rest_framework.test import APITestCase
 
 from main.factories import (
@@ -70,16 +70,44 @@ class UserViewSetTestCase(APITestCase):
 
     def test_create(self):
         built_user = UserFactory.build()
+        password = f"password{self.faker_.unique.random_int()}"
+        url = reverse("user-list")
+        data = {
+            "email": built_user.email,
+            "name": built_user.name,
+            "password": password,
+            "password_confirmation": password,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, HTTP_201_CREATED)
+
+    def test_create__password_not_match_confirmation(self):
+        built_user = UserFactory.build()
         url = reverse("user-list")
         data = {
             "email": built_user.email,
             "name": built_user.name,
             "password": f"password{self.faker_.unique.random_int()}",
+            "password_confirmation": "password",
         }
         response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, HTTP_201_CREATED)
+        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
 
     def test_partial_update(self):
+        user = UserFactory.create()
+        built_user = UserFactory.build()
+        password = f"password{self.faker_.unique.random_int()}"
+        url = reverse("user-detail", kwargs={"pk": user.id})
+        data = {
+            "email": built_user.email,
+            "name": built_user.name,
+            "password": password,
+            "password_confirmation": password,
+        }
+        response = self.client.patch(url, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+
+    def test_partial_update__password_not_match_confirmation(self):
         user = UserFactory.create()
         built_user = UserFactory.build()
         url = reverse("user-detail", kwargs={"pk": user.id})
@@ -87,6 +115,7 @@ class UserViewSetTestCase(APITestCase):
             "email": built_user.email,
             "name": built_user.name,
             "password": f"password{self.faker_.unique.random_int()}",
+            "password_confirmation": "password",
         }
         response = self.client.patch(url, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
