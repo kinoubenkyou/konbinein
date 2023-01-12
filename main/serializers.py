@@ -71,9 +71,11 @@ class UserSerializer(ModelSerializer):
 
     @staticmethod
     def _modify_to_hashed_password(validated_data):
-        del validated_data["password_confirmation"]
-        password = validated_data.pop("password")
-        validated_data["hashed_password"] = make_password(password)
+        if "password" in validated_data:
+            password = validated_data.pop("password")
+            validated_data["hashed_password"] = make_password(password)
+        if "password_confirmation" in validated_data:
+            del validated_data["password_confirmation"]
 
     @transaction.atomic
     def create(self, validated_data):
@@ -87,9 +89,9 @@ class UserSerializer(ModelSerializer):
         return instance
 
     def validate(self, attrs):
-        if attrs["password"] != attrs["password_confirmation"]:
+        if attrs.get("password") != attrs.get("password_confirmation"):
             raise ValidationError(
-                "Password must match the confirmation.",
+                "Password doesn't match the confirmation.",
                 "password_not_match_confirmation",
             )
         return attrs
