@@ -13,6 +13,7 @@ psycopg2 = "^2.9.5"
 djangorestframework = "^3.14.0"
 factory-boy = "^3.2.1"
 ipdb = "^0.13.11"
+coverage = "^7.0.5"
 
 
 [build-system]
@@ -25,3 +26,8 @@ preview = true
 
 [tool.isort]
 profile = "black"
+
+[tool.coverage.run]
+include = [
+    "main/**"
+]
