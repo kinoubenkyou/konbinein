@@ -1,6 +1,12 @@
 from django.urls import reverse
 from faker import Faker
-from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST
+from rest_framework.authtoken.models import Token
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_201_CREATED,
+    HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
+)
 from rest_framework.test import APITestCase
 
 from main.factories import (
@@ -16,7 +22,7 @@ class OrderViewSetTestCase(APITestCase):
         built_order = OrderFactory.build()
         built_order_items = OrderItemFactory.build_batch(2)
         organization = OrganizationFactory.create()
-        url = reverse("order-list")
+        path = reverse("order-list")
         data = {
             "code": built_order.code,
             "created_at": built_order.created_at,
@@ -30,7 +36,7 @@ class OrderViewSetTestCase(APITestCase):
             ),
             "organization": organization.id,
         }
-        response = self.client.post(url, data, format="json")
+        response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_201_CREATED)
 
     def test_partial_update(self):
@@ -39,7 +45,7 @@ class OrderViewSetTestCase(APITestCase):
         built_order_items = OrderItemFactory.build_batch(2)
         order_items = OrderItemFactory.create_batch(2, order=order)
         organization = OrganizationFactory.create()
-        url = reverse("order-detail", kwargs={"pk": order.id})
+        path = reverse("order-detail", kwargs={"pk": order.id})
         data = {
             "code": built_order.code,
             "created_at": built_order.created_at,
@@ -58,7 +64,7 @@ class OrderViewSetTestCase(APITestCase):
             ),
             "organization": organization.id,
         }
-        response = self.client.patch(url, data, format="json")
+        response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
 
 
@@ -71,51 +77,67 @@ class UserViewSetTestCase(APITestCase):
     def test_create(self):
         built_user = UserFactory.build()
         password = f"password{self.faker_.unique.random_int()}"
-        url = reverse("user-list")
+        path = reverse("user-list")
         data = {
             "email": built_user.email,
             "name": built_user.name,
             "password": password,
             "password_confirmation": password,
         }
-        response = self.client.post(url, data, format="json")
+        response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_201_CREATED)
 
     def test_create__password_not_match_confirmation(self):
         built_user = UserFactory.build()
-        url = reverse("user-list")
+        path = reverse("user-list")
         data = {
             "email": built_user.email,
             "name": built_user.name,
             "password": f"password{self.faker_.unique.random_int()}",
             "password_confirmation": "password",
         }
-        response = self.client.post(url, data, format="json")
+        response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
 
     def test_partial_update(self):
         user = UserFactory.create()
         built_user = UserFactory.build()
         password = f"password{self.faker_.unique.random_int()}"
-        url = reverse("user-detail", kwargs={"pk": user.id})
+        path = reverse("user-detail", kwargs={"pk": user.id})
         data = {
             "email": built_user.email,
             "name": built_user.name,
             "password": password,
             "password_confirmation": password,
         }
-        response = self.client.patch(url, data, format="json")
+        response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
 
     def test_partial_update__password_not_match_confirmation(self):
         user = UserFactory.create()
         built_user = UserFactory.build()
-        url = reverse("user-detail", kwargs={"pk": user.id})
+        path = reverse("user-detail", kwargs={"pk": user.id})
         data = {
             "email": built_user.email,
             "name": built_user.name,
             "password": f"password{self.faker_.unique.random_int()}",
             "password_confirmation": "password",
         }
-        response = self.client.patch(url, data, format="json")
+        response = self.client.patch(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
+
+    def test_post_email_verification(self):
+        email_verification_token = Token.generate_key()
+        user = UserFactory.create(email_verification_token=email_verification_token)
+        path = reverse("user-email-verification", kwargs={"pk": user.id})
+        data = {"token": email_verification_token}
+        response = self.client.post(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
+
+    def test_post_email_verification__token_not_match(self):
+        email_verification_token = Token.generate_key()
+        user = UserFactory.create(email_verification_token="")
+        path = reverse("user-email-verification", kwargs={"pk": user.id})
+        data = {"token": email_verification_token}
+        response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)

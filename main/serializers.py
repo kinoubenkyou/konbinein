@@ -1,7 +1,11 @@
 from django.contrib.auth.hashers import make_password
+from django.core.mail import send_mail
 from django.db import transaction
+from django.utils.http import urlencode
+from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import CharField, DecimalField, IntegerField
+from rest_framework.reverse import reverse
 from rest_framework.serializers import ModelSerializer
 
 from main.models import Order, OrderItem, Organization, User
@@ -80,7 +84,21 @@ class UserSerializer(ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         self._modify_to_hashed_password(validated_data)
-        return super().create(validated_data)
+        validated_data["email_verification_token"] = Token.generate_key()
+        user = super().create(validated_data)
+        uri_path = reverse(
+            "user-email-verification",
+            kwargs={"pk": user.id},
+            request=self.context["request"],
+        )
+        query = urlencode({"token": user.email_verification_token})
+        send_mail(
+            from_email="contact@konbinein.com",
+            message=f"{uri_path}?{query}",
+            recipient_list=[user.email],
+            subject="Konbinein Email Verification",
+        )
+        return user
 
     @transaction.atomic
     def update(self, instance, validated_data):
