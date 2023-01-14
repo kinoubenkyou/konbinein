@@ -29,6 +29,6 @@ class OrderItem(Model):
 
 class User(Model):
     email = EmailField(unique=True)
+    email_verification_token = CharField(max_length=255, null=True)
     hashed_password = CharField(max_length=255)
     name = CharField(max_length=255, null=True)
-    USERNAME_FIELD = "email"
