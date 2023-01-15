@@ -136,8 +136,15 @@ class UserViewSetTestCase(APITestCase):
 
     def test_post_email_verification__token_not_match(self):
         email_verification_token = Token.generate_key()
-        user = UserFactory.create(email_verification_token="")
+        user = UserFactory.create(email_verification_token=email_verification_token)
         path = reverse("user-email-verification", kwargs={"pk": user.id})
-        data = {"token": email_verification_token}
+        data = {"token": ""}
+        response = self.client.post(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
+
+    def test_post_email_verification__email_already_verified(self):
+        user = UserFactory.create()
+        path = reverse("user-email-verification", kwargs={"pk": user.id})
+        data = {"token": ""}
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
