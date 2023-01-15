@@ -38,5 +38,6 @@ class UserFactory(DjangoModelFactory):
         model = User
 
     email = Sequence(lambda n: f"email{n}@email.com")
+    email_verification_token = None
     hashed_password = Sequence(lambda n: make_password(f"password{n}"))
     name = Sequence(lambda n: f"name{n}")
