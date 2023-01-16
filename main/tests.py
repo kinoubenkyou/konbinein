@@ -6,6 +6,7 @@ from rest_framework.status import (
     HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
 )
 from rest_framework.test import APITestCase
 
@@ -147,4 +148,4 @@ class UserViewSetTestCase(APITestCase):
         path = reverse("user-email-verification", kwargs={"pk": user.id})
         data = {"token": ""}
         response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, HTTP_404_NOT_FOUND)
