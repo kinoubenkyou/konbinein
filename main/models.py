@@ -30,5 +30,5 @@ class OrderItem(Model):
 class User(Model):
     email = EmailField(unique=True)
     email_verification_token = CharField(max_length=255, null=True)
-    hashed_password = CharField(max_length=255)
+    hashed_password = CharField(max_length=255, null=True)
     name = CharField(max_length=255, null=True)
