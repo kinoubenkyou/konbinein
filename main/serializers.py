@@ -1,4 +1,4 @@
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import check_password, make_password
 from django.core.mail import send_mail
 from django.db import transaction
 from django.utils.http import urlencode
@@ -67,19 +67,19 @@ class OrganizationSerializer(ModelSerializer):
 
 class UserSerializer(ModelSerializer):
     password = CharField(max_length=255, write_only=True)
-    password_confirmation = CharField(max_length=255, write_only=True)
+    current_password = CharField(max_length=255, required=False, write_only=True)
 
     class Meta:
-        fields = ["email", "id", "name", "password", "password_confirmation"]
+        fields = ["email", "id", "name", "password", "current_password"]
         model = User
 
     @staticmethod
     def _modify_to_hashed_password(validated_data):
+        if "current_password" in validated_data:
+            del validated_data["current_password"]
         if "password" in validated_data:
             password = validated_data.pop("password")
             validated_data["hashed_password"] = make_password(password)
-        if "password_confirmation" in validated_data:
-            del validated_data["password_confirmation"]
 
     @transaction.atomic
     def create(self, validated_data):
@@ -107,9 +107,15 @@ class UserSerializer(ModelSerializer):
         return instance
 
     def validate(self, attrs):
-        if attrs.get("password") != attrs.get("password_confirmation"):
-            raise ValidationError(
-                "Password doesn't match the confirmation.",
-                "password_not_match_confirmation",
-            )
+        if self.instance is not None and "password" in attrs:
+            if "current_password" not in attrs:
+                raise ValidationError(
+                    "Current password is required.", "current_password_required"
+                )
+            if not check_password(
+                attrs["current_password"], self.instance.hashed_password
+            ):
+                raise ValidationError(
+                    "Current password is incorrect.", "current_password_incorrect"
+                )
         return attrs
