@@ -74,40 +74,46 @@ class UserSerializer(ModelSerializer):
         model = User
 
     @staticmethod
-    def _modify_to_hashed_password(validated_data):
+    def _modify_to_attributes(validated_data):
         if "current_password" in validated_data:
             del validated_data["current_password"]
+        if "email" in validated_data:
+            validated_data["email_verification_token"] = Token.generate_key()
         if "password" in validated_data:
             password = validated_data.pop("password")
             validated_data["hashed_password"] = make_password(password)
 
+    def _send_email_verification(self, user):
+        if user.email_verification_token is not None:
+            uri_path = reverse(
+                "user-email-verification",
+                kwargs={"pk": user.id},
+                request=self.context["request"],
+            )
+            query = urlencode({"token": user.email_verification_token})
+            send_mail(
+                from_email="contact@konbinein.com",
+                message=f"{uri_path}?{query}",
+                recipient_list=[user.email],
+                subject="Konbinein Email Verification",
+            )
+
     @transaction.atomic
     def create(self, validated_data):
-        self._modify_to_hashed_password(validated_data)
-        validated_data["email_verification_token"] = Token.generate_key()
+        self._modify_to_attributes(validated_data)
         user = super().create(validated_data)
-        uri_path = reverse(
-            "user-email-verification",
-            kwargs={"pk": user.id},
-            request=self.context["request"],
-        )
-        query = urlencode({"token": user.email_verification_token})
-        send_mail(
-            from_email="contact@konbinein.com",
-            message=f"{uri_path}?{query}",
-            recipient_list=[user.email],
-            subject="Konbinein Email Verification",
-        )
+        self._send_email_verification(user)
         return user
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        self._modify_to_hashed_password(validated_data)
-        super().update(instance, validated_data)
+        self._modify_to_attributes(validated_data)
+        user = super().update(instance, validated_data)
+        self._send_email_verification(user)
         return instance
 
     def validate(self, attrs):
-        if self.instance is not None and "password" in attrs:
+        if self.instance is not None and ("password" in attrs or "email" in attrs):
             if "current_password" not in attrs:
                 raise ValidationError(
                     "Current password is required.", "current_password_required"
