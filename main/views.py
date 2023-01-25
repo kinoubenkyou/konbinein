@@ -46,11 +46,11 @@ class UserViewSet(ModelViewSet):
             raise NotFound(
                 code="email_already_verified", detail="Email is already verified."
             )
-        if request.data.get("token") == token:
-            user.email_verification_token = None
-            user.save()
-            return Response(status=HTTP_204_NO_CONTENT)
-        raise ParseError(code="token_not_match", detail="Token doesn't match.")
+        if request.data.get("token") != token:
+            raise ParseError(code="token_not_match", detail="Token doesn't match.")
+        user.email_verification_token = None
+        user.save()
+        return Response(status=HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["post"])
     @transaction.atomic
