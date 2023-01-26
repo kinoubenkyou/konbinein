@@ -92,7 +92,7 @@ class UserSerializer(ModelSerializer):
             )
             query = urlencode({"token": user.email_verification_token})
             send_mail(
-                from_email="contact@konbinein.com",
+                from_email=None,
                 message=f"{uri_path}?{query}",
                 recipient_list=[user.email],
                 subject="Konbinein Email Verification",
