@@ -1,3 +1,6 @@
+from django.contrib.auth.hashers import make_password
+from django.core.mail import send_mail
+from django.db import transaction
 from django.db.models import F, Prefetch, Sum
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, ParseError
@@ -35,6 +38,7 @@ class UserViewSet(ModelViewSet):
     serializer_class = UserSerializer
 
     @action(detail=True, methods=["post"])
+    @transaction.atomic
     def email_verification(self, request, *args, **kwargs):
         user = self.get_object()
         token = user.email_verification_token
@@ -47,3 +51,22 @@ class UserViewSet(ModelViewSet):
             user.save()
             return Response(status=HTTP_204_NO_CONTENT)
         raise ParseError(code="token_not_match", detail="Token doesn't match.")
+
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    def password_resetting(self, request, *args, **kwargs):
+        user = self.get_object()
+        if user.email_verification_token is not None:
+            raise NotFound(code="email_not_verified", detail="Email isn't verified.")
+        from rest_framework.authtoken.models import Token
+
+        password = Token.generate_key()
+        user.hashed_password = make_password(password)
+        user.save()
+        send_mail(
+            from_email=None,
+            message=f"{password}",
+            recipient_list=[user.email],
+            subject="Konbinein Password Resetting",
+        )
+        return Response(status=HTTP_204_NO_CONTENT)

@@ -152,3 +152,16 @@ class UserViewSetTestCase(APITestCase):
         data = {"token": ""}
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_404_NOT_FOUND)
+
+    def test_post_password_resetting(self):
+        user = UserFactory.create()
+        path = reverse("user-password-resetting", kwargs={"pk": user.id})
+        response = self.client.post(path, {}, format="json")
+        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
+
+    def test_post_password_resetting__email_not_verified(self):
+        email_verification_token = Token.generate_key()
+        user = UserFactory.create(email_verification_token=email_verification_token)
+        path = reverse("user-password-resetting", kwargs={"pk": user.id})
+        response = self.client.post(path, {}, format="json")
+        self.assertEqual(response.status_code, HTTP_404_NOT_FOUND)
