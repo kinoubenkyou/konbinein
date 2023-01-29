@@ -130,6 +130,23 @@ class UserViewSetTestCase(APITestCase):
         response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
 
+    def test_post_authentication(self):
+        password = f"password{self.faker_.unique.random_int()}"
+        user = UserFactory.create(
+            hashed_password=make_password(password),
+        )
+        path = reverse("user-authentication")
+        data = {"email": user.email, "password": password}
+        response = self.client.post(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+
+    def test_post_authentication__password_incorrect(self):
+        user = UserFactory.create()
+        path = reverse("user-authentication")
+        data = {"email": user.email, "password": ""}
+        response = self.client.post(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
+
     def test_post_email_verification(self):
         email_verification_token = Token.generate_key()
         user = UserFactory.create(email_verification_token=email_verification_token)
