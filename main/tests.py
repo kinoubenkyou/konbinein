@@ -7,7 +7,6 @@ from rest_framework.status import (
     HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
-    HTTP_404_NOT_FOUND,
 )
 from rest_framework.test import APITestCase
 
@@ -130,45 +129,45 @@ class UserViewSetTestCase(APITestCase):
         response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
 
-    def test_post_authentication(self):
+    def test_post_authenticating(self):
         password = f"password{self.faker_.unique.random_int()}"
         user = UserFactory.create(
             hashed_password=make_password(password),
         )
-        path = reverse("user-authentication")
+        path = reverse("user-authenticating")
         data = {"email": user.email, "password": password}
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
 
-    def test_post_authentication__password_incorrect(self):
+    def test_post_authenticating__password_incorrect(self):
         user = UserFactory.create()
-        path = reverse("user-authentication")
+        path = reverse("user-authenticating")
         data = {"email": user.email, "password": ""}
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
 
-    def test_post_email_verification(self):
+    def test_post_email_verifying(self):
         email_verification_token = Token.generate_key()
         user = UserFactory.create(email_verification_token=email_verification_token)
-        path = reverse("user-email-verification", kwargs={"pk": user.id})
+        path = reverse("user-email-verifying", kwargs={"pk": user.id})
         data = {"token": email_verification_token}
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
 
-    def test_post_email_verification__token_not_match(self):
+    def test_post_email_verifying__token_not_match(self):
         email_verification_token = Token.generate_key()
         user = UserFactory.create(email_verification_token=email_verification_token)
-        path = reverse("user-email-verification", kwargs={"pk": user.id})
+        path = reverse("user-email-verifying", kwargs={"pk": user.id})
         data = {"token": ""}
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
 
-    def test_post_email_verification__email_already_verified(self):
+    def test_post_email_verifying__email_already_verified(self):
         user = UserFactory.create()
-        path = reverse("user-email-verification", kwargs={"pk": user.id})
+        path = reverse("user-email-verifying", kwargs={"pk": user.id})
         data = {"token": ""}
         response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
 
     def test_post_password_resetting(self):
         user = UserFactory.create()
@@ -181,4 +180,4 @@ class UserViewSetTestCase(APITestCase):
         user = UserFactory.create(email_verification_token=email_verification_token)
         path = reverse("user-password-resetting", kwargs={"pk": user.id})
         response = self.client.post(path, {}, format="json")
-        self.assertEqual(response.status_code, HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)

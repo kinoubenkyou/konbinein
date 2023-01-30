@@ -86,7 +86,7 @@ class UserSerializer(ModelSerializer):
     def _send_email_verification(self, user):
         if user.email_verification_token is not None:
             uri_path = reverse(
-                "user-email-verification",
+                "user-email-verifying",
                 kwargs={"pk": user.id},
                 request=self.context["request"],
             )
@@ -116,12 +116,14 @@ class UserSerializer(ModelSerializer):
         if self.instance is not None and ("password" in attrs or "email" in attrs):
             if "current_password" not in attrs:
                 raise ValidationError(
-                    "Current password is required.", "current_password_required"
+                    code="current_password_required",
+                    detail="Current password is required.",
                 )
             if not check_password(
                 attrs["current_password"], self.instance.hashed_password
             ):
                 raise ValidationError(
-                    "Current password is incorrect.", "current_password_incorrect"
+                    code="current_password_incorrect",
+                    detail="Current password is incorrect.",
                 )
         return attrs
