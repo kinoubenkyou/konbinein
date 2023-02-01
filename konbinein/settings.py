@@ -155,6 +155,9 @@ LOGGING = {
 
 
 REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "main.authentications.TokenAuthentication",
+    ],
     "UNAUTHENTICATED_USER": None,
 }
 

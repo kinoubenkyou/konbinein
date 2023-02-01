@@ -1,7 +1,10 @@
 from django.contrib.auth.hashers import make_password
+from django.test import TransactionTestCase
+from django.test.client import RequestFactory
 from django.urls import reverse
 from faker import Faker
 from rest_framework.authtoken.models import Token
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
@@ -10,6 +13,7 @@ from rest_framework.status import (
 )
 from rest_framework.test import APITestCase
 
+from main.authentications import TokenAuthentication
 from main.factories import (
     OrderFactory,
     OrderItemFactory,
@@ -18,7 +22,23 @@ from main.factories import (
 )
 
 
-class OrderViewSetTestCase(APITestCase):
+class AuthenticatedApiTestCase(APITestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        authentication_token = Token.generate_key()
+        cls.user = UserFactory.create(authentication_token=authentication_token)
+
+    def setUp(self):
+        super().setUp()
+        self.client.credentials(
+            HTTP_AUTHORIZATION=(
+                f"{TokenAuthentication.SCHEME} {self.user.authentication_token}"
+            )
+        )
+
+
+class OrderViewSetTestCase(AuthenticatedApiTestCase):
     def test_create(self):
         built_order = OrderFactory.build()
         built_order_items = OrderItemFactory.build_batch(2)
@@ -69,7 +89,40 @@ class OrderViewSetTestCase(APITestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
 
 
-class UserViewSetTestCase(APITestCase):
+class TokenAuthenticationTestCase(TransactionTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.faker = Faker()
+
+    def test_authenticate__header_not_provided(self):
+        request = RequestFactory().get("/")
+        second = TokenAuthentication().authenticate(request)
+        self.assertEqual(None, second)
+
+    def test_authenticate__scheme_not_match(self):
+        request = RequestFactory(
+            HTTP_AUTHORIZATION=f"scheme{self.faker.unique.random_int()}"
+        ).get("/")
+        second = TokenAuthentication().authenticate(request)
+        self.assertEqual(None, second)
+
+    def test_authenticate__token_not_provided(self):
+        request = RequestFactory(HTTP_AUTHORIZATION=TokenAuthentication.SCHEME).get("/")
+        with self.assertRaises(AuthenticationFailed):
+            TokenAuthentication().authenticate(request)
+
+    def test_authenticate__user_not_exist(self):
+        http_authorization = (
+            f"{TokenAuthentication.SCHEME}"
+            f" authorization_token{self.faker.unique.random_int()}"
+        )
+        request = RequestFactory(HTTP_AUTHORIZATION=http_authorization).get("/")
+        with self.assertRaises(AuthenticationFailed):
+            TokenAuthentication().authenticate(request)
+
+
+class UserViewSetTestCase(AuthenticatedApiTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
