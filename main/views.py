@@ -10,10 +10,12 @@ from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ModelViewSet
 
 from main.models import Order, OrderItem, Organization, User
+from main.permissions import AuthenticatedPermission
 from main.serializers import OrderSerializer, OrganizationSerializer, UserSerializer
 
 
 class OrderViewSet(ModelViewSet):
+    permission_classes = (AuthenticatedPermission,)
     queryset = (
         Order.objects.prefetch_related(
             Prefetch(
@@ -30,6 +32,7 @@ class OrderViewSet(ModelViewSet):
 
 
 class OrganizationViewSet(ModelViewSet):
+    permission_classes = (AuthenticatedPermission,)
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
 
@@ -37,6 +40,16 @@ class OrganizationViewSet(ModelViewSet):
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def get_permissions(self):
+        permission_dict = {
+            "authentication": (),
+            "email_verification": (),
+        }
+        permission_classes = permission_dict.get(
+            self.action, (AuthenticatedPermission,)
+        )
+        return [permission_class() for permission_class in permission_classes]
 
     @action(detail=False, methods=["post"])
     @transaction.atomic
