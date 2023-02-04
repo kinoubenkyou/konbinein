@@ -43,8 +43,9 @@ class UserViewSet(ModelViewSet):
 
     def get_permissions(self):
         permission_dict = {
-            "authentication": (),
-            "email_verification": (),
+            "authenticating": (),
+            "create": (),
+            "email_verifying": (),
         }
         permission_classes = permission_dict.get(
             self.action, (AuthenticatedPermission,)
@@ -65,6 +66,13 @@ class UserViewSet(ModelViewSet):
             user.authentication_token = Token.generate_key()
             user.save()
         return Response({"token": user.authentication_token})
+
+    @action(detail=False, methods=["post"])
+    @transaction.atomic
+    def de_authenticating(self, request, *args, **kwargs):
+        request.user.authentication_token = None
+        request.user.save()
+        return Response(status=HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["post"])
     @transaction.atomic
