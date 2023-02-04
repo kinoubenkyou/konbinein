@@ -200,7 +200,7 @@ class UserViewSetTestCase(AuthenticatedApiTestCase):
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
 
     def test_post_de_authenticating(self):
-        path = reverse("user-de-authenticating")
+        path = reverse("user-de-authenticating", kwargs={"pk": self.user.id})
         response = self.client.post(path, format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
 
