@@ -10,7 +10,7 @@ from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ModelViewSet
 
 from main.models import Order, OrderItem, Organization, User
-from main.permissions import AuthenticatedPermission, UserPermission
+from main.permissions import AuthenticatedPermission
 from main.serializers import OrderSerializer, OrganizationSerializer, UserSerializer
 
 
@@ -44,7 +44,6 @@ class UserViewSet(ModelViewSet):
     def get_permissions(self):
         permission_dict = {
             "authenticating": (),
-            "de_authenticating": (AuthenticatedPermission, UserPermission),
             "create": (),
             "email_verifying": (),
         }
@@ -68,12 +67,11 @@ class UserViewSet(ModelViewSet):
             user.save()
         return Response({"token": user.authentication_token})
 
-    @action(detail=True, methods=["post"])
+    @action(detail=False, methods=["post"])
     @transaction.atomic
     def de_authenticating(self, request, *args, **kwargs):
-        user = self.get_object()
-        user.authentication_token = None
-        user.save()
+        request.user.authentication_token = None
+        request.user.save()
         return Response(status=HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["post"])
