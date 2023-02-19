@@ -18,6 +18,7 @@ from main.factories import (
     OrderFactory,
     OrderItemFactory,
     OrganizationFactory,
+    PersonnelFactory,
     UserFactory,
 )
 
@@ -87,6 +88,63 @@ class OrderViewSetTestCase(AuthenticatedApiTestCase):
         }
         response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
+
+
+class OrganizationPersonnelViewSetTestCase(AuthenticatedApiTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.faker_ = Faker()
+
+    def test_create(self):
+        organization = OrganizationFactory.create()
+        PersonnelFactory.create(
+            does_organization_agree=True,
+            does_user_agree=True,
+            organization=organization,
+            user=self.user,
+        )
+        path = reverse(
+            "organization_personnel-list", kwargs={"organization_id": organization.id}
+        )
+        data = {"user": UserFactory.create().id}
+        response = self.client.post(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_201_CREATED)
+
+    def test_post_agreeing(self):
+        organization = OrganizationFactory.create()
+        PersonnelFactory.create(
+            does_organization_agree=True,
+            does_user_agree=True,
+            organization=organization,
+            user=self.user,
+        )
+        personnel = PersonnelFactory.create(organization=organization)
+        path = reverse(
+            "organization_personnel-agreeing",
+            kwargs={"organization_id": organization.id, "pk": personnel.id},
+        )
+        response = self.client.post(path, {}, format="json")
+        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
+
+
+class PersonnelViewSetTestCase(AuthenticatedApiTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.faker_ = Faker()
+
+    def test_create(self):
+        path = reverse("personnel-list")
+        data = {"organization": OrganizationFactory.create().id}
+        response = self.client.post(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_201_CREATED)
+
+    def test_post_agreeing(self):
+        personnel = PersonnelFactory.create(user=self.user)
+        path = reverse("personnel-agreeing", kwargs={"pk": personnel.id})
+        response = self.client.post(path, {}, format="json")
+        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
 
 
 class TokenAuthenticationTestCase(TransactionTestCase):

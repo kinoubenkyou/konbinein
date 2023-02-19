@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     # "django.contrib.sessions",
     # "django.contrib.messages",
     # "django.contrib.staticfiles",
+    "django_filters",
     "main",
 ]
 
@@ -158,6 +159,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "main.authentications.TokenAuthentication",
     ],
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "UNAUTHENTICATED_USER": None,
 }
 
