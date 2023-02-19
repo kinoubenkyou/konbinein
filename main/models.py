@@ -1,5 +1,6 @@
 from django.db.models import (
     CASCADE,
+    BooleanField,
     CharField,
     DateTimeField,
     DecimalField,
@@ -7,6 +8,7 @@ from django.db.models import (
     ForeignKey,
     IntegerField,
     Model,
+    UniqueConstraint,
 )
 
 
@@ -33,3 +35,19 @@ class User(Model):
     email_verification_token = CharField(max_length=255, null=True)
     hashed_password = CharField(max_length=255)
     name = CharField(max_length=255, null=True)
+
+
+class Personnel(Model):
+    class Meta:
+        constraints = (
+            UniqueConstraint(
+                "organization",
+                "user",
+                name="main_organizationuser_organization_id_user_id",
+            ),
+        )
+
+    does_organization_agree = BooleanField()
+    does_user_agree = BooleanField()
+    organization = ForeignKey(Organization, on_delete=CASCADE)
+    user = ForeignKey(User, on_delete=CASCADE)

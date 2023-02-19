@@ -2,16 +2,29 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import F, Prefetch, Sum
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
+from rest_framework.mixins import (
+    CreateModelMixin,
+    DestroyModelMixin,
+    ListModelMixin,
+    RetrieveModelMixin,
+)
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
-from main.models import Order, OrderItem, Organization, User
-from main.permissions import AuthenticatedPermission
-from main.serializers import OrderSerializer, OrganizationSerializer, UserSerializer
+from main.models import Order, OrderItem, Organization, Personnel, User
+from main.permissions import AuthenticatedPermission, OrganizationPermission
+from main.serializers import (
+    OrderSerializer,
+    OrganizationPersonnelSerializer,
+    OrganizationSerializer,
+    PersonnelSerializer,
+    UserSerializer,
+)
 
 
 class OrderViewSet(ModelViewSet):
@@ -32,9 +45,60 @@ class OrderViewSet(ModelViewSet):
 
 
 class OrganizationViewSet(ModelViewSet):
-    permission_classes = (AuthenticatedPermission,)
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
+
+
+class OrganizationPersonnelViewSet(
+    CreateModelMixin,
+    DestroyModelMixin,
+    GenericViewSet,
+    ListModelMixin,
+    RetrieveModelMixin,
+):
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ("does_organization_agree", "does_user_agree")
+    permission_classes = (AuthenticatedPermission, OrganizationPermission)
+    queryset = Personnel.objects.all()
+    serializer_class = OrganizationPersonnelSerializer
+
+    def get_queryset(self):
+        return (
+            super().get_queryset().filter(organization=self.kwargs["organization_id"])
+        )
+
+    @action(detail=True, methods=["post"])
+    @transaction.atomic()
+    def agreeing(self, request, *args, **kwargs):
+        personnel = self.get_object()
+        personnel.does_organization_agree = True
+        personnel.save()
+        return Response(status=HTTP_204_NO_CONTENT)
+
+
+class PersonnelViewSet(
+    CreateModelMixin,
+    DestroyModelMixin,
+    GenericViewSet,
+    ListModelMixin,
+    RetrieveModelMixin,
+):
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ("does_organization_agree", "does_user_agree")
+    permission_classes = (AuthenticatedPermission,)
+    queryset = Personnel.objects.all()
+    serializer_class = PersonnelSerializer
+
+    def get_queryset(self):
+        return super().get_queryset().filter(user=self.request.user.id)
+
+    @action(detail=True, methods=["post"])
+    @transaction.atomic()
+    def agreeing(self, request, *args, **kwargs):
+        personnel = self.get_object()
+        personnel.does_user_agree = True
+        personnel.save()
+        return Response(status=HTTP_204_NO_CONTENT)
 
 
 class UserViewSet(ModelViewSet):

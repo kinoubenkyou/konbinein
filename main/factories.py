@@ -4,7 +4,7 @@ from django.contrib.auth.hashers import make_password
 from factory import Faker, Sequence, SubFactory
 from factory.django import DjangoModelFactory
 
-from main.models import Order, OrderItem, Organization, User
+from main.models import Order, OrderItem, Organization, Personnel, User
 
 
 class OrganizationFactory(DjangoModelFactory):
@@ -41,3 +41,13 @@ class UserFactory(DjangoModelFactory):
     email_verification_token = None
     hashed_password = Sequence(lambda n: make_password(f"password{n}"))
     name = Sequence(lambda n: f"name{n}")
+
+
+class PersonnelFactory(DjangoModelFactory):
+    class Meta:
+        model = Personnel
+
+    does_organization_agree = Faker("boolean")
+    does_user_agree = Faker("boolean")
+    organization = SubFactory(OrganizationFactory)
+    user = SubFactory(UserFactory)
