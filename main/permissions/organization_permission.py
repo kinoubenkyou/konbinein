@@ -1,11 +1,6 @@
 from rest_framework.permissions import BasePermission
 
-from main.models import Personnel
-
-
-class AuthenticatedPermission(BasePermission):
-    def has_permission(self, request, view):
-        return request.user is not None
+from main.models.personnel import Personnel
 
 
 class OrganizationPermission(BasePermission):
