@@ -1,7 +1,7 @@
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
-from main.models import User
+from main.models.user import User
 
 
 class TokenAuthentication(BaseAuthentication):

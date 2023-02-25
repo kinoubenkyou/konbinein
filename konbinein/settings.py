@@ -25,12 +25,12 @@ SECRET_KEY = "django-insecure-@%6gt2jk95b0kiai$+3f&^@t9b2c-kh_+#2ig43a@%90j849eu
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ()
 
 
 # Application definition
 
-INSTALLED_APPS = [
+INSTALLED_APPS = (
     # "django.contrib.admin",
     # "django.contrib.auth",
     # "django.contrib.contenttypes",
@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     # "django.contrib.staticfiles",
     "django_filters",
     "main",
-]
+)
 
 # MIDDLEWARE = [
 #     "django.middleware.security.SecurityMiddleware",
@@ -156,10 +156,10 @@ LOGGING = {
 
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "main.authentications.TokenAuthentication",
-    ],
-    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "main.authentications.token_authentication.TokenAuthentication",
+    ),
+    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
     "UNAUTHENTICATED_USER": None,
 }
 
