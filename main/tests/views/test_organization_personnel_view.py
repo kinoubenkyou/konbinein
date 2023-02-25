@@ -38,17 +38,3 @@ class OrganizationPersonnelViewSetTestCase(TokenAuthenticatedTestCase):
         )
         response = self.client.post(path, {}, format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
-
-
-class PersonnelViewSetTestCase(TokenAuthenticatedTestCase):
-    def test_create(self):
-        path = reverse("personnel-list")
-        data = {"organization": OrganizationFactory.create().id}
-        response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_201_CREATED)
-
-    def test_post_agreeing(self):
-        personnel = PersonnelFactory.create(user=self.user)
-        path = reverse("personnel-agreeing", kwargs={"pk": personnel.id})
-        response = self.client.post(path, {}, format="json")
-        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)

@@ -28,7 +28,7 @@ class OrganizationPersonnelViewSet(
 ):
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ("does_organization_agree", "does_user_agree")
-    permission_classes = (UserPermission, OrganizationPermission)
+    permission_classes = (OrganizationPermission, UserPermission)
     queryset = Personnel.objects.all()
     serializer_class = OrganizationPersonnelSerializer
 
