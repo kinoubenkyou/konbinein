@@ -3,12 +3,13 @@ from rest_framework.viewsets import ModelViewSet
 
 from main.models.order import Order
 from main.models.order_item import OrderItem
+from main.permissions.organization_permission import OrganizationPermission
 from main.permissions.user_permission import UserPermission
 from main.serializers.order_serializer import OrderSerializer
 
 
 class OrderViewSet(ModelViewSet):
-    permission_classes = (UserPermission,)
+    permission_classes = (OrganizationPermission, UserPermission)
     queryset = (
         Order.objects.prefetch_related(
             Prefetch(
@@ -22,3 +23,8 @@ class OrderViewSet(ModelViewSet):
         .all()
     )
     serializer_class = OrderSerializer
+
+    def get_queryset(self):
+        return (
+            super().get_queryset().filter(organization=self.kwargs["organization_id"])
+        )
