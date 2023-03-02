@@ -7,7 +7,7 @@ from main.views.personnel_view import PersonnelViewSet
 from main.views.user_view import UserViewSet
 
 router = routers.SimpleRouter(trailing_slash=False)
-router.register("orders", OrderViewSet)
+router.register(r"organizations/(?P<organization_id>[^/.]+)/orders", OrderViewSet)
 router.register("organizations", OrganizationViewSet)
 router.register(
     r"organizations/(?P<organization_id>[^/.]+)/personnels",

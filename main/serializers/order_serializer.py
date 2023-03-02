@@ -16,6 +16,10 @@ class OrderSerializer(ModelSerializer):
         fields = ("code", "created_at", "id", "orderitem_set", "organization", "total")
         model = Order
 
+    def to_internal_value(self, data):
+        data["organization"] = self.context["view"].kwargs["organization_id"]
+        return super().to_internal_value(data)
+
     @transaction.atomic
     def create(self, validated_data):
         data_list = validated_data.pop("orderitem_set", ())
