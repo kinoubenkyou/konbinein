@@ -3,10 +3,10 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
 from main.factories.organization_factory import OrganizationFactory
 from main.factories.personnel_factory import PersonnelFactory
-from main.test_cases.token_authenticated_test_case import TokenAuthenticatedTestCase
+from main.test_cases.user_test_case import UserTestCase
 
 
-class PersonnelViewSetTestCase(TokenAuthenticatedTestCase):
+class PersonnelViewSetTestCase(UserTestCase):
     def test_create(self):
         path = reverse("personnel-list")
         data = {"organization": OrganizationFactory.create().id}
