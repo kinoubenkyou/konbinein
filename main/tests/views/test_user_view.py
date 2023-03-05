@@ -9,8 +9,8 @@ from rest_framework.status import (
 )
 
 from main.factories.user_factory import UserFactory
+from main.test_cases.token_authenticated_test_case import TokenAuthenticatedTestCase
 from main.tests import faker
-from main.tests.views import TokenAuthenticatedTestCase
 
 
 class UserViewSetTestCase(TokenAuthenticatedTestCase):
