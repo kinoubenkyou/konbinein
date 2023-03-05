@@ -9,11 +9,11 @@ from rest_framework.status import (
 )
 
 from main.factories.user_factory import UserFactory
-from main.test_cases.token_authenticated_test_case import TokenAuthenticatedTestCase
+from main.test_cases.user_test_case import UserTestCase
 from main.tests import faker
 
 
-class UserViewSetTestCase(TokenAuthenticatedTestCase):
+class UserViewSetTestCase(UserTestCase):
     def test_create(self):
         built_user = UserFactory.build()
         password = f"password{faker.unique.random_int()}"

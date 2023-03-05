@@ -1,9 +1,9 @@
 from main.factories.organization_factory import OrganizationFactory
 from main.factories.personnel_factory import PersonnelFactory
-from main.test_cases.token_authenticated_test_case import TokenAuthenticatedTestCase
+from main.test_cases.user_test_case import UserTestCase
 
 
-class OrganizationUserTestCase(TokenAuthenticatedTestCase):
+class OrganizationUserTestCase(UserTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
