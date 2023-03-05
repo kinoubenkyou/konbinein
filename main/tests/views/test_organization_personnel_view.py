@@ -1,40 +1,26 @@
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
-from main.factories.organization_factory import OrganizationFactory
 from main.factories.personnel_factory import PersonnelFactory
 from main.factories.user_factory import UserFactory
-from main.tests.views import TokenAuthenticatedTestCase
+from main.test_cases.organization_user_test_case import OrganizationUserTestCase
 
 
-class OrganizationPersonnelViewSetTestCase(TokenAuthenticatedTestCase):
+class OrganizationPersonnelViewSetTestCase(OrganizationUserTestCase):
     def test_create(self):
-        organization = OrganizationFactory.create()
-        PersonnelFactory.create(
-            does_organization_agree=True,
-            does_user_agree=True,
-            organization=organization,
-            user=self.user,
-        )
         path = reverse(
-            "organization_personnel-list", kwargs={"organization_id": organization.id}
+            "organization_personnel-list",
+            kwargs={"organization_id": self.organization.id},
         )
         data = {"user": UserFactory.create().id}
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_201_CREATED)
 
     def test_post_agreeing(self):
-        organization = OrganizationFactory.create()
-        PersonnelFactory.create(
-            does_organization_agree=True,
-            does_user_agree=True,
-            organization=organization,
-            user=self.user,
-        )
-        personnel = PersonnelFactory.create(organization=organization)
+        personnel = PersonnelFactory.create(organization=self.organization)
         path = reverse(
             "organization_personnel-agreeing",
-            kwargs={"organization_id": organization.id, "pk": personnel.id},
+            kwargs={"organization_id": self.organization.id, "pk": personnel.id},
         )
         response = self.client.post(path, {}, format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)

@@ -3,7 +3,7 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
 from main.factories.organization_factory import OrganizationFactory
 from main.factories.personnel_factory import PersonnelFactory
-from main.tests.views import TokenAuthenticatedTestCase
+from main.test_cases.token_authenticated_test_case import TokenAuthenticatedTestCase
 
 
 class PersonnelViewSetTestCase(TokenAuthenticatedTestCase):

@@ -3,23 +3,14 @@ from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
 
 from main.factories.order_factory import OrderFactory
 from main.factories.order_item_factory import OrderItemFactory
-from main.factories.organization_factory import OrganizationFactory
-from main.factories.personnel_factory import PersonnelFactory
-from main.tests.views import TokenAuthenticatedTestCase
+from main.test_cases.organization_user_test_case import OrganizationUserTestCase
 
 
-class OrderViewSetTestCase(TokenAuthenticatedTestCase):
+class OrderViewSetTestCase(OrganizationUserTestCase):
     def test_create(self):
-        organization = OrganizationFactory.create()
-        PersonnelFactory.create(
-            does_organization_agree=True,
-            does_user_agree=True,
-            organization=organization,
-            user=self.user,
-        )
         built_order = OrderFactory.build()
         built_order_items = OrderItemFactory.build_batch(2)
-        path = reverse("order-list", kwargs={"organization_id": organization.id})
+        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
         data = {
             "code": built_order.code,
             "created_at": built_order.created_at,
@@ -36,19 +27,13 @@ class OrderViewSetTestCase(TokenAuthenticatedTestCase):
         self.assertEqual(response.status_code, HTTP_201_CREATED)
 
     def test_partial_update(self):
-        organization = OrganizationFactory.create()
-        PersonnelFactory.create(
-            does_organization_agree=True,
-            does_user_agree=True,
-            organization=organization,
-            user=self.user,
-        )
-        order = OrderFactory.create(organization_id=organization.id)
+        order = OrderFactory.create(organization_id=self.organization.id)
         built_order = OrderFactory.build()
         built_order_items = OrderItemFactory.build_batch(2)
         order_items = OrderItemFactory.create_batch(2, order=order)
         path = reverse(
-            "order-detail", kwargs={"organization_id": organization.id, "pk": order.id}
+            "order-detail",
+            kwargs={"organization_id": self.organization.id, "pk": order.id},
         )
         data = {
             "code": built_order.code,
