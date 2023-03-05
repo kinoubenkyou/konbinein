@@ -16,8 +16,19 @@ class UserSerializer(ModelSerializer):
     current_password = CharField(max_length=255, required=False, write_only=True)
 
     class Meta:
-        fields = ["email", "id", "name", "password", "current_password"]
+        fields = [
+            "email",
+            "id",
+            "is_system_administrator",
+            "name",
+            "password",
+            "current_password",
+        ]
         model = User
+
+    def to_internal_value(self, data):
+        data["is_system_administrator"] = False
+        return super().to_internal_value(data)
 
     @staticmethod
     def _modify_to_attributes(validated_data):

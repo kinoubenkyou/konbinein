@@ -1,4 +1,4 @@
-from django.db.models import CharField, EmailField, Model
+from django.db.models import BooleanField, CharField, EmailField, Model
 
 
 class User(Model):
@@ -6,4 +6,5 @@ class User(Model):
     email = EmailField(unique=True)
     email_verification_token = CharField(max_length=255, null=True)
     hashed_password = CharField(max_length=255)
+    is_system_administrator = BooleanField()
     name = CharField(max_length=255, null=True)
