@@ -13,35 +13,39 @@ class OrderSerializer(ModelSerializer):
     )
 
     class Meta:
-        fields = ("code", "created_at", "id", "orderitem_set", "organization", "total")
+        fields = ("code", "created_at", "id", "orderitem_set", "total")
         model = Order
-
-    def to_internal_value(self, data):
-        data["organization"] = self.context["view"].kwargs["organization_id"]
-        return super().to_internal_value(data)
 
     @transaction.atomic
     def create(self, validated_data):
-        data_list = validated_data.pop("orderitem_set", ())
-        order = super().create(validated_data)
-        for data in data_list:
-            OrderItemSerializer().create(data | {"order": order})
+        order_attributes = validated_data | {
+            "organization_id": self.context["view"].kwargs["organization_id"],
+        }
+        order_item_data_list = order_attributes.pop("orderitem_set", ())
+        order = super().create(order_attributes)
+        for order_item_data in order_item_data_list:
+            OrderItemSerializer().create(order_item_data | {"order": order})
         return order
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        data_list = validated_data.pop("orderitem_set", ())
-        super().update(instance, validated_data)
-        order_item_dict = {
-            order_item.id: order_item for order_item in instance.orderitem_set.all()
+        order_attributes = validated_data | {
+            "organization_id": self.context["view"].kwargs["organization_id"],
         }
-        for data in data_list:
-            id_ = data.get("id")
-            if id_ is None:
-                OrderItemSerializer().create(data | {"order": instance})
+        order_item_data_list = order_attributes.pop("orderitem_set", ())
+        order = super().update(instance, order_attributes)
+        order_item_dict = {
+            order_item.id: order_item for order_item in order.orderitem_set.all()
+        }
+        for order_item_data in order_item_data_list:
+            order_item_id = order_item_data.get("id")
+            if order_item_id is None:
+                OrderItemSerializer().create(order_item_data | {"order": order})
             else:
-                OrderItemSerializer().update(order_item_dict[id_], data)
-        for id_, order_item in order_item_dict.items():
-            if id_ not in (data.get("id") for data in data_list):
+                OrderItemSerializer().update(
+                    order_item_dict[order_item_id], order_item_data
+                )
+        for order_item_id, order_item in order_item_dict.items():
+            if order_item_id not in (data.get("id") for data in order_item_data_list):
                 order_item.delete()
-        return instance
+        return order
