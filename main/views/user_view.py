@@ -22,6 +22,7 @@ class UserViewSet(ModelViewSet):
             "authenticating": (),
             "create": (),
             "email_verifying": (),
+            "password_resetting": (),
         }
         permission_classes = permission_dict.get(self.action, (UserPermission,))
         return (permission_class() for permission_class in permission_classes)
@@ -66,10 +67,11 @@ class UserViewSet(ModelViewSet):
         user.save()
         return Response(status=HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=("post",))
+    @action(detail=False, methods=("post",))
     @transaction.atomic
     def password_resetting(self, request, *args, **kwargs):
-        user = self.get_object()
+        email = request.data.get("email")
+        user = get_object_or_404(self.queryset, email=email)
         if user.email_verification_token is not None:
             return Response(
                 data={"detail": "Email isn't verified."}, status=HTTP_400_BAD_REQUEST
@@ -81,6 +83,6 @@ class UserViewSet(ModelViewSet):
             from_email=None,
             message=f"{password}",
             recipient_list=(user.email,),
-            subject="Konbinein Password Resetting",
+            subject="Konbinein Password Reset",
         )
         return Response(status=HTTP_204_NO_CONTENT)

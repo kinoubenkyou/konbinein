@@ -15,6 +15,7 @@ from main.tests import faker
 
 class UserViewSetTestCase(UserTestCase):
     def test_authenticating(self):
+        self.client.credentials()
         password = f"password{faker.unique.random_int()}"
         user = UserFactory.create(
             hashed_password=make_password(password),
@@ -25,6 +26,7 @@ class UserViewSetTestCase(UserTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
 
     def test_authenticating__password_incorrect(self):
+        self.client.credentials()
         user = UserFactory.create()
         path = reverse("user-authenticating")
         data = {"email": user.email, "password": ""}
@@ -32,6 +34,7 @@ class UserViewSetTestCase(UserTestCase):
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
 
     def test_create(self):
+        self.client.credentials()
         built_user = UserFactory.build()
         password = f"password{faker.unique.random_int()}"
         path = reverse("user-list")
@@ -49,6 +52,7 @@ class UserViewSetTestCase(UserTestCase):
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
 
     def test_email_verifying(self):
+        self.client.credentials()
         email_verification_token = Token.generate_key()
         user = UserFactory.create(email_verification_token=email_verification_token)
         path = reverse("user-email-verifying", kwargs={"pk": user.id})
@@ -57,6 +61,7 @@ class UserViewSetTestCase(UserTestCase):
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
 
     def test_email_verifying__token_not_match(self):
+        self.client.credentials()
         email_verification_token = Token.generate_key()
         user = UserFactory.create(email_verification_token=email_verification_token)
         path = reverse("user-email-verifying", kwargs={"pk": user.id})
@@ -65,6 +70,7 @@ class UserViewSetTestCase(UserTestCase):
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
 
     def test_email_verifying__email_already_verified(self):
+        self.client.credentials()
         user = UserFactory.create()
         path = reverse("user-email-verifying", kwargs={"pk": user.id})
         data = {"token": ""}
@@ -114,14 +120,16 @@ class UserViewSetTestCase(UserTestCase):
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
 
     def test_password_resetting(self):
+        self.client.credentials()
         user = UserFactory.create()
-        path = reverse("user-password-resetting", kwargs={"pk": user.id})
-        response = self.client.post(path, {}, format="json")
+        path = reverse("user-password-resetting")
+        response = self.client.post(path, {"email": user.email}, format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
 
     def test_password_resetting__email_not_verified(self):
+        self.client.credentials()
         email_verification_token = Token.generate_key()
         user = UserFactory.create(email_verification_token=email_verification_token)
-        path = reverse("user-password-resetting", kwargs={"pk": user.id})
-        response = self.client.post(path, {}, format="json")
+        path = reverse("user-password-resetting")
+        response = self.client.post(path, {"email": user.email}, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
