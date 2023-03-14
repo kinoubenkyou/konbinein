@@ -24,7 +24,3 @@ class UserTestCase(APITestCase):
                 f"{TokenAuthentication.SCHEME} {self.user.authentication_token}"
             )
         )
-
-    @classmethod
-    def tearDownClass(cls):
-        super().tearDownClass()

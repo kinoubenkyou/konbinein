@@ -7,6 +7,15 @@ from main.test_cases.organization_user_test_case import OrganizationUserTestCase
 
 
 class OrganizationPersonnelViewSetTestCase(OrganizationUserTestCase):
+    def test_agreeing(self):
+        personnel = PersonnelFactory.create(organization=self.organization)
+        path = reverse(
+            "organization_personnel-agreeing",
+            kwargs={"organization_id": self.organization.id, "pk": personnel.id},
+        )
+        response = self.client.post(path, {}, format="json")
+        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
+
     def test_create(self):
         path = reverse(
             "organization_personnel-list",
@@ -15,12 +24,3 @@ class OrganizationPersonnelViewSetTestCase(OrganizationUserTestCase):
         data = {"user": UserFactory.create().id}
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_201_CREATED)
-
-    def test_post_agreeing(self):
-        personnel = PersonnelFactory.create(organization=self.organization)
-        path = reverse(
-            "organization_personnel-agreeing",
-            kwargs={"organization_id": self.organization.id, "pk": personnel.id},
-        )
-        response = self.client.post(path, {}, format="json")
-        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
