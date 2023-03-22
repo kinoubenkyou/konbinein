@@ -39,3 +39,9 @@ class PersonnelViewSet(
         personnel.does_user_agree = True
         personnel.save()
         return Response(status=HTTP_204_NO_CONTENT)
+
+    def create(self, request, *args, **kwargs):
+        request.data["does_organization_agree"] = False
+        request.data["does_user_agree"] = True
+        request.data["user"] = request.user.id
+        return super().create(request, *args, **kwargs)

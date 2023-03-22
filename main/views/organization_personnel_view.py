@@ -14,9 +14,7 @@ from rest_framework.viewsets import GenericViewSet
 from main.models.personnel import Personnel
 from main.permissions.organization_permission import OrganizationPermission
 from main.permissions.user_permission import UserPermission
-from main.serializers.organization_personnel_serializer import (
-    OrganizationPersonnelSerializer,
-)
+from main.serializers.personnel_serializer import PersonnelSerializer
 
 
 class OrganizationPersonnelViewSet(
@@ -30,7 +28,7 @@ class OrganizationPersonnelViewSet(
     filterset_fields = ("does_organization_agree", "does_user_agree")
     permission_classes = (OrganizationPermission, UserPermission)
     queryset = Personnel.objects.all()
-    serializer_class = OrganizationPersonnelSerializer
+    serializer_class = PersonnelSerializer
 
     def get_queryset(self):
         return (
@@ -44,3 +42,9 @@ class OrganizationPersonnelViewSet(
         personnel.does_organization_agree = True
         personnel.save()
         return Response(status=HTTP_204_NO_CONTENT)
+
+    def create(self, request, *args, **kwargs):
+        request.data["does_organization_agree"] = True
+        request.data["does_user_agree"] = False
+        request.data["organization"] = kwargs["organization_id"]
+        return super().create(request, *args, **kwargs)

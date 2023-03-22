@@ -53,12 +53,14 @@ class PersonnelViewSetTestCase(UserTestCase):
                     "does_user_agree": personnels[0].does_user_agree,
                     "id": personnels[0].id,
                     "organization": personnels[0].organization_id,
+                    "user": personnels[0].user_id,
                 },
                 {
                     "does_organization_agree": personnels[1].does_organization_agree,
                     "does_user_agree": personnels[1].does_user_agree,
                     "id": personnels[1].id,
                     "organization": personnels[1].organization_id,
+                    "user": personnels[1].user_id,
                 },
             ),
         )
@@ -75,5 +77,6 @@ class PersonnelViewSetTestCase(UserTestCase):
                 "does_user_agree": personnel.does_user_agree,
                 "id": personnel.id,
                 "organization": personnel.organization_id,
+                "user": personnel.user_id,
             },
         )

@@ -1,4 +1,4 @@
-from django.db.models import CASCADE, BooleanField, ForeignKey, Model, UniqueConstraint
+from django.db.models import CASCADE, BooleanField, ForeignKey, Model
 
 from main.models.organization import Organization
 from main.models.user import User
@@ -6,13 +6,7 @@ from main.models.user import User
 
 class Personnel(Model):
     class Meta:
-        constraints = (
-            UniqueConstraint(
-                "organization",
-                "user",
-                name="main_organizationuser_organization_id_user_id",
-            ),
-        )
+        unique_together = (("organization", "user"),)
 
     does_organization_agree = BooleanField()
     does_user_agree = BooleanField()
