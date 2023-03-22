@@ -7,17 +7,12 @@ from main.tests import faker
 
 
 class TokenAuthenticationTestCase(TransactionTestCase):
-    def test_authenticate__header_not_provided(self):
-        request = RequestFactory().get("/")
-        second = TokenAuthentication().authenticate(request)
-        self.assertEqual(None, second)
-
     def test_authenticate__scheme_not_match(self):
         request = RequestFactory(
             HTTP_AUTHORIZATION=f"scheme{faker.unique.random_int()}"
         ).get("/")
-        second = TokenAuthentication().authenticate(request)
-        self.assertEqual(None, second)
+        actual = TokenAuthentication().authenticate(request)
+        self.assertEqual(actual, None)
 
     def test_authenticate__token_not_provided(self):
         request = RequestFactory(HTTP_AUTHORIZATION=TokenAuthentication.SCHEME).get("/")

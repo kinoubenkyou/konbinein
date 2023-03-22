@@ -3,9 +3,10 @@ from django.core.mail import send_mail
 from django.db import transaction
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.viewsets import ModelViewSet
 
 from main.models.user import User
@@ -34,9 +35,7 @@ class UserViewSet(ModelViewSet):
         user = get_object_or_404(self.queryset, email=email)
         password = request.data.get("password")
         if not check_password(password, user.hashed_password):
-            return Response(
-                data={"detail": "Password is incorrect."}, status=HTTP_400_BAD_REQUEST
-            )
+            raise ValidationError("Password is incorrect.")
         if user.authentication_token is None:
             user.authentication_token = Token.generate_key()
             user.save()
@@ -55,14 +54,9 @@ class UserViewSet(ModelViewSet):
         user = self.get_object()
         token = user.email_verification_token
         if token is None:
-            return Response(
-                data={"detail": "Email is already verified."},
-                status=HTTP_400_BAD_REQUEST,
-            )
+            raise ValidationError("Email is already verified.")
         if request.data.get("token") != token:
-            return Response(
-                data={"detail": "Token doesn't match."}, status=HTTP_400_BAD_REQUEST
-            )
+            raise ValidationError("Token doesn't match.")
         user.email_verification_token = None
         user.save()
         return Response(status=HTTP_204_NO_CONTENT)
@@ -73,15 +67,13 @@ class UserViewSet(ModelViewSet):
         email = request.data.get("email")
         user = get_object_or_404(self.queryset, email=email)
         if user.email_verification_token is not None:
-            return Response(
-                data={"detail": "Email isn't verified."}, status=HTTP_400_BAD_REQUEST
-            )
+            raise ValidationError("Email isn't verified.")
         password = Token.generate_key()
         user.hashed_password = make_password(password)
         user.save()
         send_mail(
             from_email=None,
-            message=f"{password}",
+            message=password,
             recipient_list=(user.email,),
             subject="Konbinein Password Reset",
         )
