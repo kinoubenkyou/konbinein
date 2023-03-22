@@ -8,9 +8,7 @@ from main.serializers.order_item_serializer import OrderItemSerializer
 
 class OrderSerializer(ModelSerializer):
     orderitem_set = OrderItemSerializer(allow_empty=False, many=True)
-    total = DecimalField(
-        decimal_places=4, max_digits=19, read_only=True, source="self.total"
-    )
+    total = DecimalField(decimal_places=4, max_digits=19, read_only=True)
 
     class Meta:
         fields = ("code", "created_at", "id", "orderitem_set", "total")
