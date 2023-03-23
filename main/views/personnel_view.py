@@ -1,4 +1,3 @@
-from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.mixins import (
@@ -24,7 +23,7 @@ class PersonnelViewSet(
     RetrieveModelMixin,
 ):
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ("does_organization_agree", "does_user_agree")
+    filterset_fields = ("does_organization_agree", "organization")
     permission_classes = (UserPermission,)
     queryset = Personnel.objects.all()
     serializer_class = PersonnelSerializer
@@ -33,15 +32,8 @@ class PersonnelViewSet(
         return super().get_queryset().filter(user=self.request.user.id)
 
     @action(detail=True, methods=("post",))
-    @transaction.atomic()
     def agreeing(self, request, *args, **kwargs):
         personnel = self.get_object()
         personnel.does_user_agree = True
         personnel.save()
         return Response(status=HTTP_204_NO_CONTENT)
-
-    def create(self, request, *args, **kwargs):
-        request.data["does_organization_agree"] = False
-        request.data["does_user_agree"] = True
-        request.data["user"] = request.user.id
-        return super().create(request, *args, **kwargs)
