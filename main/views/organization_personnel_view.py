@@ -1,4 +1,3 @@
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.mixins import (
     CreateModelMixin,
@@ -24,8 +23,6 @@ class OrganizationPersonnelViewSet(
     ListModelMixin,
     RetrieveModelMixin,
 ):
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ("does_user_agree", "user")
     permission_classes = (OrganizationPermission,)
     queryset = Personnel.objects.all()
     serializer_class = OrganizationPersonnelSerializer

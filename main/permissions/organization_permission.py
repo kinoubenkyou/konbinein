@@ -14,6 +14,3 @@ class OrganizationPermission(BasePermission):
                 user=request.user.id,
             ).exists()
         )
-
-    def has_object_permission(self, request, view, obj):
-        return str(obj.organization_id) == view.kwargs["organization_id"]
