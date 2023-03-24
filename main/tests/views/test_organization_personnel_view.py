@@ -11,7 +11,7 @@ class OrganizationPersonnelViewSetTestCase(OrganizationUserTestCase):
     def test_agreeing(self):
         personnel = PersonnelFactory.create(organization=self.organization)
         path = reverse(
-            "organization_personnel-agreeing",
+            "organization-personnel-agreeing",
             kwargs={"organization_id": self.organization.id, "pk": personnel.id},
         )
         response = self.client.post(path, format="json")
@@ -22,7 +22,7 @@ class OrganizationPersonnelViewSetTestCase(OrganizationUserTestCase):
 
     def test_create(self):
         path = reverse(
-            "organization_personnel-list",
+            "organization-personnel-list",
             kwargs={"organization_id": self.organization.id},
         )
         user = UserFactory.create()
@@ -44,7 +44,7 @@ class OrganizationPersonnelViewSetTestCase(OrganizationUserTestCase):
     def test_destroy(self):
         personnel = PersonnelFactory.create(organization=self.organization)
         path = reverse(
-            "organization_personnel-detail",
+            "organization-personnel-detail",
             kwargs={"organization_id": self.organization.id, "pk": personnel.id},
         )
         response = self.client.delete(path, format="json")
@@ -56,7 +56,7 @@ class OrganizationPersonnelViewSetTestCase(OrganizationUserTestCase):
         authenticated_personnel = self.user.personnel_set.get()
         personnels.append(authenticated_personnel)
         path = reverse(
-            "organization_personnel-list",
+            "organization-personnel-list",
             kwargs={"organization_id": self.organization.id},
         )
         response = self.client.get(path, format="json")
@@ -84,7 +84,7 @@ class OrganizationPersonnelViewSetTestCase(OrganizationUserTestCase):
     def test_retrieve(self):
         personnel = PersonnelFactory.create(organization=self.organization)
         path = reverse(
-            "organization_personnel-detail",
+            "organization-personnel-detail",
             kwargs={"organization_id": self.organization.id, "pk": personnel.id},
         )
         response = self.client.get(path, format="json")

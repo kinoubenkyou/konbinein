@@ -11,9 +11,8 @@ class UserTestCase(APITestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        authentication_token = Token.generate_key()
         cls.user = UserFactory.create(
-            authentication_token=authentication_token,
+            authentication_token=Token.generate_key(),
             is_system_administrator=cls.is_user_system_administrator,
         )
 

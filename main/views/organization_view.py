@@ -1,13 +1,19 @@
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.mixins import (
+    DestroyModelMixin,
+    RetrieveModelMixin,
+    UpdateModelMixin,
+)
+from rest_framework.viewsets import GenericViewSet
 
 from main.models.organization import Organization
-from main.permissions.system_administrator_permission import (
-    SystemAdministratorPermission,
-)
+from main.permissions.organization_permission import OrganizationPermission
 from main.serializers.organization_serializer import OrganizationSerializer
 
 
-class OrganizationViewSet(ModelViewSet):
-    permission_classes = (SystemAdministratorPermission,)
+class OrganizationViewSet(
+    DestroyModelMixin, GenericViewSet, RetrieveModelMixin, UpdateModelMixin
+):
+    permission_classes = (OrganizationPermission,)
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
+    lookup_url_kwarg = "organization_id"

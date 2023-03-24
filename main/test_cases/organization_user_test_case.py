@@ -7,11 +7,10 @@ class OrganizationUserTestCase(UserTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        organization = OrganizationFactory.create()
+        cls.organization = OrganizationFactory.create()
         PersonnelFactory.create(
             does_organization_agree=True,
             does_user_agree=True,
-            organization=organization,
+            organization=cls.organization,
             user=cls.user,
         )
-        cls.organization = organization
