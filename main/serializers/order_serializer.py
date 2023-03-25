@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.db.transaction import atomic
 from rest_framework.fields import DecimalField
 from rest_framework.serializers import ModelSerializer
 
@@ -14,7 +14,7 @@ class OrderSerializer(ModelSerializer):
         fields = ("code", "created_at", "id", "orderitem_set", "total")
         model = Order
 
-    @transaction.atomic
+    @atomic
     def create(self, validated_data):
         order_attributes = validated_data | {
             "organization_id": self.context["view"].kwargs["organization_id"],
@@ -25,7 +25,7 @@ class OrderSerializer(ModelSerializer):
             OrderItemSerializer().create(order_item_data | {"order": order})
         return order
 
-    @transaction.atomic
+    @atomic
     def update(self, instance, validated_data):
         order_attributes = validated_data | {
             "organization_id": self.context["view"].kwargs["organization_id"],

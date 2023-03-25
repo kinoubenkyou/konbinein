@@ -5,6 +5,7 @@ from main.views.order_view import OrderViewSet
 from main.views.organization_personnel_view import OrganizationPersonnelViewSet
 from main.views.organization_view import OrganizationViewSet
 from main.views.personnel_view import PersonnelViewSet
+from main.views.public_user_view import PublicUserViewSet
 from main.views.user_view import UserViewSet
 
 router = routers.SimpleRouter(trailing_slash=False)
@@ -18,6 +19,7 @@ router.register(
     OrganizationPersonnelViewSet,
     basename="organization-personnel",
 )
-router.register("users", UserViewSet)
-router.register("personnels", PersonnelViewSet)
+router.register(r"users", UserViewSet)
+router.register(r"users/(?P<user_id>[^/.]+)/personnels", PersonnelViewSet)
+router.register(r"public/users", PublicUserViewSet, basename="public-user")
 urlpatterns = router.urls
