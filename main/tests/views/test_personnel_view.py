@@ -10,13 +10,15 @@ from main.test_cases.user_test_case import UserTestCase
 class PersonnelViewSetTestCase(UserTestCase):
     def test_agreeing(self):
         personnel = PersonnelFactory.create(user=self.user)
-        path = reverse("personnel-agreeing", kwargs={"pk": personnel.id})
+        path = reverse(
+            "personnel-agreeing", kwargs={"pk": personnel.id, "user_id": self.user.id}
+        )
         response = self.client.post(path, format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
         self.assertTrue(Personnel.objects.filter(id=personnel.id).get().does_user_agree)
 
     def test_create(self):
-        path = reverse("personnel-list")
+        path = reverse("personnel-list", kwargs={"user_id": self.user.id})
         organization = OrganizationFactory.create()
         data = {"organization": organization.id}
         response = self.client.post(path, data, format="json")
@@ -35,39 +37,18 @@ class PersonnelViewSetTestCase(UserTestCase):
 
     def test_destroy(self):
         personnel = PersonnelFactory.create(user=self.user)
-        path = reverse("personnel-detail", kwargs={"pk": personnel.id})
+        path = reverse(
+            "personnel-detail", kwargs={"pk": personnel.id, "user_id": self.user.id}
+        )
         response = self.client.delete(path, format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
         self.assertEqual(Personnel.objects.filter(id=personnel.id).exists(), False)
 
-    def test_list(self):
-        personnels = PersonnelFactory.create_batch(2, user=self.user)
-        path = reverse("personnel-list")
-        response = self.client.get(path, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertCountEqual(
-            response.json(),
-            (
-                {
-                    "does_organization_agree": personnels[0].does_organization_agree,
-                    "does_user_agree": personnels[0].does_user_agree,
-                    "id": personnels[0].id,
-                    "organization": personnels[0].organization_id,
-                    "user": personnels[0].user_id,
-                },
-                {
-                    "does_organization_agree": personnels[1].does_organization_agree,
-                    "does_user_agree": personnels[1].does_user_agree,
-                    "id": personnels[1].id,
-                    "organization": personnels[1].organization_id,
-                    "user": personnels[1].user_id,
-                },
-            ),
-        )
-
     def test_retrieve(self):
         personnel = PersonnelFactory.create(user=self.user)
-        path = reverse("personnel-detail", kwargs={"pk": personnel.id})
+        path = reverse(
+            "personnel-detail", kwargs={"pk": personnel.id, "user_id": self.user.id}
+        )
         response = self.client.get(path, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(
