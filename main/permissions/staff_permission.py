@@ -1,13 +1,13 @@
 from rest_framework.permissions import BasePermission
 
-from main.models.personnel import Personnel
+from main.models.staff import Staff
 
 
-class OrganizationPermission(BasePermission):
+class StaffPermission(BasePermission):
     def has_permission(self, request, view):
         return (
             request.user is not None
-            and Personnel.objects.filter(
+            and Staff.objects.filter(
                 does_organization_agree=True,
                 does_user_agree=True,
                 organization=view.kwargs["organization_id"],

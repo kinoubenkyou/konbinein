@@ -5,10 +5,10 @@ from main.factories.order_factory import OrderFactory
 from main.factories.order_item_factory import OrderItemFactory
 from main.models.order import Order
 from main.models.order_item import OrderItem
-from main.test_cases.organization_user_test_case import OrganizationUserTestCase
+from main.test_cases.staff_test_case import StaffTestCase
 
 
-class OrderViewSetTestCase(OrganizationUserTestCase):
+class OrderViewSetTestCase(StaffTestCase):
     @staticmethod
     def _get_order_total(order_items):
         if len(order_items) == 0:
@@ -160,7 +160,7 @@ class OrderViewSetTestCase(OrganizationUserTestCase):
         actual = OrderItem.objects.filter(order_id=order_id).values()
         for dict_ in actual:
             del dict_["id"]
-        expected = [
+        expected = (
             {
                 "name": built_order_items[0].name,
                 "order_id": order_id,
@@ -173,7 +173,7 @@ class OrderViewSetTestCase(OrganizationUserTestCase):
                 "quantity": built_order_items[1].quantity,
                 "unit_price": built_order_items[1].unit_price,
             },
-        ]
+        )
         self.assertCountEqual(actual, expected)
 
     def test_retrieve(self):

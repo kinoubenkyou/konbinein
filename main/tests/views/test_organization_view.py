@@ -3,10 +3,10 @@ from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 
 from main.factories.organization_factory import OrganizationFactory
 from main.models.organization import Organization
-from main.test_cases.organization_user_test_case import OrganizationUserTestCase
+from main.test_cases.staff_test_case import StaffTestCase
 
 
-class OrganizationViewSetTestCase(OrganizationUserTestCase):
+class OrganizationViewSetTestCase(StaffTestCase):
     def test_destroy(self):
         path = reverse(
             "organization-detail", kwargs={"organization_id": self.organization.id}

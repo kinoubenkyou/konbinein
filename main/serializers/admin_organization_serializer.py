@@ -15,7 +15,7 @@ class AdminOrganizationSerializer(ModelSerializer):
     def create(self, validated_data):
         user_id = validated_data.pop("user")
         organization = super().create(validated_data)
-        organization.personnel_set.create(
+        organization.staff_set.create(
             does_organization_agree=True, does_user_agree=True, user=user_id
         )
         return organization
