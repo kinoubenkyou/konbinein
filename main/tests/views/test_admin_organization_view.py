@@ -3,7 +3,7 @@ from rest_framework.status import HTTP_201_CREATED
 
 from main.factories.organization_factory import OrganizationFactory
 from main.models.organization import Organization
-from main.models.personnel import Personnel
+from main.models.staff import Staff
 from main.test_cases.admin_test_case import AdminTestCase
 
 
@@ -22,5 +22,5 @@ class AdminOrganizationViewSetTestCase(AdminTestCase):
         id_ = actual.pop("id")
         self.assertEqual(actual, {"name": built_organization.name})
         self.assertTrue(
-            Personnel.objects.filter(organization=id_, user=self.user.id).exists()
+            Staff.objects.filter(organization=id_, user=self.user.id).exists()
         )

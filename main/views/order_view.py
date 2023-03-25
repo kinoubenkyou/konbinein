@@ -3,12 +3,12 @@ from rest_framework.viewsets import ModelViewSet
 
 from main.models.order import Order
 from main.models.order_item import OrderItem
-from main.permissions.organization_permission import OrganizationPermission
+from main.permissions.staff_permission import StaffPermission
 from main.serializers.order_serializer import OrderSerializer
 
 
 class OrderViewSet(ModelViewSet):
-    permission_classes = (OrganizationPermission,)
+    permission_classes = (StaffPermission,)
     queryset = (
         Order.objects.prefetch_related(
             Prefetch(

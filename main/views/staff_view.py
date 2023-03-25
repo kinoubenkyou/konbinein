@@ -1,4 +1,3 @@
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.mixins import (
     CreateModelMixin,
@@ -10,30 +9,28 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.viewsets import GenericViewSet
 
-from main.models.personnel import Personnel
+from main.models.staff import Staff
 from main.permissions.user_permission import UserPermission
-from main.serializers.personnel_serializer import PersonnelSerializer
+from main.serializers.staff_serializer import StaffSerializer
 
 
-class PersonnelViewSet(
+class StaffViewSet(
     CreateModelMixin,
     DestroyModelMixin,
     GenericViewSet,
     ListModelMixin,
     RetrieveModelMixin,
 ):
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ("does_organization_agree", "organization")
     permission_classes = (UserPermission,)
-    queryset = Personnel.objects.all()
-    serializer_class = PersonnelSerializer
+    queryset = Staff.objects.all()
+    serializer_class = StaffSerializer
 
     def get_queryset(self):
         return super().get_queryset().filter(user=self.request.user.id)
 
     @action(detail=True, methods=("post",))
     def agreeing(self, request, *args, **kwargs):
-        personnel = self.get_object()
-        personnel.does_user_agree = True
-        personnel.save()
+        staff = self.get_object()
+        staff.does_user_agree = True
+        staff.save()
         return Response(status=HTTP_204_NO_CONTENT)
