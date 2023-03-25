@@ -18,6 +18,12 @@ class UserViewSetTestCase(UserTestCase):
             User.objects.filter(id=self.user.id).get().authentication_token
         )
 
+    def test_destroy(self):
+        path = reverse("user-detail", kwargs={"user_id": self.user.id})
+        response = self.client.delete(path, format="json")
+        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
+        self.assertEqual(User.objects.filter(id=self.user.id).exists(), False)
+
     def test_partial_update(self):
         path = reverse("user-detail", kwargs={"user_id": self.user.id})
         built_user = UserFactory.build()
@@ -91,4 +97,17 @@ class UserViewSetTestCase(UserTestCase):
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.json(), {"current_password": ["Current password is incorrect."]}
+        )
+
+    def test_retrieve(self):
+        path = reverse("user-detail", kwargs={"user_id": self.user.id})
+        response = self.client.get(path, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(
+            response.json(),
+            {
+                "email": self.user.email,
+                "id": self.user.id,
+                "name": self.user.name,
+            },
         )
