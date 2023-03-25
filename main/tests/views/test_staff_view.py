@@ -58,6 +58,25 @@ class StaffViewSetTestCase(UserTestCase):
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
         self.assertEqual(Staff.objects.filter(id=staff.id).exists(), False)
 
+    def test_list(self):
+        staffs = StaffFactory.create_batch(2, user_id=self.user.id)
+        path = reverse("staff-list", kwargs={"user_id": self.user.id})
+        response = self.client.get(path, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertCountEqual(
+            response.json(),
+            (
+                {
+                    "does_organization_agree": staff.does_organization_agree,
+                    "does_user_agree": staff.does_user_agree,
+                    "id": staff.id,
+                    "organization": staff.organization_id,
+                    "user": staff.user_id,
+                }
+                for staff in staffs
+            ),
+        )
+
     def test_retrieve(self):
         staff = StaffFactory.create(user=self.user)
         path = reverse("staff-detail", kwargs={"pk": staff.id, "user_id": self.user.id})
