@@ -59,7 +59,7 @@ class PublicUserViewSetTestCase(APITestCase):
         filter_ = data | {}
         del filter_["password"]
         actual = User.objects.filter(**filter_).values().get()
-        del actual["email_verification_token"]
+        del actual["email_verifying_token"]
         del actual["id"]
         hashed_password = actual.pop("hashed_password")
         self.assertEqual(
@@ -74,19 +74,17 @@ class PublicUserViewSetTestCase(APITestCase):
         self.assertTrue(check_password(password, hashed_password))
 
     def test_email_verifying(self):
-        email_verification_token = Token.generate_key()
-        user = UserFactory.create(email_verification_token=email_verification_token)
+        email_verifying_token = Token.generate_key()
+        user = UserFactory.create(email_verifying_token=email_verifying_token)
         path = reverse("public-user-email-verifying", kwargs={"pk": user.id})
-        data = {"token": email_verification_token}
+        data = {"token": email_verifying_token}
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
-        self.assertIsNone(
-            User.objects.filter(id=user.id).get().email_verification_token
-        )
+        self.assertIsNone(User.objects.filter(id=user.id).get().email_verifying_token)
 
     def test_email_verifying__token_not_match(self):
-        email_verification_token = Token.generate_key()
-        user = UserFactory.create(email_verification_token=email_verification_token)
+        email_verifying_token = Token.generate_key()
+        user = UserFactory.create(email_verifying_token=email_verifying_token)
         path = reverse("public-user-email-verifying", kwargs={"pk": user.id})
         data = {"token": Token.generate_key()}
         response = self.client.post(path, data, format="json")
@@ -125,8 +123,8 @@ class PublicUserViewSetTestCase(APITestCase):
         )
 
     def test_password_resetting__email_not_verified(self):
-        email_verification_token = Token.generate_key()
-        user = UserFactory.create(email_verification_token=email_verification_token)
+        email_verifying_token = Token.generate_key()
+        user = UserFactory.create(email_verifying_token=email_verifying_token)
         path = reverse("public-user-password-resetting")
         response = self.client.post(path, {"email": user.email}, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)

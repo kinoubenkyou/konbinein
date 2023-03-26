@@ -17,14 +17,14 @@ router.register(
 router.register(r"organizations", OrganizationViewSet)
 router.register(r"organizations/(?P<organization_id>[^/.]+)/orders", OrderViewSet)
 router.register(
-    r"organizations/(?P<organization_id>[^/.]+)/users",
-    OrganizationUserViewSet,
-    basename="organization-user",
-)
-router.register(
     r"organizations/(?P<organization_id>[^/.]+)/staffs",
     OrganizationStaffViewSet,
     basename="organization-staff",
+)
+router.register(
+    r"organizations/(?P<organization_id>[^/.]+)/users",
+    OrganizationUserViewSet,
+    basename="organization-user",
 )
 router.register(r"users", UserViewSet)
 router.register(

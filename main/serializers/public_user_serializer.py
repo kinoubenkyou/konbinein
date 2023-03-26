@@ -15,7 +15,7 @@ class PublicUserSerializer(ModelSerializer):
 
     def create(self, validated_data):
         user_attributes = validated_data | {
-            "email_verification_token": Token.generate_key(),
+            "email_verifying_token": Token.generate_key(),
             "hashed_password": make_password(validated_data["password"]),
             "is_system_administrator": False,
         }

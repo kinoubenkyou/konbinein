@@ -11,7 +11,7 @@ class UserViewSetMixin:
             kwargs={"pk": user.id},
             request=request,
         )
-        query = urlencode({"token": user.email_verification_token})
+        query = urlencode({"token": user.email_verifying_token})
         send_mail(
             from_email=None,
             message=f"{uri_path}?{query}",
