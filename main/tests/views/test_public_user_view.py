@@ -59,8 +59,9 @@ class PublicUserViewSetTestCase(APITestCase):
         filter_ = data | {}
         del filter_["password"]
         actual = User.objects.filter(**filter_).values().get()
-        del actual["email_verifying_token"]
-        del actual["id"]
+        del actual["password_resetting_token"]
+        email_verifying_token = actual.pop("email_verifying_token")
+        id_ = actual.pop("id")
         hashed_password = actual.pop("hashed_password")
         self.assertEqual(
             actual,
@@ -72,6 +73,15 @@ class PublicUserViewSetTestCase(APITestCase):
             },
         )
         self.assertTrue(check_password(password, hashed_password))
+        dict_ = mail.outbox[0].__dict__
+        body = (
+            f"http://testserver/public/users/{id_}/email_verifying"
+            f"?token={email_verifying_token}"
+        )
+        self.assertEqual(dict_["body"], body)
+        self.assertEqual(dict_["from_email"], "webmaster@localhost")
+        self.assertEqual(dict_["subject"], "Konbinein Email Verification")
+        self.assertCountEqual(dict_["to"], (built_user.email,))
 
     def test_email_verifying(self):
         email_verifying_token = Token.generate_key()
@@ -99,28 +109,48 @@ class PublicUserViewSetTestCase(APITestCase):
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), ["Email is already verified."])
 
+    def test_partial_update(self):
+        password_resetting_token = Token.generate_key()
+        user = UserFactory.create(password_resetting_token=password_resetting_token)
+        path = reverse("public-user-detail", kwargs={"pk": user.id})
+        password = f"password{faker.unique.random_int()}"
+        data = {"password": password, "token": password_resetting_token}
+        response = self.client.patch(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        hashed_password = (
+            User.objects.filter(id=user.id).values().get()["hashed_password"]
+        )
+        self.assertTrue(check_password(password, hashed_password))
+
+    def test_partial_update__token_not_match(self):
+        user = UserFactory.create(password_resetting_token=Token.generate_key())
+        path = reverse("public-user-detail", kwargs={"pk": user.id})
+        data = {
+            "password": f"password{faker.unique.random_int()}",
+            "token": Token.generate_key(),
+        }
+        response = self.client.patch(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json(), {"token": ["Token doesn't match."]})
+
     def test_password_resetting(self):
         user = UserFactory.create()
         path = reverse("public-user-password-resetting")
         response = self.client.post(path, {"email": user.email}, format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
+        password_resetting_token = (
+            User.objects.filter(id=user.id).get().password_resetting_token
+        )
+        self.assertIsNotNone(password_resetting_token)
         dict_ = mail.outbox[0].__dict__
-        actual = {
-            key: dict_[key] for key in dict_ if key in ("from_email", "subject", "to")
-        }
-        self.assertTrue(
-            check_password(
-                dict_["body"], User.objects.filter(id=user.id).get().hashed_password
-            )
+        body = (
+            "http://testserver/public/users/password_resetting"
+            f"?token={password_resetting_token}"
         )
-        self.assertEqual(
-            actual,
-            {
-                "from_email": "webmaster@localhost",
-                "subject": "Konbinein Password Reset",
-                "to": [user.email],
-            },
-        )
+        self.assertEqual(dict_["body"], body)
+        self.assertEqual(dict_["from_email"], "webmaster@localhost")
+        self.assertEqual(dict_["subject"], "Konbinein Password Reset")
+        self.assertCountEqual(dict_["to"], (user.email,))
 
     def test_password_resetting__email_not_verified(self):
         email_verifying_token = Token.generate_key()

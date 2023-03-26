@@ -6,7 +6,7 @@ from rest_framework.serializers import ModelSerializer
 from main.models.user import User
 
 
-class PublicUserSerializer(ModelSerializer):
+class PublicUserCreateSerializer(ModelSerializer):
     password = CharField(max_length=255, write_only=True)
 
     class Meta:
