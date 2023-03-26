@@ -13,9 +13,7 @@ class OrganizationViewSetTestCase(StaffTestCase):
         )
         response = self.client.delete(path, format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
-        self.assertEqual(
-            Organization.objects.filter(id=self.organization.id).exists(), False
-        )
+        self.assertFalse(Organization.objects.filter(id=self.organization.id).exists())
 
     def test_partial_update(self):
         path = reverse(
@@ -25,9 +23,8 @@ class OrganizationViewSetTestCase(StaffTestCase):
         data = {"name": built_organization.name}
         response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        actual = Organization.objects.filter(id=self.organization.id).values().get()
-        del actual["id"]
-        self.assertEqual(actual, {"name": built_organization.name})
+        filter_ = data | {"id": self.organization.id}
+        self.assertTrue(Organization.objects.filter(**filter_).exists())
 
     def test_retrieve(self):
         path = reverse(

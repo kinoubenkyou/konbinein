@@ -32,17 +32,12 @@ class OrganizationStaffViewSetTestCase(StaffTestCase):
         data = {"user": user.id}
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_201_CREATED)
-        actual = Staff.objects.filter(**data).values().get()
-        del actual["id"]
-        self.assertEqual(
-            actual,
-            {
-                "does_organization_agree": True,
-                "does_user_agree": False,
-                "organization_id": self.organization.id,
-                "user_id": user.id,
-            },
-        )
+        filter_ = data | {
+            "does_organization_agree": True,
+            "does_user_agree": False,
+            "organization_id": self.organization.id,
+        }
+        self.assertTrue(Staff.objects.filter(**filter_).exists())
 
     def test_create__staff_already_created(self):
         path = reverse(
@@ -64,7 +59,7 @@ class OrganizationStaffViewSetTestCase(StaffTestCase):
         )
         response = self.client.delete(path, format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
-        self.assertEqual(Staff.objects.filter(id=staff.id).exists(), False)
+        self.assertFalse(Staff.objects.filter(id=staff.id).exists())
 
     def test_list(self):
         staffs = StaffFactory.create_batch(1, organization=self.organization)

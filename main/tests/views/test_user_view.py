@@ -22,7 +22,7 @@ class UserViewSetTestCase(UserTestCase):
         path = reverse("user-detail", kwargs={"user_id": self.user.id})
         response = self.client.delete(path, format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
-        self.assertEqual(User.objects.filter(id=self.user.id).exists(), False)
+        self.assertFalse(User.objects.filter(id=self.user.id).exists())
 
     def test_partial_update(self):
         path = reverse("user-detail", kwargs={"user_id": self.user.id})
@@ -36,22 +36,16 @@ class UserViewSetTestCase(UserTestCase):
         }
         response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        actual = User.objects.filter(id=self.user.id).values().get()
-        del actual["authentication_token"]
-        del actual["id"]
-        del actual["is_system_administrator"]
-        del actual["password_resetting_token"]
-        email_verifying_token = actual.pop("email_verifying_token")
-        hashed_password = actual.pop("hashed_password")
-        self.assertEqual(
-            actual,
-            {"email": built_user.email, "name": built_user.name},
-        )
-        self.assertTrue(check_password(password, hashed_password))
+        filter_ = data | {"id": self.user.id}
+        del filter_["password"]
+        del filter_["current_password"]
+        user = User.objects.filter(**filter_).first()
+        self.assertIsNotNone(user)
+        self.assertTrue(check_password(password, user.hashed_password))
         dict_ = mail.outbox[0].__dict__
         body = (
             f"http://testserver/public/users/{self.user.id}/email_verifying"
-            f"?token={email_verifying_token}"
+            f"?token={user.email_verifying_token}"
         )
         self.assertEqual(dict_["body"], body)
         self.assertEqual(dict_["from_email"], "webmaster@localhost")

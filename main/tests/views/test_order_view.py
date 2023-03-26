@@ -25,7 +25,7 @@ class OrderViewSetTestCase(StaffTestCase):
         data = {
             "code": built_order.code,
             "created_at": built_order.created_at,
-            "orderitem_set": (
+            "orderitem_set": tuple(
                 {
                     "name": order_item.name,
                     "quantity": order_item.quantity,
@@ -37,33 +37,12 @@ class OrderViewSetTestCase(StaffTestCase):
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_201_CREATED)
         filter_ = data | {"organization_id": self.organization.id}
-        del filter_["orderitem_set"]
-        actual = Order.objects.filter(**filter_).values().get()
-        order_id = actual.pop("id")
-        expected = {
-            "code": built_order.code,
-            "created_at": built_order.created_at,
-            "organization_id": self.organization.id,
-        }
-        self.assertEqual(actual, expected)
-        actual = OrderItem.objects.filter(order_id=order_id).values()
-        for dict_ in actual:
-            del dict_["id"]
-        expected = (
-            {
-                "name": built_order_items[0].name,
-                "order_id": order_id,
-                "quantity": built_order_items[0].quantity,
-                "unit_price": built_order_items[0].unit_price,
-            },
-            {
-                "name": built_order_items[1].name,
-                "order_id": order_id,
-                "quantity": built_order_items[1].quantity,
-                "unit_price": built_order_items[1].unit_price,
-            },
-        )
-        self.assertCountEqual(actual, expected)
+        order_item_data_list = filter_.pop("orderitem_set")
+        order = Order.objects.filter(**filter_).first()
+        self.assertIsNotNone(order)
+        for order_item_data in order_item_data_list:
+            filter_ = order_item_data | {"order_id": order.id}
+            self.assertTrue(OrderItem.objects.filter(**filter_).exists())
 
     def test_destroy(self):
         order = OrderFactory.create(organization_id=self.organization.id)
@@ -74,8 +53,8 @@ class OrderViewSetTestCase(StaffTestCase):
         )
         response = self.client.delete(path, format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
-        self.assertEqual(Order.objects.filter(id=order.id).exists(), False)
-        self.assertEqual(OrderItem.objects.filter(order_id=order.id).exists(), False)
+        self.assertFalse(Order.objects.filter(id=order.id).exists())
+        self.assertFalse(OrderItem.objects.filter(order_id=order.id).exists())
 
     def test_list(self):
         orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
@@ -140,7 +119,7 @@ class OrderViewSetTestCase(StaffTestCase):
                     "unit_price": built_order_items[0].unit_price,
                 },
                 {
-                    "id": order_items[1].id,
+                    "id": order_items[0].id,
                     "name": built_order_items[1].name,
                     "quantity": built_order_items[1].quantity,
                     "unit_price": built_order_items[1].unit_price,
@@ -149,32 +128,13 @@ class OrderViewSetTestCase(StaffTestCase):
         }
         response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        actual = Order.objects.filter(id=order.id).values().get()
-        order_id = actual.pop("id")
-        expected = {
-            "code": built_order.code,
-            "created_at": built_order.created_at,
-            "organization_id": self.organization.id,
-        }
-        self.assertEqual(actual, expected)
-        actual = OrderItem.objects.filter(order_id=order_id).values()
-        for dict_ in actual:
-            del dict_["id"]
-        expected = (
-            {
-                "name": built_order_items[0].name,
-                "order_id": order_id,
-                "quantity": built_order_items[0].quantity,
-                "unit_price": built_order_items[0].unit_price,
-            },
-            {
-                "name": built_order_items[1].name,
-                "order_id": order_id,
-                "quantity": built_order_items[1].quantity,
-                "unit_price": built_order_items[1].unit_price,
-            },
-        )
-        self.assertCountEqual(actual, expected)
+        filter_ = data | {"id": order.id, "organization_id": self.organization.id}
+        order_item_data_list = filter_.pop("orderitem_set")
+        self.assertTrue(Order.objects.filter(**filter_).exists())
+        for order_item_data in order_item_data_list:
+            filter_ = order_item_data | {"order_id": order.id}
+            self.assertTrue(OrderItem.objects.filter(**filter_).exists())
+        self.assertFalse(OrderItem.objects.filter(id=order_items[1].id).exists())
 
     def test_retrieve(self):
         order = OrderFactory.create(organization_id=self.organization.id)
