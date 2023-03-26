@@ -11,10 +11,10 @@ from rest_framework.viewsets import GenericViewSet
 
 from main.models.staff import Staff
 from main.permissions.user_permission import UserPermission
-from main.serializers.staff_serializer import StaffSerializer
+from main.serializers.user_staff_serializer import UserStaffSerializer
 
 
-class StaffViewSet(
+class UserStaffViewSet(
     CreateModelMixin,
     DestroyModelMixin,
     GenericViewSet,
@@ -23,7 +23,7 @@ class StaffViewSet(
 ):
     permission_classes = (UserPermission,)
     queryset = Staff.objects.all()
-    serializer_class = StaffSerializer
+    serializer_class = UserStaffSerializer
 
     def get_queryset(self):
         return super().get_queryset().filter(user=self.request.user.id)

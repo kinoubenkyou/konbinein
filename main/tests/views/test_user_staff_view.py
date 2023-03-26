@@ -12,18 +12,18 @@ from main.models.staff import Staff
 from main.test_cases.user_test_case import UserTestCase
 
 
-class StaffViewSetTestCase(UserTestCase):
+class UserStaffViewSetTestCase(UserTestCase):
     def test_agreeing(self):
         staff = StaffFactory.create(user_id=self.user.id)
         path = reverse(
-            "staff-agreeing", kwargs={"pk": staff.id, "user_id": self.user.id}
+            "user-staff-agreeing", kwargs={"pk": staff.id, "user_id": self.user.id}
         )
         response = self.client.post(path, format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
         self.assertTrue(Staff.objects.filter(id=staff.id).get().does_user_agree)
 
     def test_create(self):
-        path = reverse("staff-list", kwargs={"user_id": self.user.id})
+        path = reverse("user-staff-list", kwargs={"user_id": self.user.id})
         organization = OrganizationFactory.create()
         data = {"organization": organization.id}
         response = self.client.post(path, data, format="json")
@@ -41,7 +41,7 @@ class StaffViewSetTestCase(UserTestCase):
         )
 
     def test_create__staff_already_created(self):
-        path = reverse("staff-list", kwargs={"user_id": self.user.id})
+        path = reverse("user-staff-list", kwargs={"user_id": self.user.id})
         organization = OrganizationFactory.create()
         data = {"organization": organization.id}
         StaffFactory.create(organization_id=organization.id, user_id=self.user.id)
@@ -53,14 +53,16 @@ class StaffViewSetTestCase(UserTestCase):
 
     def test_destroy(self):
         staff = StaffFactory.create(user=self.user)
-        path = reverse("staff-detail", kwargs={"pk": staff.id, "user_id": self.user.id})
+        path = reverse(
+            "user-staff-detail", kwargs={"pk": staff.id, "user_id": self.user.id}
+        )
         response = self.client.delete(path, format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
         self.assertEqual(Staff.objects.filter(id=staff.id).exists(), False)
 
     def test_list(self):
         staffs = StaffFactory.create_batch(2, user_id=self.user.id)
-        path = reverse("staff-list", kwargs={"user_id": self.user.id})
+        path = reverse("user-staff-list", kwargs={"user_id": self.user.id})
         response = self.client.get(path, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertCountEqual(
@@ -79,7 +81,9 @@ class StaffViewSetTestCase(UserTestCase):
 
     def test_retrieve(self):
         staff = StaffFactory.create(user=self.user)
-        path = reverse("staff-detail", kwargs={"pk": staff.id, "user_id": self.user.id})
+        path = reverse(
+            "user-staff-detail", kwargs={"pk": staff.id, "user_id": self.user.id}
+        )
         response = self.client.get(path, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(
