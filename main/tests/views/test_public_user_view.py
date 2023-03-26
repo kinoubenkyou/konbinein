@@ -56,27 +56,19 @@ class PublicUserViewSetTestCase(APITestCase):
         }
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_201_CREATED)
-        filter_ = data | {}
+        filter_ = data | {
+            "authentication_token": None,
+            "is_system_administrator": False,
+        }
         del filter_["password"]
-        actual = User.objects.filter(**filter_).values().get()
-        del actual["password_resetting_token"]
-        email_verifying_token = actual.pop("email_verifying_token")
-        id_ = actual.pop("id")
-        hashed_password = actual.pop("hashed_password")
-        self.assertEqual(
-            actual,
-            {
-                "authentication_token": None,
-                "email": built_user.email,
-                "is_system_administrator": False,
-                "name": built_user.name,
-            },
-        )
-        self.assertTrue(check_password(password, hashed_password))
+        user = User.objects.filter(**filter_).first()
+        self.assertIsNotNone(user)
+        self.assertTrue(check_password(password, user.hashed_password))
+
         dict_ = mail.outbox[0].__dict__
         body = (
-            f"http://testserver/public/users/{id_}/email_verifying"
-            f"?token={email_verifying_token}"
+            f"http://testserver/public/users/{user.id}/email_verifying"
+            f"?token={user.email_verifying_token}"
         )
         self.assertEqual(dict_["body"], body)
         self.assertEqual(dict_["from_email"], "webmaster@localhost")
@@ -117,10 +109,9 @@ class PublicUserViewSetTestCase(APITestCase):
         data = {"password": password, "token": password_resetting_token}
         response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        hashed_password = (
-            User.objects.filter(id=user.id).values().get()["hashed_password"]
-        )
-        self.assertTrue(check_password(password, hashed_password))
+        user = User.objects.filter(id=user.id, password_resetting_token=None).first()
+        self.assertIsNotNone(user)
+        self.assertTrue(check_password(password, user.hashed_password))
 
     def test_partial_update__token_not_match(self):
         user = UserFactory.create(password_resetting_token=Token.generate_key())

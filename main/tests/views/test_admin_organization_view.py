@@ -14,13 +14,12 @@ class AdminOrganizationViewSetTestCase(AdminTestCase):
         data = {"name": built_organization.name, "user": self.user.id}
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_201_CREATED)
-        actual = (
-            Organization.objects.filter(**{"name": built_organization.name})
-            .values()
-            .get()
-        )
-        id_ = actual.pop("id")
-        self.assertEqual(actual, {"name": built_organization.name})
+        filter_ = data | {}
+        del filter_["user"]
+        organization = Organization.objects.filter(**filter_).first()
+        self.assertIsNotNone(organization)
         self.assertTrue(
-            Staff.objects.filter(organization=id_, user=self.user.id).exists()
+            Staff.objects.filter(
+                organization=organization.id, user=self.user.id
+            ).exists()
         )
