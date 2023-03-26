@@ -43,7 +43,7 @@ class UserSerializer(ModelSerializer):
 
     def validate_email(self, value):
         if (
-            self.context["view"].action == "partial_update"
+            self.instance is not None
             and self.instance.email != value
             and "current_password" not in self.initial_data
         ):
@@ -52,7 +52,7 @@ class UserSerializer(ModelSerializer):
 
     def validate_password(self, value):
         if (
-            self.context["view"].action == "partial_update"
+            self.instance is not None
             and not check_password(value, self.instance.hashed_password)
             and "current_password" not in self.initial_data
         ):

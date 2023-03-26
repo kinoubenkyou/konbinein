@@ -1,22 +1,26 @@
-from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.hashers import check_password
 from django.core.mail import send_mail
+from django.utils.http import urlencode
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
-from rest_framework.mixins import CreateModelMixin
+from rest_framework.mixins import CreateModelMixin, UpdateModelMixin
 from rest_framework.response import Response
+from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.viewsets import GenericViewSet
 
 from main.models.user import User
-from main.serializers.public_user_serializer import PublicUserSerializer
+from main.serializers.public_user_create_serializer import PublicUserCreateSerializer
+from main.serializers.public_user_update_serializer import PublicUserUpdateSerializer
 from main.views.user_view_mixin import UserViewSetMixin
 
 
-class PublicUserViewSet(CreateModelMixin, GenericViewSet, UserViewSetMixin):
+class PublicUserViewSet(
+    CreateModelMixin, GenericViewSet, UpdateModelMixin, UserViewSetMixin
+):
     queryset = User.objects.all()
-    serializer_class = PublicUserSerializer
 
     @action(detail=False, methods=("post",))
     def authenticating(self, request, *args, **kwargs):
@@ -42,18 +46,29 @@ class PublicUserViewSet(CreateModelMixin, GenericViewSet, UserViewSetMixin):
         user.save()
         return Response(status=HTTP_204_NO_CONTENT)
 
+    def get_serializer_class(self):
+        serializer_classes = {
+            "create": PublicUserCreateSerializer,
+            "partial_update": PublicUserUpdateSerializer,
+        }
+        return serializer_classes.get(self.action)
+
     @action(detail=False, methods=("post",))
     def password_resetting(self, request, *args, **kwargs):
         email = request.data.get("email")
         user = get_object_or_404(self.queryset, email=email)
         if user.email_verifying_token is not None:
             raise ValidationError("Email isn't verified.")
-        password = Token.generate_key()
-        user.hashed_password = make_password(password)
+        user.password_resetting_token = Token.generate_key()
         user.save()
+        uri_path = reverse(
+            "public-user-password-resetting",
+            request=request,
+        )
+        query = urlencode({"token": user.password_resetting_token})
         send_mail(
             from_email=None,
-            message=password,
+            message=f"{uri_path}?{query}",
             recipient_list=(user.email,),
             subject="Konbinein Password Reset",
         )

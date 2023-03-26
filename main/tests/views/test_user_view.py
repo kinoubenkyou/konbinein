@@ -40,6 +40,7 @@ class UserViewSetTestCase(UserTestCase):
         del actual["authentication_token"]
         del actual["id"]
         del actual["is_system_administrator"]
+        del actual["password_resetting_token"]
         email_verifying_token = actual.pop("email_verifying_token")
         hashed_password = actual.pop("hashed_password")
         self.assertEqual(
@@ -48,24 +49,14 @@ class UserViewSetTestCase(UserTestCase):
         )
         self.assertTrue(check_password(password, hashed_password))
         dict_ = mail.outbox[0].__dict__
-        actual = {
-            key: dict_[key]
-            for key in dict_
-            if key in ("body", "from_email", "subject", "to")
-        }
         body = (
-            "http://testserver/public/users/"
-            f"{self.user.id}/email_verifying?token={email_verifying_token}"
+            f"http://testserver/public/users/{self.user.id}/email_verifying"
+            f"?token={email_verifying_token}"
         )
-        self.assertEqual(
-            actual,
-            {
-                "body": body,
-                "from_email": "webmaster@localhost",
-                "subject": "Konbinein Email Verification",
-                "to": [built_user.email],
-            },
-        )
+        self.assertEqual(dict_["body"], body)
+        self.assertEqual(dict_["from_email"], "webmaster@localhost")
+        self.assertEqual(dict_["subject"], "Konbinein Email Verification")
+        self.assertCountEqual(dict_["to"], (built_user.email,))
 
     def test_partial_update__current_password_required(self):
         built_user = UserFactory.build()

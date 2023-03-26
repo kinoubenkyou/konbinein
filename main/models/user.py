@@ -8,3 +8,4 @@ class User(Model):
     hashed_password = CharField(max_length=255)
     is_system_administrator = BooleanField()
     name = CharField(max_length=255, null=True)
+    password_resetting_token = CharField(max_length=255, null=True)
