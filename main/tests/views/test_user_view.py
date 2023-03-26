@@ -40,7 +40,7 @@ class UserViewSetTestCase(UserTestCase):
         del actual["authentication_token"]
         del actual["id"]
         del actual["is_system_administrator"]
-        email_verification_token = actual.pop("email_verification_token")
+        email_verifying_token = actual.pop("email_verifying_token")
         hashed_password = actual.pop("hashed_password")
         self.assertEqual(
             actual,
@@ -55,7 +55,7 @@ class UserViewSetTestCase(UserTestCase):
         }
         body = (
             "http://testserver/public/users/"
-            f"{self.user.id}/email_verifying?token={email_verification_token}"
+            f"{self.user.id}/email_verifying?token={email_verifying_token}"
         )
         self.assertEqual(
             actual,

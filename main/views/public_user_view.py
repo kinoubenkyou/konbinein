@@ -33,12 +33,12 @@ class PublicUserViewSet(CreateModelMixin, GenericViewSet, UserViewSetMixin):
     @action(detail=True, methods=("post",))
     def email_verifying(self, request, *args, **kwargs):
         user = self.get_object()
-        token = user.email_verification_token
+        token = user.email_verifying_token
         if token is None:
             raise ValidationError("Email is already verified.")
         if request.data.get("token") != token:
             raise ValidationError("Token doesn't match.")
-        user.email_verification_token = None
+        user.email_verifying_token = None
         user.save()
         return Response(status=HTTP_204_NO_CONTENT)
 
@@ -46,7 +46,7 @@ class PublicUserViewSet(CreateModelMixin, GenericViewSet, UserViewSetMixin):
     def password_resetting(self, request, *args, **kwargs):
         email = request.data.get("email")
         user = get_object_or_404(self.queryset, email=email)
-        if user.email_verification_token is not None:
+        if user.email_verifying_token is not None:
             raise ValidationError("Email isn't verified.")
         password = Token.generate_key()
         user.hashed_password = make_password(password)

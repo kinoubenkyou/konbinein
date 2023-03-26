@@ -31,7 +31,7 @@ class UserSerializer(ModelSerializer):
     def update(self, instance, validated_data):
         user_attributes = validated_data | {}
         if "email" in user_attributes and user_attributes["email"] != instance.email:
-            user_attributes["email_verification_token"] = Token.generate_key()
+            user_attributes["email_verifying_token"] = Token.generate_key()
         if "password" in user_attributes and not check_password(
             validated_data["password"], instance.hashed_password
         ):
@@ -43,7 +43,7 @@ class UserSerializer(ModelSerializer):
 
     def validate_email(self, value):
         if (
-            self.instance is not None
+            self.context["view"].action == "partial_update"
             and self.instance.email != value
             and "current_password" not in self.initial_data
         ):
@@ -52,7 +52,7 @@ class UserSerializer(ModelSerializer):
 
     def validate_password(self, value):
         if (
-            self.instance is not None
+            self.context["view"].action == "partial_update"
             and not check_password(value, self.instance.hashed_password)
             and "current_password" not in self.initial_data
         ):
