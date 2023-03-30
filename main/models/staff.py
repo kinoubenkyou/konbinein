@@ -10,7 +10,7 @@ class Staff(Model):
             UniqueConstraint(
                 "organization",
                 "user",
-                name="main_organizationuser_organization_id_user_id",
+                name="main_staff_organization_id_user_id",
             ),
         )
 
