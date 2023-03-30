@@ -14,7 +14,7 @@ class OrderViewSetTestCase(StaffTestCase):
         if len(order_items) == 0:
             return None
         order_total = sum(
-            order_item.quantity * order_item.unit_price for order_item in order_items
+            order_item.quantity * order_item.price for order_item in order_items
         )
         return f"{order_total:.4f}"
 
@@ -29,7 +29,7 @@ class OrderViewSetTestCase(StaffTestCase):
                 {
                     "name": order_item.name,
                     "quantity": order_item.quantity,
-                    "unit_price": order_item.unit_price,
+                    "price": order_item.price,
                 }
                 for order_item in built_order_items
             ),
@@ -93,8 +93,8 @@ class OrderViewSetTestCase(StaffTestCase):
                     "id": order_item.id,
                     "name": order_item.name,
                     "quantity": order_item.quantity,
-                    "unit_price": f"{order_item.unit_price:.4f}",
-                    "total": f"{order_item.quantity * order_item.unit_price:.4f}",
+                    "price": f"{order_item.price:.4f}",
+                    "total": f"{order_item.quantity * order_item.price:.4f}",
                 }
                 for order_item in order_items
             ),
@@ -116,13 +116,13 @@ class OrderViewSetTestCase(StaffTestCase):
                 {
                     "name": built_order_items[0].name,
                     "quantity": built_order_items[0].quantity,
-                    "unit_price": built_order_items[0].unit_price,
+                    "price": built_order_items[0].price,
                 },
                 {
                     "id": order_items[0].id,
                     "name": built_order_items[1].name,
                     "quantity": built_order_items[1].quantity,
-                    "unit_price": built_order_items[1].unit_price,
+                    "price": built_order_items[1].price,
                 },
             ),
         }
@@ -163,8 +163,8 @@ class OrderViewSetTestCase(StaffTestCase):
                     "id": order_item.id,
                     "name": order_item.name,
                     "quantity": order_item.quantity,
-                    "unit_price": f"{order_item.unit_price:.4f}",
-                    "total": f"{order_item.quantity * order_item.unit_price:.4f}",
+                    "price": f"{order_item.price:.4f}",
+                    "total": f"{order_item.quantity * order_item.price:.4f}",
                 }
                 for order_item in order_items
             ),

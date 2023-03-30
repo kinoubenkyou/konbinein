@@ -9,5 +9,5 @@ class OrderItemSerializer(ModelSerializer):
     total = DecimalField(decimal_places=4, max_digits=19, read_only=True)
 
     class Meta:
-        fields = ("id", "name", "quantity", "total", "unit_price")
+        fields = ("id", "name", "quantity", "total", "price")
         model = OrderItem

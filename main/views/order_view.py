@@ -13,12 +13,10 @@ class OrderViewSet(ModelViewSet):
         Order.objects.prefetch_related(
             Prefetch(
                 "orderitem_set",
-                queryset=OrderItem.objects.annotate(
-                    total=F("quantity") * F("unit_price")
-                ),
+                queryset=OrderItem.objects.annotate(total=F("quantity") * F("price")),
             )
         )
-        .annotate(total=Sum(F("orderitem__quantity") * F("orderitem__unit_price")))
+        .annotate(total=Sum(F("orderitem__quantity") * F("orderitem__price")))
         .all()
     )
     serializer_class = OrderSerializer
