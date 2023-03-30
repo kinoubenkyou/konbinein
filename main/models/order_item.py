@@ -14,4 +14,4 @@ class OrderItem(Model):
     name = CharField(max_length=255)
     order = ForeignKey(Order, on_delete=CASCADE)
     quantity = IntegerField()
-    unit_price = DecimalField(decimal_places=4, max_digits=19)
+    price = DecimalField(decimal_places=4, max_digits=19)
