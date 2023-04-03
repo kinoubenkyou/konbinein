@@ -1,3 +1,4 @@
+from factory import Iterator
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
@@ -6,13 +7,50 @@ from main.factories.order_item_factory import OrderItemFactory
 from main.models.order import Order
 from main.models.order_item import OrderItem
 from main.test_cases.staff_test_case import StaffTestCase
+from main.tests import faker
 
 
 class OrderViewSetTestCase(StaffTestCase):
+    def _assertGetResponseData(self, actual1, orders, order_items):
+        actual2 = []
+        for dict_ in actual1:
+            actual2.extend(
+                dict_.pop("orderitem_set"),
+            )
+        self.assertCountEqual(
+            actual1,
+            (
+                {
+                    "code": order.code,
+                    "created_at": order.created_at.isoformat(),
+                    "id": order.id,
+                    "total": self._get_order_total(
+                        tuple(
+                            order_item
+                            for order_item in order_items
+                            if order_item.order_id == order.id
+                        ),
+                    ),
+                }
+                for order in orders
+            ),
+        )
+        self.assertCountEqual(
+            actual2,
+            (
+                {
+                    "id": order_item.id,
+                    "name": order_item.name,
+                    "quantity": order_item.quantity,
+                    "price": f"{order_item.price:.4f}",
+                    "total": f"{order_item.quantity * order_item.price:.4f}",
+                }
+                for order_item in order_items
+            ),
+        )
+
     @staticmethod
     def _get_order_total(order_items):
-        if len(order_items) == 0:
-            return None
         order_total = sum(
             order_item.quantity * order_item.price for order_item in order_items
         )
@@ -58,47 +96,70 @@ class OrderViewSetTestCase(StaffTestCase):
 
     def test_list(self):
         orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
-        order_items = OrderItemFactory.create_batch(2, order=orders[0])
+        order_items = OrderItemFactory.create_batch(4, order=Iterator(orders))
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
         response = self.client.get(path, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        actual1 = response.json()
-        actual2 = []
-        for dict_ in actual1:
-            actual2.extend(
-                dict_.pop("orderitem_set"),
-            )
-        self.assertCountEqual(
-            actual1,
-            (
-                {
-                    "code": order.code,
-                    "created_at": order.created_at.isoformat(),
-                    "id": order.id,
-                    "total": self._get_order_total(
-                        tuple(
-                            order_item
-                            for order_item in order_items
-                            if order_item.order_id == order.id
-                        ),
-                    ),
-                }
-                for order in orders
-            ),
+        self._assertGetResponseData(response.json(), orders, order_items)
+
+    def test_list__filter__code__in(self):
+        OrderFactory.create(organization_id=self.organization.id)
+        orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
+        order_items = OrderItemFactory.create_batch(4, order=Iterator(orders))
+        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        data = {"code__in": tuple(order.code for order in orders)}
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self._assertGetResponseData(response.json(), orders, order_items)
+
+    def test_list__filter__created_at__gte(self):
+        created_at_list = [faker.past_datetime() for _ in range(3)]
+        created_at_list.sort(reverse=True)
+        OrderFactory.create(
+            organization_id=self.organization.id, created_at=created_at_list.pop()
         )
-        self.assertCountEqual(
-            actual2,
-            (
-                {
-                    "id": order_item.id,
-                    "name": order_item.name,
-                    "quantity": order_item.quantity,
-                    "price": f"{order_item.price:.4f}",
-                    "total": f"{order_item.quantity * order_item.price:.4f}",
-                }
-                for order_item in order_items
-            ),
+        orders = OrderFactory.create_batch(
+            2,
+            organization_id=self.organization.id,
+            created_at=Iterator(created_at_list),
         )
+        order_items = OrderItemFactory.create_batch(4, order=Iterator(orders))
+        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        data = {"created_at__gte": orders[-1].created_at}
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self._assertGetResponseData(response.json(), orders, order_items)
+
+    def test_list__filter__created_at__lte(self):
+        created_at_list = [faker.past_datetime() for _ in range(3)]
+        created_at_list.sort()
+        OrderFactory.create(
+            organization_id=self.organization.id, created_at=created_at_list.pop()
+        )
+        orders = OrderFactory.create_batch(
+            2,
+            organization_id=self.organization.id,
+            created_at=Iterator(created_at_list),
+        )
+        order_items = OrderItemFactory.create_batch(4, order=Iterator(orders))
+        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        data = {"created_at__lte": orders[-1].created_at}
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self._assertGetResponseData(response.json(), orders, order_items)
+
+    def test_list__filter__orderitem__name__in(self):
+        order = OrderFactory.create(organization_id=self.organization.id)
+        OrderItemFactory.create_batch(2, order=order)
+        orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
+        order_items = OrderItemFactory.create_batch(4, order=Iterator(orders))
+        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        data = {
+            "orderitem__name__in": tuple(order_item.name for order_item in order_items)
+        }
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self._assertGetResponseData(response.json(), orders, order_items)
 
     def test_partial_update(self):
         order = OrderFactory.create(organization_id=self.organization.id)
@@ -145,27 +206,8 @@ class OrderViewSetTestCase(StaffTestCase):
         )
         response = self.client.get(path, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        actual1 = response.json()
-        actual2 = actual1.pop("orderitem_set")
-        self.assertEqual(
-            actual1,
-            {
-                "code": order.code,
-                "created_at": order.created_at.isoformat(),
-                "id": order.id,
-                "total": self._get_order_total(order_items),
-            },
-        )
-        self.assertCountEqual(
-            actual2,
-            (
-                {
-                    "id": order_item.id,
-                    "name": order_item.name,
-                    "quantity": order_item.quantity,
-                    "price": f"{order_item.price:.4f}",
-                    "total": f"{order_item.quantity * order_item.price:.4f}",
-                }
-                for order_item in order_items
-            ),
+        self._assertGetResponseData(
+            (response.json(),),
+            (order,),
+            order_items,
         )
