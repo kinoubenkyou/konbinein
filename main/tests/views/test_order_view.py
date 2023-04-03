@@ -11,30 +11,25 @@ from main.tests import faker
 
 
 class OrderViewSetTestCase(StaffTestCase):
-    def _assertGetResponseData(self, actual1, orders, order_items):
+    def _assertGetResponseData(self, actual1, orders, order_items, is_ordered=False):
         actual2 = []
         for dict_ in actual1:
             actual2.extend(
                 dict_.pop("orderitem_set"),
             )
-        self.assertCountEqual(
-            actual1,
-            (
-                {
-                    "code": order.code,
-                    "created_at": order.created_at.isoformat(),
-                    "id": order.id,
-                    "total": self._get_order_total(
-                        tuple(
-                            order_item
-                            for order_item in order_items
-                            if order_item.order_id == order.id
-                        ),
-                    ),
-                }
-                for order in orders
-            ),
-        )
+        expected = [
+            {
+                "code": order.code,
+                "created_at": order.created_at.isoformat(),
+                "id": order.id,
+                "total": f"{self._get_order_total(order, order_items):.4f}",
+            }
+            for order in orders
+        ]
+        if is_ordered:
+            self.assertEqual(actual1, expected)
+        else:
+            self.assertCountEqual(actual1, expected)
         self.assertCountEqual(
             actual2,
             (
@@ -50,11 +45,15 @@ class OrderViewSetTestCase(StaffTestCase):
         )
 
     @staticmethod
-    def _get_order_total(order_items):
-        order_total = sum(
-            order_item.quantity * order_item.price for order_item in order_items
+    def _get_order_total(order, order_items):
+        return sum(
+            order_item.quantity * order_item.price
+            for order_item in (
+                order_item
+                for order_item in order_items
+                if order_item.order_id == order.id
+            )
         )
-        return f"{order_total:.4f}"
 
     def test_create(self):
         built_order = OrderFactory.build()
@@ -160,6 +159,48 @@ class OrderViewSetTestCase(StaffTestCase):
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assertGetResponseData(response.json(), orders, order_items)
+
+    def test_list__ordering__code(self):
+        orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
+        order_items = OrderItemFactory.create_batch(4, order=Iterator(orders))
+        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        data = {"ordering": "code"}
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self._assertGetResponseData(
+            response.json(),
+            sorted(orders, key=lambda order: order.code),
+            order_items,
+            is_ordered=True,
+        )
+
+    def test_list__ordering__created_at(self):
+        orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
+        order_items = OrderItemFactory.create_batch(4, order=Iterator(orders))
+        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        data = {"ordering": "created_at"}
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self._assertGetResponseData(
+            response.json(),
+            sorted(orders, key=lambda order: order.created_at),
+            order_items,
+            is_ordered=True,
+        )
+
+    def test_list__ordering__total(self):
+        orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
+        order_items = OrderItemFactory.create_batch(4, order=Iterator(orders))
+        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        data = {"ordering": "total"}
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self._assertGetResponseData(
+            response.json(),
+            sorted(orders, key=lambda order: self._get_order_total(order, order_items)),
+            order_items,
+            is_ordered=True,
+        )
 
     def test_partial_update(self):
         order = OrderFactory.create(organization_id=self.organization.id)

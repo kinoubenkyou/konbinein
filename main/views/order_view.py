@@ -1,5 +1,8 @@
+from django.db.models import F, OuterRef, Prefetch, Subquery, Sum
+
 from main.filter_sets.order_filter_set import OrderFilterSet
 from main.models.order import Order
+from main.models.order_item import OrderItem
 from main.permissions.staff_permission import StaffPermission
 from main.serializers.order_serializer import OrderSerializer
 from main.views.filterable_model_view_set import FilterableModelViewSet
@@ -7,8 +10,26 @@ from main.views.filterable_model_view_set import FilterableModelViewSet
 
 class OrderViewSet(FilterableModelViewSet):
     filter_set_class = OrderFilterSet
+    ordering_fields = ("code", "created_at", "total")
     permission_classes = (StaffPermission,)
-    queryset = Order.objects.prefetch_related("orderitem_set").distinct()
+    queryset = (
+        Order.objects.prefetch_related(
+            Prefetch(
+                "orderitem_set",
+                queryset=OrderItem.objects.annotate(total=F("quantity") * F("price")),
+            )
+        )
+        .annotate(
+            total=Subquery(
+                Order.objects.annotate(
+                    total=Sum(F("orderitem__quantity") * F("orderitem__price"))
+                )
+                .filter(id=OuterRef("pk"))
+                .values("total")
+            )
+        )
+        .distinct()
+    )
     serializer_class = OrderSerializer
 
     def get_queryset(self):
