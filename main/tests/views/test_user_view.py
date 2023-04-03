@@ -6,7 +6,6 @@ from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD
 from main.factories.user_factory import UserFactory
 from main.models.user import User
 from main.test_cases.user_test_case import UserTestCase
-from main.tests import faker
 
 
 class UserViewSetTestCase(UserTestCase):
@@ -27,7 +26,7 @@ class UserViewSetTestCase(UserTestCase):
     def test_partial_update(self):
         path = reverse("user-detail", kwargs={"user_id": self.user.id})
         built_user = UserFactory.build()
-        password = f"password{faker.unique.random_int()}"
+        password = "password"
         data = {
             "email": built_user.email,
             "name": built_user.name,
@@ -57,7 +56,7 @@ class UserViewSetTestCase(UserTestCase):
         path = reverse("user-detail", kwargs={"user_id": self.user.id})
         data = {
             "email": built_user.email,
-            "password": f"password{faker.unique.random_int()}",
+            "password": "password",
         }
         response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
@@ -75,7 +74,7 @@ class UserViewSetTestCase(UserTestCase):
         data = {
             "email": built_user.email,
             "name": built_user.name,
-            "password": f"password{faker.unique.random_int()}",
+            "password": "password",
             "current_password": "password",
         }
         response = self.client.patch(path, data, format="json")
