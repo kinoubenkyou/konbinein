@@ -15,3 +15,7 @@ class OrderItem(Model):
     order = ForeignKey(Order, on_delete=CASCADE)
     quantity = IntegerField()
     price = DecimalField(decimal_places=4, max_digits=19)
+
+    @property
+    def total(self):
+        return self.price * self.quantity
