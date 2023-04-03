@@ -39,7 +39,7 @@ class PublicUserViewSetTestCase(APITestCase):
         path = reverse("public-user-authenticating")
         data = {
             "email": user.email,
-            "password": f"password{faker.unique.random_int()}",
+            "password": "password",
         }
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
@@ -105,7 +105,7 @@ class PublicUserViewSetTestCase(APITestCase):
         password_resetting_token = Token.generate_key()
         user = UserFactory.create(password_resetting_token=password_resetting_token)
         path = reverse("public-user-detail", kwargs={"pk": user.id})
-        password = f"password{faker.unique.random_int()}"
+        password = "password"
         data = {"password": password, "token": password_resetting_token}
         response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
@@ -117,7 +117,7 @@ class PublicUserViewSetTestCase(APITestCase):
         user = UserFactory.create(password_resetting_token=Token.generate_key())
         path = reverse("public-user-detail", kwargs={"pk": user.id})
         data = {
-            "password": f"password{faker.unique.random_int()}",
+            "password": "password",
             "token": Token.generate_key(),
         }
         response = self.client.patch(path, data, format="json")

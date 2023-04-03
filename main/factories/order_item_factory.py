@@ -1,9 +1,8 @@
-from factory import Sequence, SubFactory
+from factory import Faker, Sequence, SubFactory
 from factory.django import DjangoModelFactory
 
 from main.factories.order_factory import OrderFactory
 from main.models.order_item import OrderItem
-from main.tests import faker
 
 
 class OrderItemFactory(DjangoModelFactory):
@@ -12,5 +11,5 @@ class OrderItemFactory(DjangoModelFactory):
 
     name = Sequence(lambda n: f"name{n}")
     order = SubFactory(OrderFactory)
-    quantity = faker.pyint(max_value=100, min_value=1)
-    price = faker.pydecimal(left_digits=2, positive=True, right_digits=2)
+    quantity = Faker("pyint", max_value=100, min_value=1)
+    price = Faker("pydecimal", left_digits=2, positive=True, right_digits=2)
