@@ -28,7 +28,5 @@ class UserStaffSerializer(ModelSerializer):
         if Staff.objects.filter(
             organization=value, user=self.context["view"].kwargs["user_id"]
         ).exists():
-            raise ValidationError(
-                code="staff_already_created", detail="Staff is already created."
-            )
+            raise ValidationError(detail="Staff is already created.")
         return value

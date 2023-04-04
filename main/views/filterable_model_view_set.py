@@ -12,9 +12,5 @@ class FilterableModelViewSet(ModelViewSet):
         return super().filter_queryset(filtered_query_set)
 
     def get_filter_set_class(self):
-        assert self.filter_set_class is not None, (
-            "'%s' should either include a `filter_set_class` attribute, "
-            "or override the `get_filter_set_class()` method."
-            % self.__class__.__name__
-        )
+        assert self.filter_set_class is not None
         return self.filter_set_class

@@ -1,14 +1,14 @@
 from rest_framework import routers
 
-from main.views.admin_organization_view import AdminOrganizationViewSet
-from main.views.order_view import OrderViewSet
-from main.views.organization_staff_view import OrganizationStaffViewSet
-from main.views.organization_user_view import OrganizationUserViewSet
-from main.views.organization_view import OrganizationViewSet
-from main.views.public_user_view import PublicUserViewSet
-from main.views.user_organization_view import UserOrganizationViewSet
-from main.views.user_staff_view import UserStaffViewSet
-from main.views.user_view import UserViewSet
+from main.views.admin_organization_view_set import AdminOrganizationViewSet
+from main.views.order_view_set import OrderViewSet
+from main.views.organization_staff_view_set import OrganizationStaffViewSet
+from main.views.organization_user_view_set import OrganizationUserViewSet
+from main.views.organization_view_set import OrganizationViewSet
+from main.views.public_user_view_set import PublicUserViewSet
+from main.views.user_organization_view_set import UserOrganizationViewSet
+from main.views.user_staff_view_set import UserStaffViewSet
+from main.views.user_view_set import UserViewSet
 
 router = routers.SimpleRouter(trailing_slash=False)
 router.register(
