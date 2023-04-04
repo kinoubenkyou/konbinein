@@ -14,7 +14,7 @@ from rest_framework.viewsets import GenericViewSet
 from main.models.user import User
 from main.serializers.public_user_create_serializer import PublicUserCreateSerializer
 from main.serializers.public_user_update_serializer import PublicUserUpdateSerializer
-from main.views.user_view_mixin import UserViewSetMixin
+from main.views.user_view_set_mixin import UserViewSetMixin
 
 
 class PublicUserViewSet(

@@ -11,50 +11,6 @@ from main.tests import faker
 
 
 class OrderViewSetTestCase(StaffTestCase):
-    def _assertGetResponseData(self, actual1, orders, order_items, is_ordered=False):
-        actual2 = []
-        for dict_ in actual1:
-            actual2.extend(
-                dict_.pop("orderitem_set"),
-            )
-        expected = [
-            {
-                "code": order.code,
-                "created_at": order.created_at.isoformat(),
-                "id": order.id,
-                "total": f"{self._get_order_total(order, order_items):.4f}",
-            }
-            for order in orders
-        ]
-        if is_ordered:
-            self.assertEqual(actual1, expected)
-        else:
-            self.assertCountEqual(actual1, expected)
-        self.assertCountEqual(
-            actual2,
-            (
-                {
-                    "id": order_item.id,
-                    "name": order_item.name,
-                    "quantity": order_item.quantity,
-                    "price": f"{order_item.price:.4f}",
-                    "total": f"{order_item.quantity * order_item.price:.4f}",
-                }
-                for order_item in order_items
-            ),
-        )
-
-    @staticmethod
-    def _get_order_total(order, order_items):
-        return sum(
-            order_item.quantity * order_item.price
-            for order_item in (
-                order_item
-                for order_item in order_items
-                if order_item.order_id == order.id
-            )
-        )
-
     def test_create(self):
         built_order = OrderFactory.build()
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
@@ -267,4 +223,48 @@ class OrderViewSetTestCase(StaffTestCase):
             (response.json(),),
             (order,),
             order_items,
+        )
+
+    def _assertGetResponseData(self, actual1, orders, order_items, is_ordered=False):
+        actual2 = []
+        for dict_ in actual1:
+            actual2.extend(
+                dict_.pop("orderitem_set"),
+            )
+        expected = [
+            {
+                "code": order.code,
+                "created_at": order.created_at.isoformat(),
+                "id": order.id,
+                "total": f"{self._get_order_total(order, order_items):.4f}",
+            }
+            for order in orders
+        ]
+        if is_ordered:
+            self.assertEqual(actual1, expected)
+        else:
+            self.assertCountEqual(actual1, expected)
+        self.assertCountEqual(
+            actual2,
+            (
+                {
+                    "id": order_item.id,
+                    "name": order_item.name,
+                    "quantity": order_item.quantity,
+                    "price": f"{order_item.price:.4f}",
+                    "total": f"{order_item.quantity * order_item.price:.4f}",
+                }
+                for order_item in order_items
+            ),
+        )
+
+    @staticmethod
+    def _get_order_total(order, order_items):
+        return sum(
+            order_item.quantity * order_item.price
+            for order_item in (
+                order_item
+                for order_item in order_items
+                if order_item.order_id == order.id
+            )
         )

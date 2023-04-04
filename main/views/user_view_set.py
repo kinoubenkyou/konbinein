@@ -11,7 +11,7 @@ from rest_framework.viewsets import GenericViewSet
 from main.models.user import User
 from main.permissions.user_permission import UserPermission
 from main.serializers.user_serializer import UserSerializer
-from main.views.user_view_mixin import UserViewSetMixin
+from main.views.user_view_set_mixin import UserViewSetMixin
 
 
 class UserViewSet(

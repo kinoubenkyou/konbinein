@@ -7,11 +7,11 @@ from main.models.user import User
 
 
 class PublicUserCreateSerializer(ModelSerializer):
-    password = CharField(max_length=255, write_only=True)
-
     class Meta:
         fields = ("email", "id", "name", "password")
         model = User
+
+    password = CharField(max_length=255, write_only=True)
 
     def create(self, validated_data):
         user_attributes = validated_data | {

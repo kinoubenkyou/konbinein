@@ -11,5 +11,5 @@ class OrderItemFactory(DjangoModelFactory):
 
     name = Sequence(lambda n: f"name{n}")
     order = SubFactory(OrderFactory)
-    quantity = Faker("pyint", max_value=100, min_value=1)
     price = Faker("pydecimal", left_digits=2, positive=True, right_digits=2)
+    quantity = Faker("pyint", max_value=100, min_value=1)

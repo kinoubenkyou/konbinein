@@ -7,12 +7,12 @@ from main.models.user import User
 
 
 class PublicUserUpdateSerializer(ModelSerializer):
-    password = CharField(max_length=255, write_only=True)
-    token = CharField(max_length=255, write_only=True)
-
     class Meta:
         fields = ("id", "password", "token")
         model = User
+
+    password = CharField(max_length=255, write_only=True)
+    token = CharField(max_length=255, write_only=True)
 
     def update(self, instance, validated_data):
         user_attributes = validated_data | {
@@ -27,5 +27,5 @@ class PublicUserUpdateSerializer(ModelSerializer):
             self.instance is not None
             and self.instance.password_resetting_token != value
         ):
-            raise ValidationError(code="token_not_match", detail="Token doesn't match.")
+            raise ValidationError(detail="Token doesn't match.")
         return value

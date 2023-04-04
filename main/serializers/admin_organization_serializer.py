@@ -6,11 +6,11 @@ from main.models.user import User
 
 
 class AdminOrganizationSerializer(ModelSerializer):
-    user = PrimaryKeyRelatedField(queryset=User.objects.all(), write_only=True)
-
     class Meta:
         fields = ("id", "name", "user")
         model = Organization
+
+    user = PrimaryKeyRelatedField(queryset=User.objects.all(), write_only=True)
 
     def create(self, validated_data):
         user_id = validated_data.pop("user")

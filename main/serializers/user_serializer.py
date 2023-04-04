@@ -8,9 +8,6 @@ from main.models.user import User
 
 
 class UserSerializer(ModelSerializer):
-    current_password = CharField(max_length=255, required=False, write_only=True)
-    password = CharField(max_length=255, write_only=True)
-
     class Meta:
         fields = (
             "current_password",
@@ -21,12 +18,8 @@ class UserSerializer(ModelSerializer):
         )
         model = User
 
-    @property
-    def _current_password_required_error(self):
-        return ValidationError(
-            code="current_password_required",
-            detail="Current password is required.",
-        )
+    current_password = CharField(max_length=255, required=False, write_only=True)
+    password = CharField(max_length=255, write_only=True)
 
     def update(self, instance, validated_data):
         user_attributes = validated_data | {}
@@ -61,8 +54,9 @@ class UserSerializer(ModelSerializer):
 
     def validate_current_password(self, value):
         if not check_password(value, self.instance.hashed_password):
-            raise ValidationError(
-                code="current_password_incorrect",
-                detail="Current password is incorrect.",
-            )
+            raise ValidationError(detail="Current password is incorrect.")
         return value
+
+    @property
+    def _current_password_required_error(self):
+        return ValidationError(detail="Current password is required.")
