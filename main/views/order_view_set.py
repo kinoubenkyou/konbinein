@@ -6,7 +6,7 @@ from main.models.order import Order
 from main.models.order_item import OrderItem
 from main.permissions.staff_permission import StaffPermission
 from main.serializers.order_serializer import OrderSerializer
-from main.views.filterable_model_view_set import FilterMixin
+from main.views.filter_mixin import FilterMixin
 
 
 class OrderViewSet(FilterMixin, ModelViewSet):

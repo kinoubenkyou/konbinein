@@ -7,6 +7,8 @@ from main.serializers.user_serializer import UserSerializer
 
 
 class OrganizationUserViewSet(GenericViewSet, ListModelMixin):
+    ordering_fields = ("email", "id")
     permission_classes = (StaffPermission,)
     queryset = User.objects.all()
+    search_fields = ("email",)
     serializer_class = UserSerializer

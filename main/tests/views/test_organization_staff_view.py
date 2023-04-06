@@ -134,8 +134,7 @@ class OrganizationStaffViewSetTestCase(StaffTestCase):
         self._assertGetResponseData(response.json(), staffs, is_ordered=True)
 
     def test_list__sort__user_email(self):
-        staffs = StaffFactory.create_batch(3, organization=self.organization)
-        staffs.append(self.staff)
+        staffs = [StaffFactory.create(organization=self.organization), self.staff]
         path = reverse(
             "organization-staff-list", kwargs={"organization_id": self.organization.id}
         )
