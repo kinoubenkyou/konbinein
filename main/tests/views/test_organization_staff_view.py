@@ -103,7 +103,7 @@ class OrganizationStaffViewSetTestCase(StaffTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assertGetResponseData(response.json(), staffs)
 
-    def test_list__ordering__does_organization_agree(self):
+    def test_list__sort__does_organization_agree(self):
         staffs = [
             StaffFactory.create(
                 does_organization_agree=False, organization=self.organization
@@ -119,7 +119,7 @@ class OrganizationStaffViewSetTestCase(StaffTestCase):
         staffs.sort(key=lambda staff: staff.does_organization_agree)
         self._assertGetResponseData(response.json(), staffs, is_ordered=True)
 
-    def test_list__ordering__does_user_agree(self):
+    def test_list__sort__does_user_agree(self):
         staffs = [
             StaffFactory.create(does_user_agree=False, organization=self.organization),
             self.staff,
@@ -133,31 +133,19 @@ class OrganizationStaffViewSetTestCase(StaffTestCase):
         staffs.sort(key=lambda staff: staff.does_user_agree)
         self._assertGetResponseData(response.json(), staffs, is_ordered=True)
 
-    def test_list__ordering__user_id(self):
+    def test_list__sort__user_email(self):
         staffs = StaffFactory.create_batch(3, organization=self.organization)
         staffs.append(self.staff)
         path = reverse(
             "organization-staff-list", kwargs={"organization_id": self.organization.id}
         )
-        data = {"ordering": "user_id"}
-        response = self.client.get(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        staffs.sort(key=lambda staff: staff.user_id)
-        self._assertGetResponseData(response.json(), staffs, is_ordered=True)
-
-    def test_list__ordering__user_email(self):
-        staffs = StaffFactory.create_batch(3, organization=self.organization)
-        staffs.append(self.staff)
-        path = reverse(
-            "organization-staff-list", kwargs={"organization_id": self.organization.id}
-        )
-        data = {"ordering": "user_email"}
+        data = {"ordering": "user__email"}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         staffs.sort(key=lambda staff: staff.user.email)
         self._assertGetResponseData(response.json(), staffs, is_ordered=True)
 
-    def test_list__pagination(self):
+    def test_list__paginate(self):
         staffs = StaffFactory.create_batch(3, organization=self.organization)
         staffs.append(self.staff)
         path = reverse(

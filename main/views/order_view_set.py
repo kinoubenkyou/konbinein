@@ -10,7 +10,7 @@ from main.views.filterable_model_view_set import FilterableModelViewSet
 
 class OrderViewSet(FilterableModelViewSet):
     filter_set_class = OrderFilterSet
-    ordering_fields = ("code", "created_at", "total")
+    ordering_fields = ("code", "created_at", "id", "total")
     permission_classes = (StaffPermission,)
     queryset = (
         Order.objects.prefetch_related(
