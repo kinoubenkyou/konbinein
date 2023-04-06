@@ -11,15 +11,11 @@ from rest_framework.viewsets import GenericViewSet
 from main.models.user import User
 from main.permissions.user_permission import UserPermission
 from main.serializers.user_serializer import UserSerializer
-from main.views.user_view_set_mixin import UserViewSetMixin
+from main.utils import send_email_verification
 
 
 class UserViewSet(
-    DestroyModelMixin,
-    GenericViewSet,
-    UpdateModelMixin,
-    UserViewSetMixin,
-    RetrieveModelMixin,
+    DestroyModelMixin, GenericViewSet, UpdateModelMixin, RetrieveModelMixin
 ):
     lookup_url_kwarg = "user_id"
     permission_classes = (UserPermission,)
@@ -37,4 +33,4 @@ class UserViewSet(
         current_email = serializer.instance.email
         user = serializer.save()
         if current_email != user.email:
-            self.send_email_verification(self.request, user)
+            send_email_verification(self.request, user)

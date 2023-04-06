@@ -14,12 +14,10 @@ from rest_framework.viewsets import GenericViewSet
 from main.models.user import User
 from main.serializers.public_user_create_serializer import PublicUserCreateSerializer
 from main.serializers.public_user_update_serializer import PublicUserUpdateSerializer
-from main.views.user_view_set_mixin import UserViewSetMixin
+from main.utils import send_email_verification
 
 
-class PublicUserViewSet(
-    CreateModelMixin, GenericViewSet, UpdateModelMixin, UserViewSetMixin
-):
+class PublicUserViewSet(CreateModelMixin, GenericViewSet, UpdateModelMixin):
     queryset = User.objects.all()
 
     @action(detail=False, methods=("post",))
@@ -76,4 +74,4 @@ class PublicUserViewSet(
 
     def perform_create(self, serializer):
         user = serializer.save()
-        self.send_email_verification(self.request, user)
+        send_email_verification(self.request, user)

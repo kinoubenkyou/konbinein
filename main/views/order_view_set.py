@@ -1,14 +1,15 @@
 from django.db.models import F, OuterRef, Prefetch, Subquery, Sum
+from rest_framework.viewsets import ModelViewSet
 
 from main.filter_sets.order_filter_set import OrderFilterSet
 from main.models.order import Order
 from main.models.order_item import OrderItem
 from main.permissions.staff_permission import StaffPermission
 from main.serializers.order_serializer import OrderSerializer
-from main.views.filterable_model_view_set import FilterableModelViewSet
+from main.views.filterable_model_view_set import FilterMixin
 
 
-class OrderViewSet(FilterableModelViewSet):
+class OrderViewSet(FilterMixin, ModelViewSet):
     filter_set_class = OrderFilterSet
     ordering_fields = ("code", "created_at", "id", "total")
     permission_classes = (StaffPermission,)
