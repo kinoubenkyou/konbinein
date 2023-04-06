@@ -159,7 +159,10 @@ REST_FRAMEWORK = {
         "main.authentications.token_authentication.TokenAuthentication",
     ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
-    "DEFAULT_FILTER_BACKENDS": ("rest_framework.filters.OrderingFilter",),
+    "DEFAULT_FILTER_BACKENDS": (
+        "rest_framework.filters.OrderingFilter",
+        "rest_framework.filters.SearchFilter",
+    ),
     "UNAUTHENTICATED_USER": None,
 }
 

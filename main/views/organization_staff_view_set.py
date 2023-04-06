@@ -13,7 +13,7 @@ from main.filter_sets.organization_staff_filter_set import OrganizationStaffFilt
 from main.models.staff import Staff
 from main.permissions.staff_permission import StaffPermission
 from main.serializers.organization_staff_serializer import OrganizationStaffSerializer
-from main.views.filterable_model_view_set import FilterMixin
+from main.views.filter_mixin import FilterMixin
 
 
 class OrganizationStaffViewSet(
