@@ -1,23 +1,28 @@
 from rest_framework.exceptions import ValidationError
+from rest_framework.fields import CharField
+from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
 
 from main.models.staff import Staff
+from main.models.user import User
 
 
 class OrganizationStaffSerializer(ModelSerializer):
+    user_id = PrimaryKeyRelatedField(queryset=User.objects.all(), source="user")
+    user_email = CharField(read_only=True, source="user.email")
+
     class Meta:
         fields = (
             "does_organization_agree",
             "does_user_agree",
             "id",
-            "organization",
-            "user",
+            "user_id",
+            "user_email",
         )
         model = Staff
         read_only_fields = (
             "does_organization_agree",
             "does_user_agree",
-            "organization",
         )
 
     def create(self, validated_data):
@@ -28,7 +33,7 @@ class OrganizationStaffSerializer(ModelSerializer):
         }
         return super().create(staff_attributes)
 
-    def validate_user(self, value):
+    def validate_user_id(self, value):
         if Staff.objects.filter(
             user=value, organization=self.context["view"].kwargs["organization_id"]
         ).exists():

@@ -7,20 +7,29 @@ from rest_framework.mixins import (
 )
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
-from rest_framework.viewsets import GenericViewSet
 
+from main.filter_sets.organization_staff_filter_set import OrganizationStaffFilterSet
 from main.models.staff import Staff
 from main.permissions.staff_permission import StaffPermission
 from main.serializers.organization_staff_serializer import OrganizationStaffSerializer
+from main.views.filterable_model_view_set import FilterableGenericViewSet
 
 
 class OrganizationStaffViewSet(
     CreateModelMixin,
     DestroyModelMixin,
-    GenericViewSet,
+    FilterableGenericViewSet,
     ListModelMixin,
     RetrieveModelMixin,
 ):
+    filter_set_class = OrganizationStaffFilterSet
+    ordering_fields = (
+        "does_organization_agree",
+        "does_user_agree",
+        "id",
+        "user_id",
+        "user__email",
+    )
     permission_classes = (StaffPermission,)
     queryset = Staff.objects.all()
     serializer_class = OrganizationStaffSerializer

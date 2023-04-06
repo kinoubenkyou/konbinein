@@ -8,7 +8,7 @@ class StaffTestCase(UserTestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.organization = OrganizationFactory.create()
-        StaffFactory.create(
+        cls.staff = StaffFactory.create(
             does_organization_agree=True,
             does_user_agree=True,
             organization=cls.organization,
