@@ -27,7 +27,6 @@ class OrganizationStaffViewSet(
         "does_organization_agree",
         "does_user_agree",
         "id",
-        "user_id",
         "user__email",
     )
     permission_classes = (StaffPermission,)

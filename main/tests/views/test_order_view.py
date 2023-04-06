@@ -108,64 +108,55 @@ class OrderViewSetTestCase(StaffTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assertGetResponseData(response.json(), orders, order_items)
 
-    def test_list__ordering__code(self):
-        orders = OrderFactory.create_batch(4, organization_id=self.organization.id)
-        order_items = OrderItemFactory.create_batch(8, order=Iterator(orders))
+    def test_list__sort__code(self):
+        orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
+        order_items = OrderItemFactory.create_batch(4, order=Iterator(orders))
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {"limit": 2, "offset": 1, "ordering": "code"}
+        data = {"ordering": "code"}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         orders.sort(key=lambda order: order.code)
-        paginated_orders = (orders[1], orders[2])
-        paginated_order_ids = (orders[1].id, orders[2].id)
-        paginated_order_items = tuple(
-            order_item
-            for order_item in order_items
-            if order_item.order_id in paginated_order_ids
-        )
         self._assertGetResponseData(
-            response.json()["results"],
-            paginated_orders,
-            paginated_order_items,
-            is_ordered=True,
+            response.json(), orders, order_items, is_ordered=True
         )
 
-    def test_list__ordering__created_at(self):
-        orders = OrderFactory.create_batch(4, organization_id=self.organization.id)
-        order_items = OrderItemFactory.create_batch(8, order=Iterator(orders))
+    def test_list__sort__created_at(self):
+        orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
+        order_items = OrderItemFactory.create_batch(4, order=Iterator(orders))
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {"limit": 2, "offset": 1, "ordering": "created_at"}
+        data = {"ordering": "created_at"}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         orders.sort(key=lambda order: order.created_at)
-        paginated_orders = (orders[1], orders[2])
-        paginated_order_ids = (orders[1].id, orders[2].id)
-        paginated_order_items = tuple(
-            order_item
-            for order_item in order_items
-            if order_item.order_id in paginated_order_ids
-        )
         self._assertGetResponseData(
-            response.json()["results"],
-            paginated_orders,
-            paginated_order_items,
-            is_ordered=True,
+            response.json(), orders, order_items, is_ordered=True
         )
 
-    def test_list__ordering__total(self):
-        orders = OrderFactory.create_batch(4, organization_id=self.organization.id)
-        order_items = OrderItemFactory.create_batch(8, order=Iterator(orders))
+    def test_list__sort__total(self):
+        orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
+        order_items = OrderItemFactory.create_batch(4, order=Iterator(orders))
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {"limit": 2, "offset": 1, "ordering": "total"}
+        data = {"ordering": "total"}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         orders.sort(key=lambda order: self._get_order_total(order, order_items))
+        self._assertGetResponseData(
+            response.json(), orders, order_items, is_ordered=True
+        )
+
+    def test_list__paginate(self):
+        orders = OrderFactory.create_batch(4, organization_id=self.organization.id)
+        order_items = OrderItemFactory.create_batch(8, order=Iterator(orders))
+        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        data = {"limit": 2, "offset": 1, "ordering": "id"}
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        orders.sort(key=lambda order: order.id)
         paginated_orders = (orders[1], orders[2])
-        paginated_order_ids = (orders[1].id, orders[2].id)
         paginated_order_items = tuple(
             order_item
             for order_item in order_items
-            if order_item.order_id in paginated_order_ids
+            if order_item.order_id in (orders[1].id, orders[2].id)
         )
         self._assertGetResponseData(
             response.json()["results"],
