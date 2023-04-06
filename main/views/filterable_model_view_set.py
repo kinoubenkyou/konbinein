@@ -1,7 +1,7 @@
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
 
-class FilterableModelViewSet(ModelViewSet):
+class FilterableGenericViewSet(GenericViewSet):
     filter_set_class = None
 
     def filter_queryset(self, queryset):
@@ -14,3 +14,7 @@ class FilterableModelViewSet(ModelViewSet):
     def get_filter_set_class(self):
         assert self.filter_set_class is not None
         return self.filter_set_class
+
+
+class FilterableModelViewSet(FilterableGenericViewSet, ModelViewSet):
+    pass
