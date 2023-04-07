@@ -11,11 +11,15 @@ class AdminOrganizationViewSetTestCase(AdminTestCase):
     def test_create(self):
         path = reverse("admin-organization-list")
         built_organization = OrganizationFactory.build()
-        data = {"name": built_organization.name, "user": self.user.id}
+        data = {
+            "code": built_organization.code,
+            "name": built_organization.name,
+            "user_id": self.user.id,
+        }
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_201_CREATED)
         filter_ = data | {}
-        del filter_["user"]
+        del filter_["user_id"]
         organization = Organization.objects.filter(**filter_).first()
         self.assertIsNotNone(organization)
         self.assertTrue(

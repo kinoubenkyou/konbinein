@@ -20,7 +20,7 @@ class OrganizationViewSetTestCase(StaffTestCase):
             "organization-detail", kwargs={"organization_id": self.organization.id}
         )
         built_organization = OrganizationFactory.build()
-        data = {"name": built_organization.name}
+        data = {"code": built_organization.code, "name": built_organization.name}
         response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         filter_ = data | {"id": self.organization.id}
@@ -34,5 +34,9 @@ class OrganizationViewSetTestCase(StaffTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(
             response.json(),
-            {"id": self.organization.id, "name": self.organization.name},
+            {
+                "code": self.organization.code,
+                "id": self.organization.id,
+                "name": self.organization.name,
+            },
         )

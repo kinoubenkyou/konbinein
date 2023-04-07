@@ -14,7 +14,11 @@ class UserOrganizationViewSetTestCase(UserTestCase):
         self.assertCountEqual(
             response.json(),
             (
-                {"id": organization.id, "name": organization.name}
+                {
+                    "code": organization.code,
+                    "id": organization.id,
+                    "name": organization.name,
+                }
                 for organization in organizations
             ),
         )
