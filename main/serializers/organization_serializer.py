@@ -5,5 +5,5 @@ from main.models.organization import Organization
 
 class OrganizationSerializer(ModelSerializer):
     class Meta:
-        fields = ("id", "name")
+        fields = ("code", "id", "name")
         model = Organization

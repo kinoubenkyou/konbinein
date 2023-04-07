@@ -7,13 +7,13 @@ from main.models.user import User
 
 class AdminOrganizationSerializer(ModelSerializer):
     class Meta:
-        fields = ("id", "name", "user")
+        fields = ("code", "id", "name", "user_id")
         model = Organization
 
-    user = PrimaryKeyRelatedField(queryset=User.objects.all(), write_only=True)
+    user_id = PrimaryKeyRelatedField(queryset=User.objects.all(), write_only=True)
 
     def create(self, validated_data):
-        user_id = validated_data.pop("user")
+        user_id = validated_data.pop("user_id")
         organization = super().create(validated_data)
         organization.staff_set.create(
             does_organization_agree=True, does_user_agree=True, user=user_id
