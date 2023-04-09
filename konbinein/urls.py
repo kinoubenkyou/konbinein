@@ -1,6 +1,7 @@
 from rest_framework import routers
 
 from main.views.admin_organization_view_set import AdminOrganizationViewSet
+from main.views.admin_user_view_set import AdminUserViewSet
 from main.views.order_view_set import OrderViewSet
 from main.views.organization_staff_view_set import OrganizationStaffViewSet
 from main.views.organization_user_view_set import OrganizationUserViewSet
@@ -14,6 +15,7 @@ router = routers.SimpleRouter(trailing_slash=False)
 router.register(
     r"admin/organizations", AdminOrganizationViewSet, basename="admin-organization"
 )
+router.register(r"admin/users", AdminUserViewSet, basename="admin-user")
 router.register(r"organizations", OrganizationViewSet)
 router.register(r"organizations/(?P<organization_id>[^/.]+)/orders", OrderViewSet)
 router.register(
