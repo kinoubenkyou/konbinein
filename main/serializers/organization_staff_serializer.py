@@ -8,9 +8,6 @@ from main.models.user import User
 
 
 class OrganizationStaffSerializer(ModelSerializer):
-    user_id = PrimaryKeyRelatedField(queryset=User.objects.all(), source="user")
-    user_email = CharField(read_only=True, source="user.email")
-
     class Meta:
         fields = (
             "does_organization_agree",
@@ -24,6 +21,9 @@ class OrganizationStaffSerializer(ModelSerializer):
             "does_organization_agree",
             "does_user_agree",
         )
+
+    user_id = PrimaryKeyRelatedField(queryset=User.objects.all(), source="user")
+    user_email = CharField(read_only=True, source="user.email")
 
     def create(self, validated_data):
         staff_attributes = validated_data | {

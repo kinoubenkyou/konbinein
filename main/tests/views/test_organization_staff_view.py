@@ -28,8 +28,7 @@ class OrganizationStaffViewSetTestCase(StaffTestCase):
             "organization-staff-list",
             kwargs={"organization_id": self.organization.id},
         )
-        user = UserFactory.create()
-        data = {"user_id": user.id}
+        data = {"user_id": UserFactory.create().id}
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_201_CREATED)
         filter_ = data | {
@@ -40,14 +39,13 @@ class OrganizationStaffViewSetTestCase(StaffTestCase):
         self.assertTrue(Staff.objects.filter(**filter_).exists())
 
     def test_create__staff_already_created(self):
+        user = UserFactory.create()
+        StaffFactory.create(organization_id=self.organization.id, user_id=user.id)
         path = reverse(
             "organization-staff-list",
             kwargs={"organization_id": self.organization.id},
         )
-        user = UserFactory.create()
-        data = {"user_id": user.id}
-        StaffFactory.create(organization_id=self.organization.id, user_id=user.id)
-        response = self.client.post(path, data, format="json")
+        response = self.client.post(path, data={"user_id": user.id}, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), {"user_id": ["Staff is already created."]})
 
@@ -62,14 +60,14 @@ class OrganizationStaffViewSetTestCase(StaffTestCase):
         self.assertFalse(Staff.objects.filter(id=staff.id).exists())
 
     def test_list__filter__does_organization_agree(self):
-        StaffFactory.create(
-            does_organization_agree=False, organization=self.organization
-        )
         staffs = (
             StaffFactory.create(
                 does_organization_agree=True, organization=self.organization
             ),
             self.staff,
+        )
+        StaffFactory.create(
+            does_organization_agree=False, organization=self.organization
         )
         path = reverse(
             "organization-staff-list", kwargs={"organization_id": self.organization.id}
@@ -80,16 +78,15 @@ class OrganizationStaffViewSetTestCase(StaffTestCase):
         self._assertGetResponseData(response.json(), staffs)
 
     def test_list__filter__does_user_agree(self):
-        StaffFactory.create(does_user_agree=False, organization=self.organization)
         staffs = (
             StaffFactory.create(does_user_agree=True, organization=self.organization),
             self.staff,
         )
+        StaffFactory.create(does_user_agree=False, organization=self.organization)
         path = reverse(
             "organization-staff-list", kwargs={"organization_id": self.organization.id}
         )
-        data = {"does_user_agree": True}
-        response = self.client.get(path, data, format="json")
+        response = self.client.get(path, data={"does_user_agree": True}, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assertGetResponseData(response.json(), staffs)
 
