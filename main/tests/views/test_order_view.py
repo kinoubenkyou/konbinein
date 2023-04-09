@@ -108,6 +108,36 @@ class OrderViewSetTestCase(StaffTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assertGetResponseData(response.json(), orders, order_items)
 
+    def test_list__filter__total__gte(self):
+        orders = OrderFactory.create_batch(3, organization_id=self.organization.id)
+        order_items = OrderItemFactory.create_batch(6, order=Iterator(orders))
+        orders.sort(
+            key=lambda order_: self._get_order_total(order_, order_items), reverse=True
+        )
+        order = orders.pop()
+        order_items = tuple(
+            order_item for order_item in order_items if order_item.order_id != order.id
+        )
+        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        data = {"total__gte": self._get_order_total(orders[-1], order_items)}
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self._assertGetResponseData(response.json(), orders, order_items)
+
+    def test_list__filter__total__lte(self):
+        orders = OrderFactory.create_batch(3, organization_id=self.organization.id)
+        order_items = OrderItemFactory.create_batch(6, order=Iterator(orders))
+        orders.sort(key=lambda order_: self._get_order_total(order_, order_items))
+        order = orders.pop()
+        order_items = tuple(
+            order_item for order_item in order_items if order_item.order_id != order.id
+        )
+        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        data = {"total__lte": self._get_order_total(orders[-1], order_items)}
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self._assertGetResponseData(response.json(), orders, order_items)
+
     def test_list__sort__code(self):
         orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
         order_items = OrderItemFactory.create_batch(4, order=Iterator(orders))

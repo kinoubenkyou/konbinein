@@ -1,4 +1,4 @@
-from rest_framework.fields import CharField, DateTimeField, ListField
+from rest_framework.fields import CharField, DateTimeField, DecimalField, ListField
 from rest_framework.serializers import Serializer
 
 
@@ -7,3 +7,5 @@ class OrderFilterSet(Serializer):
     created_at__gte = DateTimeField()
     created_at__lte = DateTimeField()
     orderitem__name__in = ListField(child=CharField(max_length=255))
+    total__gte = DecimalField(decimal_places=4, max_digits=19)
+    total__lte = DecimalField(decimal_places=4, max_digits=19)
