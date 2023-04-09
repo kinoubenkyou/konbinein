@@ -4,6 +4,7 @@ from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CON
 
 from main.factories.order_factory import OrderFactory
 from main.factories.order_item_factory import OrderItemFactory
+from main.factories.product_factory import ProductFactory
 from main.models.order import Order
 from main.models.order_item import OrderItem
 from main.test_cases.staff_test_case import StaffTestCase
@@ -14,13 +15,15 @@ class OrderViewSetTestCase(StaffTestCase):
     def test_create(self):
         built_order = OrderFactory.build()
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        built_order_items = OrderItemFactory.build_batch(2)
+        products = ProductFactory.create_batch(2)
+        built_order_items = OrderItemFactory.build_batch(2, product=Iterator(products))
         data = {
             "code": built_order.code,
             "created_at": built_order.created_at,
             "orderitem_set": tuple(
                 {
                     "name": order_item.name,
+                    "product": order_item.product_id,
                     "quantity": order_item.quantity,
                     "price": order_item.price,
                 }
@@ -195,7 +198,8 @@ class OrderViewSetTestCase(StaffTestCase):
     def test_partial_update(self):
         order = OrderFactory.create(organization_id=self.organization.id)
         built_order = OrderFactory.build()
-        built_order_items = OrderItemFactory.build_batch(2)
+        products = ProductFactory.create_batch(2)
+        built_order_items = OrderItemFactory.build_batch(2, product=Iterator(products))
         order_items = OrderItemFactory.create_batch(2, order=order)
         path = reverse(
             "order-detail",
@@ -207,12 +211,14 @@ class OrderViewSetTestCase(StaffTestCase):
             "orderitem_set": (
                 {
                     "name": built_order_items[0].name,
+                    "product": built_order_items[0].product_id,
                     "quantity": built_order_items[0].quantity,
                     "price": built_order_items[0].price,
                 },
                 {
                     "id": order_items[0].id,
                     "name": built_order_items[1].name,
+                    "product": built_order_items[1].product_id,
                     "quantity": built_order_items[1].quantity,
                     "price": built_order_items[1].price,
                 },
@@ -230,7 +236,10 @@ class OrderViewSetTestCase(StaffTestCase):
 
     def test_retrieve(self):
         order = OrderFactory.create(organization_id=self.organization.id)
-        order_items = OrderItemFactory.create_batch(2, order=order)
+        products = ProductFactory.create_batch(2)
+        order_items = OrderItemFactory.create_batch(
+            2, order=order, product=Iterator(products)
+        )
         path = reverse(
             "order-detail",
             kwargs={"organization_id": self.organization.id, "pk": order.id},
@@ -268,6 +277,7 @@ class OrderViewSetTestCase(StaffTestCase):
                 {
                     "id": order_item.id,
                     "name": order_item.name,
+                    "product": order_item.product_id,
                     "quantity": order_item.quantity,
                     "price": f"{order_item.price:.4f}",
                     "total": f"{order_item.quantity * order_item.price:.4f}",
