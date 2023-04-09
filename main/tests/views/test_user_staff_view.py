@@ -37,10 +37,10 @@ class UserStaffViewSetTestCase(UserTestCase):
         self.assertTrue(Staff.objects.filter(**filter_).exists())
 
     def test_create__staff_already_created(self):
-        path = reverse("user-staff-list", kwargs={"user_id": self.user.id})
         organization = OrganizationFactory.create()
-        data = {"organization_id": organization.id}
         StaffFactory.create(organization_id=organization.id, user_id=self.user.id)
+        path = reverse("user-staff-list", kwargs={"user_id": self.user.id})
+        data = {"organization_id": organization.id}
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(
@@ -57,10 +57,10 @@ class UserStaffViewSetTestCase(UserTestCase):
         self.assertFalse(Staff.objects.filter(id=staff.id).exists())
 
     def test_list__filter__does_organization_agree(self):
-        StaffFactory.create(does_organization_agree=False, user=self.user)
         staffs = StaffFactory.create_batch(
             2, does_organization_agree=True, user=self.user
         )
+        StaffFactory.create(does_organization_agree=False, user=self.user)
         path = reverse("user-staff-list", kwargs={"user_id": self.user.id})
         data = {"does_organization_agree": True}
         response = self.client.get(path, data, format="json")
@@ -68,11 +68,10 @@ class UserStaffViewSetTestCase(UserTestCase):
         self._assertGetResponseData(response.json(), staffs)
 
     def test_list__filter__does_user_agree(self):
-        StaffFactory.create(does_user_agree=False, user=self.user)
         staffs = StaffFactory.create_batch(2, does_user_agree=True, user=self.user)
+        StaffFactory.create(does_user_agree=False, user=self.user)
         path = reverse("user-staff-list", kwargs={"user_id": self.user.id})
-        data = {"does_user_agree": True}
-        response = self.client.get(path, data, format="json")
+        response = self.client.get(path, data={"does_user_agree": True}, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assertGetResponseData(response.json(), staffs)
 

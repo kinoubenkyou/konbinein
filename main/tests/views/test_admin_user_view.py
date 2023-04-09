@@ -8,8 +8,8 @@ from main.test_cases.admin_test_case import AdminTestCase
 
 class AdminUserViewSetTestCase(AdminTestCase):
     def test_list__search__email(self):
-        email_list = ("search1@email.com", "search2@email.com")
-        users = UserFactory.create_batch(2, email=Iterator(email_list))
+        emails = ("search1@email.com", "search2@email.com")
+        users = UserFactory.create_batch(2, email=Iterator(emails))
         path = reverse("admin-user-list")
         response = self.client.get(path, data={"search": "search"}, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)

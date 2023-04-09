@@ -8,13 +8,12 @@ from main.test_cases.staff_test_case import StaffTestCase
 
 class OrganizationUserViewSetTestCase(StaffTestCase):
     def test_list__search__email(self):
-        email_list = ("search1@email.com", "search2@email.com")
-        users = UserFactory.create_batch(2, email=Iterator(email_list))
+        emails = ("search1@email.com", "search2@email.com")
+        users = UserFactory.create_batch(2, email=Iterator(emails))
         path = reverse(
             "organization-user-list", kwargs={"organization_id": self.organization.id}
         )
-        data = {"search": "search"}
-        response = self.client.get(path, data, format="json")
+        response = self.client.get(path, data={"search": "search"}, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assertGetResponseData(response.json(), users)
 
@@ -23,8 +22,7 @@ class OrganizationUserViewSetTestCase(StaffTestCase):
         path = reverse(
             "organization-user-list", kwargs={"organization_id": self.organization.id}
         )
-        data = {"ordering": "email"}
-        response = self.client.get(path, data, format="json")
+        response = self.client.get(path, data={"ordering": "email"}, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         users.sort(key=lambda user: user.email)
         self._assertGetResponseData(response.json(), users, is_ordered=True)

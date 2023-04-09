@@ -112,8 +112,7 @@ class OrderViewSetTestCase(StaffTestCase):
         orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
         order_items = OrderItemFactory.create_batch(4, order=Iterator(orders))
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {"ordering": "code"}
-        response = self.client.get(path, data, format="json")
+        response = self.client.get(path, data={"ordering": "code"}, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         orders.sort(key=lambda order: order.code)
         self._assertGetResponseData(
@@ -124,8 +123,7 @@ class OrderViewSetTestCase(StaffTestCase):
         orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
         order_items = OrderItemFactory.create_batch(4, order=Iterator(orders))
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {"ordering": "created_at"}
-        response = self.client.get(path, data, format="json")
+        response = self.client.get(path, data={"ordering": "created_at"}, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         orders.sort(key=lambda order: order.created_at)
         self._assertGetResponseData(
@@ -136,8 +134,7 @@ class OrderViewSetTestCase(StaffTestCase):
         orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
         order_items = OrderItemFactory.create_batch(4, order=Iterator(orders))
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {"ordering": "total"}
-        response = self.client.get(path, data, format="json")
+        response = self.client.get(path, data={"ordering": "total"}, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         orders.sort(key=lambda order: self._get_order_total(order, order_items))
         self._assertGetResponseData(
