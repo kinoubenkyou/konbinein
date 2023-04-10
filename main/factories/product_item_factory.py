@@ -3,12 +3,12 @@ from factory.django import DjangoModelFactory
 
 from main.factories.order_factory import OrderFactory
 from main.factories.product_factory import ProductFactory
-from main.models.order_item import OrderItem
+from main.models.product_item import ProductItem
 
 
-class OrderItemFactory(DjangoModelFactory):
+class ProductItemFactory(DjangoModelFactory):
     class Meta:
-        model = OrderItem
+        model = ProductItem
 
     name = Sequence(lambda n: f"name{n}")
     order = SubFactory(OrderFactory)

@@ -12,7 +12,7 @@ from main.models.order import Order
 from main.models.product import Product
 
 
-class OrderItem(Model):
+class ProductItem(Model):
     name = CharField(max_length=255)
     order = ForeignKey(Order, on_delete=CASCADE)
     price = DecimalField(decimal_places=4, max_digits=19)
