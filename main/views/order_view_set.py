@@ -3,7 +3,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from main.filter_sets.order_filter_set import OrderFilterSet
 from main.models.order import Order
-from main.models.order_item import OrderItem
+from main.models.product_item import ProductItem
 from main.permissions.staff_permission import StaffPermission
 from main.serializers.order_serializer import OrderSerializer
 from main.views.filter_mixin import FilterMixin
@@ -16,14 +16,14 @@ class OrderViewSet(FilterMixin, ModelViewSet):
     queryset = (
         Order.objects.prefetch_related(
             Prefetch(
-                "orderitem_set",
-                queryset=OrderItem.objects.annotate(total=F("quantity") * F("price")),
+                "productitem_set",
+                queryset=ProductItem.objects.annotate(total=F("quantity") * F("price")),
             )
         )
         .annotate(
             total=Subquery(
                 Order.objects.annotate(
-                    total=Sum(F("orderitem__quantity") * F("orderitem__price"))
+                    total=Sum(F("productitem__quantity") * F("productitem__price"))
                 )
                 .filter(id=OuterRef("pk"))
                 .values("total")

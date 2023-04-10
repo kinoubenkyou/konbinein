@@ -2,14 +2,14 @@ from rest_framework.fields import DecimalField, IntegerField
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
 
-from main.models.order_item import OrderItem
 from main.models.product import Product
+from main.models.product_item import ProductItem
 
 
-class OrderItemSerializer(ModelSerializer):
+class ProductItemSerializer(ModelSerializer):
     class Meta:
         fields = ("id", "name", "product", "quantity", "total", "price")
-        model = OrderItem
+        model = ProductItem
 
     id = IntegerField(required=False)
     product = PrimaryKeyRelatedField(queryset=Product.objects.all(), required=True)
