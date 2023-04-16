@@ -365,6 +365,17 @@ python-versions = "*"
 tests = ["pytest"]
 
 [[package]]
+name = "pycountry"
+version = "22.3.5"
+description = "ISO country, subdivision, language, currency and script definitions and their translations"
+category = "main"
+optional = false
+python-versions = ">=3.6, <4"
+
+[package.dependencies]
+setuptools = "*"
+
+[[package]]
 name = "pygments"
 version = "2.13.0"
 description = "Pygments is a syntax highlighting package written in Python."
@@ -503,7 +514,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.11"
-content-hash = "3ede23d0224ca28d2f677d8bcf4029b2a8c78f04b5a9ac227c3a51564a0ee3ea"
+content-hash = "b80294e1bb12f7c94e9c032c151c187a74c529721c18bf551657363bc1949201"
 
 [metadata.files]
 appnope = [
@@ -689,6 +700,9 @@ ptyprocess = [
 pure-eval = [
     {file = "pure_eval-0.2.2-py3-none-any.whl", hash = "sha256:01eaab343580944bc56080ebe0a674b39ec44a945e6d09ba7db3cb8cec289350"},
     {file = "pure_eval-0.2.2.tar.gz", hash = "sha256:2b45320af6dfaa1750f543d714b6d1c520a1688dec6fd24d339063ce0aaa9ac3"},
+]
+pycountry = [
+    {file = "pycountry-22.3.5.tar.gz", hash = "sha256:b2163a246c585894d808f18783e19137cb70a0c18fb36748dc01fc6f109c1646"},
 ]
 pygments = [
     {file = "Pygments-2.13.0-py3-none-any.whl", hash = "sha256:f643f331ab57ba3c9d89212ee4a2dabc6e94f117cf4eefde99a0574720d14c42"},
