@@ -6,6 +6,7 @@ from main.views.order_view_set import OrderViewSet
 from main.views.organization_staff_view_set import OrganizationStaffViewSet
 from main.views.organization_user_view_set import OrganizationUserViewSet
 from main.views.organization_view_set import OrganizationViewSet
+from main.views.product_shipping_view_set import ProductShippingViewSet
 from main.views.product_view_set import ProductViewSet
 from main.views.public_user_view_set import PublicUserViewSet
 from main.views.user_organization_view_set import UserOrganizationViewSet
@@ -20,6 +21,10 @@ router.register(r"admin/users", AdminUserViewSet, basename="admin-user")
 router.register(r"organizations", OrganizationViewSet)
 router.register(r"organizations/(?P<organization_id>[^/.]+)/orders", OrderViewSet)
 router.register(r"organizations/(?P<organization_id>[^/.]+)/products", ProductViewSet)
+router.register(
+    r"organizations/(?P<organization_id>[^/.]+)/product-shippings",
+    ProductShippingViewSet,
+)
 router.register(
     r"organizations/(?P<organization_id>[^/.]+)/staffs",
     OrganizationStaffViewSet,
