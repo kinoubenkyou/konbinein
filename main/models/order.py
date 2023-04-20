@@ -20,6 +20,6 @@ class Order(Model):
             ),
         )
 
-    code = CharField(max_length=255, unique=True)
+    code = CharField(max_length=255)
     created_at = DateTimeField()
     organization = ForeignKey(Organization, on_delete=CASCADE)

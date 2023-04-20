@@ -1,4 +1,5 @@
 from django.db.transaction import atomic
+from rest_framework.exceptions import ValidationError
 from rest_framework.fields import DecimalField
 from rest_framework.serializers import ModelSerializer
 
@@ -50,3 +51,13 @@ class OrderSerializer(ModelSerializer):
             ):
                 product_item.delete()
         return order
+
+    def validate_code(self, value):
+        query_set = Order.objects.filter(
+            code=value, organization=self.context["view"].kwargs["organization_id"]
+        )
+        if self.instance is not None:
+            query_set = query_set.exclude(id=self.instance.id)
+        if query_set.exists():
+            raise ValidationError(detail="Code is already in another order.")
+        return value

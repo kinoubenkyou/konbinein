@@ -1,6 +1,11 @@
 from factory import Iterator
 from rest_framework.reverse import reverse
-from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_201_CREATED,
+    HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
+)
 
 from main.factories.product_factory import ProductFactory
 from main.models.product import Product
@@ -23,8 +28,23 @@ class ProductViewSetTestCase(StaffTestCase):
         product = Product.objects.filter(**filter_).first()
         self.assertIsNotNone(product)
 
+    def test_create__code_already_in_another_product(self):
+        path = reverse("product-list", kwargs={"organization_id": self.organization.id})
+        product = ProductFactory.create(organization=self.organization)
+        built_product = ProductFactory.build(organization=self.organization)
+        data = {
+            "code": product.code,
+            "name": built_product.name,
+            "price": built_product.price,
+        }
+        response = self.client.post(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json(), {"code": ["Code is already in another product."]}
+        )
+
     def test_destroy(self):
-        product = ProductFactory.create(organization_id=self.organization.id)
+        product = ProductFactory.create(organization=self.organization)
         path = reverse(
             "product-detail",
             kwargs={"organization_id": self.organization.id, "pk": product.id},
@@ -33,20 +53,9 @@ class ProductViewSetTestCase(StaffTestCase):
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
         self.assertFalse(Product.objects.filter(id=product.id).exists())
 
-    def test_list__paginate(self):
-        products = ProductFactory.create_batch(4, organization_id=self.organization.id)
-        path = reverse("product-list", kwargs={"organization_id": self.organization.id})
-        data = {"limit": 2, "offset": 1, "ordering": "id"}
-        response = self.client.get(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        products.sort(key=lambda product: product.id)
-        self._assertGetResponseData(
-            response.json()["results"], (products[1], products[2]), is_ordered=True
-        )
-
     def test_list__filter__code__in(self):
-        ProductFactory.create(organization_id=self.organization.id)
-        products = ProductFactory.create_batch(2, organization_id=self.organization.id)
+        ProductFactory.create(organization=self.organization)
+        products = ProductFactory.create_batch(2, organization=self.organization)
         path = reverse("product-list", kwargs={"organization_id": self.organization.id})
         data = {"code__in": tuple(product.code for product in products)}
         response = self.client.get(path, data, format="json")
@@ -54,8 +63,8 @@ class ProductViewSetTestCase(StaffTestCase):
         self._assertGetResponseData(response.json(), products)
 
     def test_list__filter__name__in(self):
-        ProductFactory.create(organization_id=self.organization.id)
-        products = ProductFactory.create_batch(2, organization_id=self.organization.id)
+        ProductFactory.create(organization=self.organization)
+        products = ProductFactory.create_batch(2, organization=self.organization)
         path = reverse("product-list", kwargs={"organization_id": self.organization.id})
         data = {"name__in": tuple(product.name for product in products)}
         response = self.client.get(path, data, format="json")
@@ -68,10 +77,10 @@ class ProductViewSetTestCase(StaffTestCase):
             for _ in range(3)
         ]
         prices.sort(reverse=True)
-        ProductFactory.create(organization_id=self.organization.id, price=prices.pop())
+        ProductFactory.create(organization=self.organization, price=prices.pop())
         products = ProductFactory.create_batch(
             2,
-            organization_id=self.organization.id,
+            organization=self.organization,
             price=Iterator(prices),
         )
         path = reverse("product-list", kwargs={"organization_id": self.organization.id})
@@ -86,10 +95,10 @@ class ProductViewSetTestCase(StaffTestCase):
             for _ in range(3)
         ]
         prices.sort()
-        ProductFactory.create(organization_id=self.organization.id, price=prices.pop())
+        ProductFactory.create(organization=self.organization, price=prices.pop())
         products = ProductFactory.create_batch(
             2,
-            organization_id=self.organization.id,
+            organization=self.organization,
             price=Iterator(prices),
         )
         path = reverse("product-list", kwargs={"organization_id": self.organization.id})
@@ -97,6 +106,17 @@ class ProductViewSetTestCase(StaffTestCase):
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assertGetResponseData(response.json(), products)
+
+    def test_list__paginate(self):
+        products = ProductFactory.create_batch(4, organization_id=self.organization.id)
+        path = reverse("product-list", kwargs={"organization_id": self.organization.id})
+        data = {"limit": 2, "offset": 1, "ordering": "id"}
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        products.sort(key=lambda product: product.id)
+        self._assertGetResponseData(
+            response.json()["results"], (products[1], products[2]), is_ordered=True
+        )
 
     def test_list__sort__code(self):
         products = ProductFactory.create_batch(2, organization_id=self.organization.id)

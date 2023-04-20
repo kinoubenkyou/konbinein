@@ -20,7 +20,7 @@ class Product(Model):
             ),
         )
 
-    code = CharField(max_length=255, unique=True)
+    code = CharField(max_length=255)
     name = CharField(max_length=255)
     organization = ForeignKey(Organization, on_delete=CASCADE)
     price = DecimalField(decimal_places=4, max_digits=19)

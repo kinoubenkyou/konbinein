@@ -204,6 +204,23 @@ class ProductShippingViewSetTestCase(StaffTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assertGetResponseData(response.json(), product_shipping_list)
 
+    def test_list__paginate(self):
+        product_shipping_list = ProductShippingFactory.create_batch(
+            4, organization=self.organization
+        )
+        path = reverse(
+            "productshipping-list", kwargs={"organization_id": self.organization.id}
+        )
+        data = {"limit": 2, "offset": 1, "ordering": "id"}
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        product_shipping_list.sort(key=lambda product_shipping: product_shipping.id)
+        self._assertGetResponseData(
+            response.json()["results"],
+            (product_shipping_list[1], product_shipping_list[2]),
+            is_ordered=True,
+        )
+
     def test_list__sort__code(self):
         product_shipping_list = ProductShippingFactory.create_batch(
             2, organization_id=self.organization.id
@@ -266,23 +283,6 @@ class ProductShippingViewSetTestCase(StaffTestCase):
         )
         self._assertGetResponseData(
             response.json(), product_shipping_list, is_ordered=True
-        )
-
-    def test_list__paginate(self):
-        product_shipping_list = ProductShippingFactory.create_batch(
-            4, organization=self.organization
-        )
-        path = reverse(
-            "productshipping-list", kwargs={"organization_id": self.organization.id}
-        )
-        data = {"limit": 2, "offset": 1, "ordering": "id"}
-        response = self.client.get(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        product_shipping_list.sort(key=lambda product_shipping: product_shipping.id)
-        self._assertGetResponseData(
-            response.json()["results"],
-            (product_shipping_list[1], product_shipping_list[2]),
-            is_ordered=True,
         )
 
     def test_partial_update(self):
