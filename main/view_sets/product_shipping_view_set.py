@@ -4,7 +4,7 @@ from main.filter_sets.product_shipping_filter_set import ProductShippingFilterSe
 from main.models.product_shipping import ProductShipping
 from main.permissions.staff_permission import StaffPermission
 from main.serializers.product_shipping_serializer import ProductShippingSerializer
-from main.views.filter_mixin import FilterMixin
+from main.view_sets.filter_mixin import FilterMixin
 
 
 class ProductShippingViewSet(FilterMixin, ModelViewSet):

@@ -40,7 +40,7 @@ class OrganizationStaffViewSetTestCase(StaffTestCase):
 
     def test_create__staff_already_created(self):
         user = UserFactory.create()
-        StaffFactory.create(organization_id=self.organization.id, user_id=user.id)
+        StaffFactory.create(organization=self.organization, user=user)
         path = reverse(
             "organization-staff-list",
             kwargs={"organization_id": self.organization.id},
@@ -100,6 +100,20 @@ class OrganizationStaffViewSetTestCase(StaffTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assertGetResponseData(response.json(), staffs)
 
+    def test_list__paginate(self):
+        staffs = StaffFactory.create_batch(3, organization=self.organization)
+        staffs.append(self.staff)
+        path = reverse(
+            "organization-staff-list", kwargs={"organization_id": self.organization.id}
+        )
+        data = {"limit": 2, "offset": 1, "ordering": "id"}
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        staffs.sort(key=lambda staff: staff.id)
+        self._assertGetResponseData(
+            response.json()["results"], (staffs[1], staffs[2]), is_ordered=True
+        )
+
     def test_list__sort__does_organization_agree(self):
         staffs = [
             StaffFactory.create(
@@ -140,20 +154,6 @@ class OrganizationStaffViewSetTestCase(StaffTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         staffs.sort(key=lambda staff: staff.user.email)
         self._assertGetResponseData(response.json(), staffs, is_ordered=True)
-
-    def test_list__paginate(self):
-        staffs = StaffFactory.create_batch(3, organization=self.organization)
-        staffs.append(self.staff)
-        path = reverse(
-            "organization-staff-list", kwargs={"organization_id": self.organization.id}
-        )
-        data = {"limit": 2, "offset": 1, "ordering": "id"}
-        response = self.client.get(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        staffs.sort(key=lambda staff: staff.id)
-        self._assertGetResponseData(
-            response.json()["results"], (staffs[1], staffs[2]), is_ordered=True
-        )
 
     def test_retrieve(self):
         staff = StaffFactory.create(organization=self.organization)

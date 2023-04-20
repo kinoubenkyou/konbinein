@@ -7,6 +7,18 @@ from main.test_cases.admin_test_case import AdminTestCase
 
 
 class AdminUserViewSetTestCase(AdminTestCase):
+    def test_list__paginate(self):
+        users = UserFactory.create_batch(3)
+        users.append(self.user)
+        path = reverse("admin-user-list")
+        data = {"limit": 2, "offset": 1, "ordering": "id"}
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        users.sort(key=lambda user: user.id)
+        self._assertGetResponseData(
+            response.json()["results"], (users[1], users[2]), is_ordered=True
+        )
+
     def test_list__search__email(self):
         emails = ("search1@email.com", "search2@email.com")
         users = UserFactory.create_batch(2, email=Iterator(emails))
@@ -22,18 +34,6 @@ class AdminUserViewSetTestCase(AdminTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         users.sort(key=lambda user: user.email)
         self._assertGetResponseData(response.json(), users, is_ordered=True)
-
-    def test_list__paginate(self):
-        users = UserFactory.create_batch(3)
-        users.append(self.user)
-        path = reverse("admin-user-list")
-        data = {"limit": 2, "offset": 1, "ordering": "id"}
-        response = self.client.get(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        users.sort(key=lambda user: user.id)
-        self._assertGetResponseData(
-            response.json()["results"], (users[1], users[2]), is_ordered=True
-        )
 
     def _assertGetResponseData(self, actual, users, is_ordered=False):
         expected = [

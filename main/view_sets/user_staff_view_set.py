@@ -9,14 +9,14 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.viewsets import GenericViewSet
 
-from main.filter_sets.organization_staff_filter_set import OrganizationStaffFilterSet
+from main.filter_sets.user_staff_filter_set import UserStaffFilterSet
 from main.models.staff import Staff
-from main.permissions.staff_permission import StaffPermission
-from main.serializers.organization_staff_serializer import OrganizationStaffSerializer
-from main.views.filter_mixin import FilterMixin
+from main.permissions.user_permission import UserPermission
+from main.serializers.user_staff_serializer import UserStaffSerializer
+from main.view_sets.filter_mixin import FilterMixin
 
 
-class OrganizationStaffViewSet(
+class UserStaffViewSet(
     FilterMixin,
     CreateModelMixin,
     DestroyModelMixin,
@@ -24,25 +24,23 @@ class OrganizationStaffViewSet(
     ListModelMixin,
     RetrieveModelMixin,
 ):
-    filter_set_class = OrganizationStaffFilterSet
+    filter_set_class = UserStaffFilterSet
     ordering_fields = (
         "does_organization_agree",
         "does_user_agree",
         "id",
-        "user__email",
+        "organization__code",
     )
-    permission_classes = (StaffPermission,)
+    permission_classes = (UserPermission,)
     queryset = Staff.objects.all()
-    serializer_class = OrganizationStaffSerializer
+    serializer_class = UserStaffSerializer
 
     def get_queryset(self):
-        return (
-            super().get_queryset().filter(organization=self.kwargs["organization_id"])
-        )
+        return super().get_queryset().filter(user=self.request.user.id)
 
     @action(detail=True, methods=("post",))
     def agreeing(self, request, *args, **kwargs):
         staff = self.get_object()
-        staff.does_organization_agree = True
+        staff.does_user_agree = True
         staff.save()
         return Response(status=HTTP_204_NO_CONTENT)

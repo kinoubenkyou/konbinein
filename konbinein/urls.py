@@ -1,17 +1,17 @@
 from rest_framework import routers
 
-from main.views.admin_organization_view_set import AdminOrganizationViewSet
-from main.views.admin_user_view_set import AdminUserViewSet
-from main.views.order_view_set import OrderViewSet
-from main.views.organization_staff_view_set import OrganizationStaffViewSet
-from main.views.organization_user_view_set import OrganizationUserViewSet
-from main.views.organization_view_set import OrganizationViewSet
-from main.views.product_shipping_view_set import ProductShippingViewSet
-from main.views.product_view_set import ProductViewSet
-from main.views.public_user_view_set import PublicUserViewSet
-from main.views.user_organization_view_set import UserOrganizationViewSet
-from main.views.user_staff_view_set import UserStaffViewSet
-from main.views.user_view_set import UserViewSet
+from main.view_sets.admin_organization_view_set import AdminOrganizationViewSet
+from main.view_sets.admin_user_view_set import AdminUserViewSet
+from main.view_sets.order_view_set import OrderViewSet
+from main.view_sets.organization_staff_view_set import OrganizationStaffViewSet
+from main.view_sets.organization_user_view_set import OrganizationUserViewSet
+from main.view_sets.organization_view_set import OrganizationViewSet
+from main.view_sets.product_shipping_view_set import ProductShippingViewSet
+from main.view_sets.product_view_set import ProductViewSet
+from main.view_sets.public_user_view_set import PublicUserViewSet
+from main.view_sets.user_organization_view_set import UserOrganizationViewSet
+from main.view_sets.user_staff_view_set import UserStaffViewSet
+from main.view_sets.user_view_set import UserViewSet
 
 router = routers.SimpleRouter(trailing_slash=False)
 router.register(

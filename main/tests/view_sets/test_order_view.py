@@ -1,6 +1,11 @@
 from factory import Iterator
 from rest_framework.reverse import reverse
-from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_201_CREATED,
+    HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
+)
 
 from main.factories.order_factory import OrderFactory
 from main.factories.product_factory import ProductFactory
@@ -13,8 +18,8 @@ from main.tests import faker
 
 class OrderViewSetTestCase(StaffTestCase):
     def test_create(self):
-        built_order = OrderFactory.build()
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        built_order = OrderFactory.build()
         products = ProductFactory.create_batch(2)
         built_product_items = ProductItemFactory.build_batch(
             2, product=Iterator(products)
@@ -42,8 +47,35 @@ class OrderViewSetTestCase(StaffTestCase):
             filter_ = product_item_data | {"order_id": order.id}
             self.assertTrue(ProductItem.objects.filter(**filter_).exists())
 
+    def test_create__code_already_in_another_order(self):
+        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        order = OrderFactory.create(organization=self.organization)
+        built_order = OrderFactory.build(organization=self.organization)
+        products = ProductFactory.create_batch(2)
+        built_product_items = ProductItemFactory.build_batch(
+            2, product=Iterator(products)
+        )
+        data = {
+            "code": order.code,
+            "created_at": built_order.created_at,
+            "productitem_set": tuple(
+                {
+                    "name": product_item.name,
+                    "product": product_item.product_id,
+                    "quantity": product_item.quantity,
+                    "price": product_item.price,
+                }
+                for product_item in built_product_items
+            ),
+        }
+        response = self.client.post(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json(), {"code": ["Code is already in another order."]}
+        )
+
     def test_destroy(self):
-        order = OrderFactory.create(organization_id=self.organization.id)
+        order = OrderFactory.create(organization=self.organization)
         ProductItemFactory.create(order=order)
         path = reverse(
             "order-detail",
@@ -55,8 +87,8 @@ class OrderViewSetTestCase(StaffTestCase):
         self.assertFalse(ProductItem.objects.filter(order_id=order.id).exists())
 
     def test_list__filter__code__in(self):
-        OrderFactory.create(organization_id=self.organization.id)
-        orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
+        OrderFactory.create(organization=self.organization)
+        orders = OrderFactory.create_batch(2, organization=self.organization)
         product_items = ProductItemFactory.create_batch(4, order=Iterator(orders))
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
         data = {"code__in": tuple(order.code for order in orders)}
@@ -68,11 +100,11 @@ class OrderViewSetTestCase(StaffTestCase):
         created_at_list = [faker.past_datetime() for _ in range(3)]
         created_at_list.sort(reverse=True)
         OrderFactory.create(
-            organization_id=self.organization.id, created_at=created_at_list.pop()
+            organization=self.organization, created_at=created_at_list.pop()
         )
         orders = OrderFactory.create_batch(
             2,
-            organization_id=self.organization.id,
+            organization=self.organization,
             created_at=Iterator(created_at_list),
         )
         product_items = ProductItemFactory.create_batch(4, order=Iterator(orders))
@@ -86,11 +118,11 @@ class OrderViewSetTestCase(StaffTestCase):
         created_at_list = [faker.past_datetime() for _ in range(3)]
         created_at_list.sort()
         OrderFactory.create(
-            organization_id=self.organization.id, created_at=created_at_list.pop()
+            organization=self.organization, created_at=created_at_list.pop()
         )
         orders = OrderFactory.create_batch(
             2,
-            organization_id=self.organization.id,
+            organization=self.organization,
             created_at=Iterator(created_at_list),
         )
         product_items = ProductItemFactory.create_batch(4, order=Iterator(orders))
@@ -101,9 +133,9 @@ class OrderViewSetTestCase(StaffTestCase):
         self._assertGetResponseData(response.json(), orders, product_items)
 
     def test_list__filter__productitem__name__in(self):
-        order = OrderFactory.create(organization_id=self.organization.id)
+        order = OrderFactory.create(organization=self.organization)
         ProductItemFactory.create_batch(2, order=order)
-        orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
+        orders = OrderFactory.create_batch(2, organization=self.organization)
         product_items = ProductItemFactory.create_batch(4, order=Iterator(orders))
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
         data = {
@@ -116,7 +148,7 @@ class OrderViewSetTestCase(StaffTestCase):
         self._assertGetResponseData(response.json(), orders, product_items)
 
     def test_list__filter__total__gte(self):
-        orders = OrderFactory.create_batch(3, organization_id=self.organization.id)
+        orders = OrderFactory.create_batch(3, organization=self.organization)
         product_items = ProductItemFactory.create_batch(6, order=Iterator(orders))
         orders.sort(
             key=lambda order_: self._get_order_total(order_, product_items),
@@ -135,7 +167,7 @@ class OrderViewSetTestCase(StaffTestCase):
         self._assertGetResponseData(response.json(), orders, product_items)
 
     def test_list__filter__total__lte(self):
-        orders = OrderFactory.create_batch(3, organization_id=self.organization.id)
+        orders = OrderFactory.create_batch(3, organization=self.organization)
         product_items = ProductItemFactory.create_batch(6, order=Iterator(orders))
         orders.sort(key=lambda order_: self._get_order_total(order_, product_items))
         order = orders.pop()
@@ -149,6 +181,27 @@ class OrderViewSetTestCase(StaffTestCase):
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assertGetResponseData(response.json(), orders, product_items)
+
+    def test_list__paginate(self):
+        orders = OrderFactory.create_batch(4, organization_id=self.organization.id)
+        product_items = ProductItemFactory.create_batch(8, order=Iterator(orders))
+        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        data = {"limit": 2, "offset": 1, "ordering": "id"}
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        orders.sort(key=lambda order: order.id)
+        paginated_orders = (orders[1], orders[2])
+        paginated_product_items = tuple(
+            product_item
+            for product_item in product_items
+            if product_item.order_id in (orders[1].id, orders[2].id)
+        )
+        self._assertGetResponseData(
+            response.json()["results"],
+            paginated_orders,
+            paginated_product_items,
+            is_ordered=True,
+        )
 
     def test_list__sort__code(self):
         orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
@@ -181,27 +234,6 @@ class OrderViewSetTestCase(StaffTestCase):
         orders.sort(key=lambda order: self._get_order_total(order, product_items))
         self._assertGetResponseData(
             response.json(), orders, product_items, is_ordered=True
-        )
-
-    def test_list__paginate(self):
-        orders = OrderFactory.create_batch(4, organization_id=self.organization.id)
-        product_items = ProductItemFactory.create_batch(8, order=Iterator(orders))
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {"limit": 2, "offset": 1, "ordering": "id"}
-        response = self.client.get(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        orders.sort(key=lambda order: order.id)
-        paginated_orders = (orders[1], orders[2])
-        paginated_product_items = tuple(
-            product_item
-            for product_item in product_items
-            if product_item.order_id in (orders[1].id, orders[2].id)
-        )
-        self._assertGetResponseData(
-            response.json()["results"],
-            paginated_orders,
-            paginated_product_items,
-            is_ordered=True,
         )
 
     def test_partial_update(self):
