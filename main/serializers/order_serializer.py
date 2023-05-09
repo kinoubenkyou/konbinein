@@ -1,6 +1,7 @@
+from decimal import Decimal
+
 from django.db.transaction import atomic
 from rest_framework.exceptions import ValidationError
-from rest_framework.fields import DecimalField
 from rest_framework.serializers import ModelSerializer
 
 from main.models.order import Order
@@ -13,7 +14,6 @@ class OrderSerializer(ModelSerializer):
         model = Order
 
     productitem_set = ProductItemSerializer(allow_empty=False, many=True)
-    total = DecimalField(decimal_places=4, max_digits=19, read_only=True)
 
     @atomic
     def create(self, validated_data):
@@ -32,11 +32,11 @@ class OrderSerializer(ModelSerializer):
             "organization_id": self.context["view"].kwargs["organization_id"],
         }
         product_item_data_list = order_attributes.pop("productitem_set", ())
-        order = super().update(instance, order_attributes)
         product_item_dict = {
             product_item.id: product_item
-            for product_item in order.productitem_set.all()
+            for product_item in instance.productitem_set.all()
         }
+        order = super().update(instance, order_attributes)
         for product_item_data in product_item_data_list:
             product_item_id = product_item_data.get("id")
             if product_item_id is None:
@@ -51,6 +51,15 @@ class OrderSerializer(ModelSerializer):
             ):
                 product_item.delete()
         return order
+
+    def validate(self, data):
+        calculated_total = sum(
+            Decimal(product_item_data["price"]) * int(product_item_data["quantity"])
+            for product_item_data in data["productitem_set"]
+        )
+        if Decimal(data["total"]) != calculated_total:
+            raise ValidationError(detail="Total is incorrect.")
+        return data
 
     def validate_code(self, value):
         query_set = Order.objects.filter(

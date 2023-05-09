@@ -1,4 +1,7 @@
-from rest_framework.fields import DecimalField, IntegerField
+from decimal import Decimal
+
+from rest_framework.exceptions import ValidationError
+from rest_framework.fields import IntegerField
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
 
@@ -13,4 +16,8 @@ class ProductItemSerializer(ModelSerializer):
 
     id = IntegerField(required=False)
     product = PrimaryKeyRelatedField(queryset=Product.objects.all(), required=True)
-    total = DecimalField(decimal_places=4, max_digits=19, read_only=True)
+
+    def validate(self, data):
+        if Decimal(data["total"]) != Decimal(data["price"]) * int(data["quantity"]):
+            raise ValidationError(detail="Total is incorrect.")
+        return data
