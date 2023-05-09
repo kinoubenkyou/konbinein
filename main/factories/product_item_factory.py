@@ -1,4 +1,4 @@
-from factory import Faker, Sequence, SubFactory
+from factory import Faker, LazyAttribute, Sequence, SubFactory
 from factory.django import DjangoModelFactory
 
 from main.factories.order_factory import OrderFactory
@@ -15,3 +15,4 @@ class ProductItemFactory(DjangoModelFactory):
     price = Faker("pydecimal", left_digits=2, positive=True, right_digits=2)
     product = SubFactory(ProductFactory)
     quantity = Faker("pyint", max_value=100, min_value=1)
+    total = LazyAttribute(lambda product: product.price * product.quantity)
