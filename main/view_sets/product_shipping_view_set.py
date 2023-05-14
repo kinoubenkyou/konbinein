@@ -9,7 +9,7 @@ from main.view_sets.filter_mixin import FilterMixin
 
 class ProductShippingViewSet(FilterMixin, ModelViewSet):
     filter_set_class = ProductShippingFilterSet
-    ordering_fields = ("code", "fee", "id", "name", "shipping_type")
+    ordering_fields = ("code", "fixed_fee", "id", "name", "unit_fee")
     permission_classes = (StaffPermission,)
     queryset = ProductShipping.objects.all()
     serializer_class = ProductShippingSerializer

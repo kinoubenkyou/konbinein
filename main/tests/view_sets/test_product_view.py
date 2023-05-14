@@ -176,6 +176,7 @@ class ProductViewSetTestCase(StaffTestCase):
         expected = [
             {
                 "code": product.code,
+                "id": product.id,
                 "name": product.name,
                 "price": f"{product.price:.4f}",
             }
