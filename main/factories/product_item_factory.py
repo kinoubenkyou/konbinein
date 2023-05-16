@@ -12,7 +12,7 @@ class ProductItemFactory(DjangoModelFactory):
 
     name = Sequence(lambda n: f"name{n}")
     order = SubFactory(OrderFactory)
-    price = Faker("pydecimal", left_digits=2, positive=True, right_digits=2)
+    price = Faker("pydecimal", left_digits=2, positive=True, right_digits=4)
     product = SubFactory(ProductFactory)
     quantity = Faker("pyint", max_value=100, min_value=1)
     total = LazyAttribute(lambda product: product.price * product.quantity)

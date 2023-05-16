@@ -22,7 +22,7 @@ class UserSerializer(ModelSerializer):
     password = CharField(max_length=255, write_only=True)
 
     def update(self, instance, validated_data):
-        user_attributes = validated_data | {}
+        user_attributes = {**validated_data}
         if "email" in user_attributes and user_attributes["email"] != instance.email:
             user_attributes["email_verifying_token"] = Token.generate_key()
         if "password" in user_attributes and not check_password(

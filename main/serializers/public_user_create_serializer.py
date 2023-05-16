@@ -14,7 +14,8 @@ class PublicUserCreateSerializer(ModelSerializer):
     password = CharField(max_length=255, write_only=True)
 
     def create(self, validated_data):
-        user_attributes = validated_data | {
+        user_attributes = {
+            **validated_data,
             "email_verifying_token": Token.generate_key(),
             "hashed_password": make_password(validated_data["password"]),
             "is_system_administrator": False,

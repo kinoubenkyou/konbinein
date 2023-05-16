@@ -9,7 +9,7 @@ class TokenAuthenticationTestCase(TransactionTestCase):
     def test_authenticate__scheme_not_match(self):
         request = RequestFactory(HTTP_AUTHORIZATION="scheme").get("/")
         actual = TokenAuthentication().authenticate(request)
-        self.assertEqual(actual, None)
+        self.assertIsNone(actual)
 
     def test_authenticate__token_not_provided(self):
         request = RequestFactory(HTTP_AUTHORIZATION=TokenAuthentication.SCHEME).get("/")

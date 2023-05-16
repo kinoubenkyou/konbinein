@@ -18,7 +18,7 @@ class AdminOrganizationViewSetTestCase(AdminTestCase):
         }
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_201_CREATED)
-        filter_ = data | {}
+        filter_ = {**data}
         del filter_["user_id"]
         organization = Organization.objects.filter(**filter_).first()
         self.assertIsNotNone(organization)

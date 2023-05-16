@@ -35,7 +35,7 @@ class UserViewSetTestCase(UserTestCase):
         }
         response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        filter_ = data | {"id": self.user.id}
+        filter_ = {**data, "id": self.user.id}
         del filter_["password"]
         del filter_["current_password"]
         user = User.objects.filter(**filter_).first()

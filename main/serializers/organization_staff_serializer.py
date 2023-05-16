@@ -26,7 +26,8 @@ class OrganizationStaffSerializer(ModelSerializer):
     user_email = CharField(read_only=True, source="user.email")
 
     def create(self, validated_data):
-        staff_attributes = validated_data | {
+        staff_attributes = {
+            **validated_data,
             "does_organization_agree": True,
             "does_user_agree": False,
             "organization_id": self.context["view"].kwargs["organization_id"],

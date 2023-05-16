@@ -25,7 +25,8 @@ class UserStaffSerializer(ModelSerializer):
     )
 
     def create(self, validated_data):
-        staff_attributes = validated_data | {
+        staff_attributes = {
+            **validated_data,
             "does_organization_agree": False,
             "does_user_agree": True,
             "user_id": self.context["view"].kwargs["user_id"],

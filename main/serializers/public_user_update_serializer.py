@@ -15,7 +15,8 @@ class PublicUserUpdateSerializer(ModelSerializer):
     token = CharField(max_length=255, write_only=True)
 
     def update(self, instance, validated_data):
-        user_attributes = validated_data | {
+        user_attributes = {
+            **validated_data,
             "hashed_password": make_password(validated_data["password"]),
             "password_resetting_token": None,
         }

@@ -21,3 +21,8 @@ class ProductItemSerializer(ModelSerializer):
         if Decimal(data["total"]) != Decimal(data["price"]) * int(data["quantity"]):
             raise ValidationError(detail="Total is incorrect.")
         return data
+
+    def validate_product(self, value):
+        if value.organization_id != int(self.context["view"].kwargs["organization_id"]):
+            raise ValidationError(detail="Product is in another organization.")
+        return value

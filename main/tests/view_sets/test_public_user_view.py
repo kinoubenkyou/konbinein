@@ -56,7 +56,8 @@ class PublicUserViewSetTestCase(APITestCase):
         }
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_201_CREATED)
-        filter_ = data | {
+        filter_ = {
+            **data,
             "authentication_token": None,
             "is_system_administrator": False,
         }
