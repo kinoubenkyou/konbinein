@@ -23,7 +23,7 @@ class OrganizationViewSetTestCase(StaffTestCase):
         data = {"code": built_organization.code, "name": built_organization.name}
         response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        filter_ = data | {"id": self.organization.id}
+        filter_ = {**data, "id": self.organization.id}
         self.assertTrue(Organization.objects.filter(**filter_).exists())
 
     def test_retrieve(self):

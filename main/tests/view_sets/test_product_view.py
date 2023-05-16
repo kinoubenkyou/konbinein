@@ -24,7 +24,7 @@ class ProductViewSetTestCase(StaffTestCase):
         }
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_201_CREATED)
-        filter_ = data | {"organization_id": self.organization.id}
+        filter_ = {**data, "organization_id": self.organization.id}
         product = Product.objects.filter(**filter_).first()
         self.assertIsNotNone(product)
 
@@ -73,7 +73,7 @@ class ProductViewSetTestCase(StaffTestCase):
 
     def test_list__filter__price__gte(self):
         prices = [
-            faker.pydecimal(left_digits=2, positive=True, right_digits=2)
+            faker.pydecimal(left_digits=2, positive=True, right_digits=4)
             for _ in range(3)
         ]
         prices.sort(reverse=True)
@@ -91,7 +91,7 @@ class ProductViewSetTestCase(StaffTestCase):
 
     def test_list__filter__price__lte(self):
         prices = [
-            faker.pydecimal(left_digits=2, positive=True, right_digits=2)
+            faker.pydecimal(left_digits=2, positive=True, right_digits=4)
             for _ in range(3)
         ]
         prices.sort()
@@ -156,7 +156,7 @@ class ProductViewSetTestCase(StaffTestCase):
         }
         response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        filter_ = data | {"id": product.id, "organization_id": self.organization.id}
+        filter_ = {**data, "id": product.id, "organization_id": self.organization.id}
         self.assertTrue(Product.objects.filter(**filter_).exists())
 
     def test_retrieve(self):
@@ -178,7 +178,7 @@ class ProductViewSetTestCase(StaffTestCase):
                 "code": product.code,
                 "id": product.id,
                 "name": product.name,
-                "price": f"{product.price:.4f}",
+                "price": str(product.price),
             }
             for product in products
         ]

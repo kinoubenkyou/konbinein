@@ -9,7 +9,7 @@ from main.view_sets.filter_mixin import FilterMixin
 
 class ProductViewSet(FilterMixin, ModelViewSet):
     filter_set_class = ProductFilterSet
-    ordering_fields = ("code", "name", "id", "price")
+    ordering_fields = ("code", "id", "name", "price")
     permission_classes = (StaffPermission,)
     queryset = Product.objects.all()
     serializer_class = ProductSerializer

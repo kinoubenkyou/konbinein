@@ -20,11 +20,11 @@ from main.tests import faker
 
 class ProductShippingViewSetTestCase(StaffTestCase):
     def test_create(self):
+        built_product_shipping = ProductShippingFactory.build()
+        products = ProductFactory.create_batch(2, organization=self.organization)
         path = reverse(
             "productshipping-list", kwargs={"organization_id": self.organization.id}
         )
-        built_product_shipping = ProductShippingFactory.build()
-        products = ProductFactory.create_batch(2, organization=self.organization)
         data = {
             "code": built_product_shipping.code,
             "fixed_fee": built_product_shipping.fixed_fee,
@@ -36,7 +36,7 @@ class ProductShippingViewSetTestCase(StaffTestCase):
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_201_CREATED)
         product_ids = data.pop("products")
-        filter_ = data | {"organization_id": self.organization.id}
+        filter_ = {**data, "organization_id": self.organization.id}
         product_shipping = ProductShipping.objects.filter(**filter_).first()
         self.assertIsNotNone(product_shipping)
         self.assertCountEqual(
@@ -47,14 +47,14 @@ class ProductShippingViewSetTestCase(StaffTestCase):
         )
 
     def test_create__code_already_in_another_product_shipping(self):
-        path = reverse(
-            "productshipping-list", kwargs={"organization_id": self.organization.id}
-        )
         product_shipping = ProductShippingFactory.create(organization=self.organization)
         built_product_shipping = ProductShippingFactory.build(
             organization=self.organization
         )
         products = ProductFactory.create_batch(2, organization=self.organization)
+        path = reverse(
+            "productshipping-list", kwargs={"organization_id": self.organization.id}
+        )
         data = {
             "code": product_shipping.code,
             "fixed_fee": built_product_shipping.fixed_fee,
@@ -70,19 +70,19 @@ class ProductShippingViewSetTestCase(StaffTestCase):
         )
 
     def test_create__products_already_have_shipping_with_zones(self):
-        products = ProductFactory.create_batch(3, organization=self.organization)
         zones = faker.random_choices(
             elements=tuple(choice[0] for choice in ZONE_CHOICES), length=3
         )
         product_shipping = ProductShippingFactory.create(
             organization=self.organization, zones=zones[0:2]
         )
+        built_product_shipping = ProductShippingFactory.build(
+            organization=self.organization
+        )
+        products = ProductFactory.create_batch(3, organization=self.organization)
         product_shipping.products.set(products[0:2])
         path = reverse(
             "productshipping-list", kwargs={"organization_id": self.organization.id}
-        )
-        built_product_shipping = ProductShippingFactory.build(
-            organization=self.organization
         )
         data = {
             "code": built_product_shipping.code,
@@ -100,13 +100,13 @@ class ProductShippingViewSetTestCase(StaffTestCase):
         )
 
     def test_create__products_in_another_organizations(self):
-        path = reverse(
-            "productshipping-list", kwargs={"organization_id": self.organization.id}
-        )
         built_product_shipping = ProductShippingFactory.build(
             organization=self.organization
         )
         products = ProductFactory.create_batch(2)
+        path = reverse(
+            "productshipping-list", kwargs={"organization_id": self.organization.id}
+        )
         data = {
             "code": built_product_shipping.code,
             "fixed_fee": built_product_shipping.fixed_fee,
@@ -152,7 +152,7 @@ class ProductShippingViewSetTestCase(StaffTestCase):
 
     def test_list__filter__fixed_fee__gte(self):
         fixed_fee = [
-            faker.pydecimal(left_digits=2, positive=True, right_digits=2)
+            faker.pydecimal(left_digits=2, positive=True, right_digits=4)
             for _ in range(3)
         ]
         fixed_fee.sort(reverse=True)
@@ -174,7 +174,7 @@ class ProductShippingViewSetTestCase(StaffTestCase):
 
     def test_list__filter__fixed_fee__lte(self):
         fixed_fee = [
-            faker.pydecimal(left_digits=2, positive=True, right_digits=2)
+            faker.pydecimal(left_digits=2, positive=True, right_digits=4)
             for _ in range(3)
         ]
         fixed_fee.sort()
@@ -196,7 +196,7 @@ class ProductShippingViewSetTestCase(StaffTestCase):
 
     def test_list__filter__unit_fee__gte(self):
         unit_fee = [
-            faker.pydecimal(left_digits=2, positive=True, right_digits=2)
+            faker.pydecimal(left_digits=2, positive=True, right_digits=4)
             for _ in range(3)
         ]
         unit_fee.sort(reverse=True)
@@ -218,7 +218,7 @@ class ProductShippingViewSetTestCase(StaffTestCase):
 
     def test_list__filter__unit_fee__lte(self):
         unit_fee = [
-            faker.pydecimal(left_digits=2, positive=True, right_digits=2)
+            faker.pydecimal(left_digits=2, positive=True, right_digits=4)
             for _ in range(3)
         ]
         unit_fee.sort()
@@ -269,7 +269,7 @@ class ProductShippingViewSetTestCase(StaffTestCase):
             "productshipping-list", kwargs={"organization_id": self.organization.id}
         )
         data = {
-            "products__id__in": tuple(
+            "products__in": tuple(
                 product.id
                 for product_shipping_id in product_dict
                 for product in product_dict[product_shipping_id]
@@ -300,17 +300,27 @@ class ProductShippingViewSetTestCase(StaffTestCase):
         product_shipping_list = ProductShippingFactory.create_batch(
             4, organization=self.organization
         )
+        product_shipping_list.sort(key=lambda product_shipping: product_shipping.id)
+        paginated_product_shipping_list = (
+            product_shipping_list[1],
+            product_shipping_list[2],
+        )
+        product_dict = {}
+        for product_shipping in paginated_product_shipping_list:
+            products = ProductFactory.create_batch(2, organization=self.organization)
+            product_shipping.products.set(products)
+            product_dict[product_shipping.id] = products
         path = reverse(
             "productshipping-list", kwargs={"organization_id": self.organization.id}
         )
         data = {"limit": 2, "offset": 1, "ordering": "id"}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        product_shipping_list.sort(key=lambda product_shipping: product_shipping.id)
         self._assertGetResponseData(
             response.json()["results"],
-            (product_shipping_list[1], product_shipping_list[2]),
+            paginated_product_shipping_list,
             is_ordered=True,
+            product_dict=product_dict,
         )
 
     def test_list__sort__code(self):
@@ -374,15 +384,15 @@ class ProductShippingViewSetTestCase(StaffTestCase):
         )
 
     def test_partial_update(self):
-        products = ProductFactory.create_batch(3, organization=self.organization)
         zones = faker.random_choices(
             elements=tuple(choice[0] for choice in ZONE_CHOICES), length=3
         )
         product_shipping = ProductShippingFactory.create(
             organization=self.organization, zones=zones[0:2]
         )
-        product_shipping.products.set(products[0:2])
         built_product_shipping = ProductShippingFactory.build()
+        products = ProductFactory.create_batch(3, organization=self.organization)
+        product_shipping.products.set(products[0:2])
         path = reverse(
             "productshipping-detail",
             kwargs={"organization_id": self.organization.id, "pk": product_shipping.id},
@@ -398,7 +408,8 @@ class ProductShippingViewSetTestCase(StaffTestCase):
         response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         product_ids = data.pop("products")
-        filter_ = data | {
+        filter_ = {
+            **data,
             "id": product_shipping.id,
             "organization_id": self.organization.id,
         }
@@ -412,8 +423,8 @@ class ProductShippingViewSetTestCase(StaffTestCase):
         )
 
     def test_retrieve(self):
-        products = ProductFactory.create_batch(2, organization=self.organization)
         product_shipping = ProductShippingFactory.create(organization=self.organization)
+        products = ProductFactory.create_batch(2, organization=self.organization)
         product_shipping.products.set(products)
         path = reverse(
             "productshipping-detail",
@@ -424,34 +435,33 @@ class ProductShippingViewSetTestCase(StaffTestCase):
         self._assertGetResponseData(
             (response.json(),),
             (product_shipping,),
-            product_dict={product_shipping.id: products},
+            products,
         )
 
     def _assertGetResponseData(
         self, actual1, product_shipping_list, is_ordered=False, product_dict=None
     ):
-        product_dict = product_dict or dict()
         actual2 = {dict_["id"]: dict_.pop("products") for dict_ in actual1}
         expected = [
             {
                 "code": product_shipping.code,
-                "fixed_fee": f"{product_shipping.fixed_fee:.4f}",
+                "fixed_fee": str(product_shipping.fixed_fee),
                 "id": product_shipping.id,
                 "name": product_shipping.name,
-                "unit_fee": f"{product_shipping.unit_fee:.4f}",
+                "unit_fee": str(product_shipping.unit_fee),
                 "zones": product_shipping.zones,
             }
             for product_shipping in product_shipping_list
         ]
         if is_ordered:
-            self.assertEqual(actual1, expected)
+            self.assertSequenceEqual(actual1, expected)
         else:
             self.assertCountEqual(actual1, expected)
-        for product_shipping_id, product_ids in actual2.items():
+        if product_dict is not None:
             self.assertCountEqual(
-                product_ids,
-                (
-                    product.id
-                    for product in product_dict.get(product_shipping_id, tuple())
-                ),
+                tuple(id_ for id_ in actual2), tuple(id_ for id_ in product_dict)
             )
+            for id_, product_ids in actual2.items():
+                self.assertCountEqual(
+                    product_ids, (product.id for product in product_dict[id_])
+                )

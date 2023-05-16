@@ -17,18 +17,20 @@ class OrderSerializer(ModelSerializer):
 
     @atomic
     def create(self, validated_data):
-        order_attributes = validated_data | {
+        order_attributes = {
+            **validated_data,
             "organization_id": self.context["view"].kwargs["organization_id"],
         }
         product_item_data_list = order_attributes.pop("productitem_set", ())
         order = super().create(order_attributes)
         for product_item_data in product_item_data_list:
-            ProductItemSerializer().create(product_item_data | {"order": order})
+            ProductItemSerializer().create({**product_item_data, "order": order})
         return order
 
     @atomic
     def update(self, instance, validated_data):
-        order_attributes = validated_data | {
+        order_attributes = {
+            **validated_data,
             "organization_id": self.context["view"].kwargs["organization_id"],
         }
         product_item_data_list = order_attributes.pop("productitem_set", ())
@@ -40,7 +42,7 @@ class OrderSerializer(ModelSerializer):
         for product_item_data in product_item_data_list:
             product_item_id = product_item_data.get("id")
             if product_item_id is None:
-                ProductItemSerializer().create(product_item_data | {"order": order})
+                ProductItemSerializer().create({**product_item_data, "order": order})
             else:
                 ProductItemSerializer().update(
                     product_item_dict[product_item_id], product_item_data

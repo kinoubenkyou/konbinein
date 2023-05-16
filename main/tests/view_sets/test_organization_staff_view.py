@@ -31,7 +31,8 @@ class OrganizationStaffViewSetTestCase(StaffTestCase):
         data = {"user_id": UserFactory.create().id}
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_201_CREATED)
-        filter_ = data | {
+        filter_ = {
+            **data,
             "does_organization_agree": True,
             "does_user_agree": False,
             "organization_id": self.organization.id,

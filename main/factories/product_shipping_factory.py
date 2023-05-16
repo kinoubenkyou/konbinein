@@ -11,10 +11,10 @@ class ProductShippingFactory(DjangoModelFactory):
         model = ProductShipping
 
     code = Sequence(lambda n: f"code{n}")
-    fixed_fee = Faker("pydecimal", left_digits=2, positive=True, right_digits=2)
+    fixed_fee = Faker("pydecimal", left_digits=2, positive=True, right_digits=4)
     name = Sequence(lambda n: f"name{n}")
     organization = SubFactory(OrganizationFactory)
-    unit_fee = Faker("pydecimal", left_digits=2, positive=True, right_digits=2)
+    unit_fee = Faker("pydecimal", left_digits=2, positive=True, right_digits=4)
     zones = Faker(
         "random_choices", elements=tuple(choice[0] for choice in ZONE_CHOICES), length=2
     )

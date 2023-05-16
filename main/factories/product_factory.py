@@ -12,4 +12,4 @@ class ProductFactory(DjangoModelFactory):
     code = Sequence(lambda n: f"code{n}")
     name = Sequence(lambda n: f"name{n}")
     organization = SubFactory(OrganizationFactory)
-    price = Faker("pydecimal", left_digits=2, positive=True, right_digits=2)
+    price = Faker("pydecimal", left_digits=2, positive=True, right_digits=4)
