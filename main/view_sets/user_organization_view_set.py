@@ -6,7 +6,7 @@ from main.permissions.user_permission import UserPermission
 from main.serializers.organization_serializer import OrganizationSerializer
 
 
-class UserOrganizationViewSet(GenericViewSet, ListModelMixin):
+class UserOrganizationViewSet(ListModelMixin, GenericViewSet):
     ordering_fields = ("code", "id")
     permission_classes = (UserPermission,)
     queryset = Organization.objects.all()

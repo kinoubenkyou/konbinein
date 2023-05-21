@@ -14,10 +14,10 @@ from rest_framework.viewsets import GenericViewSet
 from main.models.user import User
 from main.serializers.public_user_create_serializer import PublicUserCreateSerializer
 from main.serializers.public_user_update_serializer import PublicUserUpdateSerializer
-from main.utils import send_email_verification
+from main.view_sets import send_email_verification
 
 
-class PublicUserViewSet(CreateModelMixin, GenericViewSet, UpdateModelMixin):
+class PublicUserViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
     queryset = User.objects.all()
 
     @action(detail=False, methods=("post",))

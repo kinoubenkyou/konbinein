@@ -6,7 +6,7 @@ from main.permissions.admin_permission import AdminPermission
 from main.serializers.user_serializer import UserSerializer
 
 
-class AdminUserViewSet(GenericViewSet, ListModelMixin):
+class AdminUserViewSet(ListModelMixin, GenericViewSet):
     ordering_fields = ("email", "id")
     permission_classes = (AdminPermission,)
     queryset = User.objects.all()
