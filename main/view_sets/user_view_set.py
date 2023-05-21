@@ -11,7 +11,7 @@ from rest_framework.viewsets import GenericViewSet
 from main.models.user import User
 from main.permissions.user_permission import UserPermission
 from main.serializers.user_serializer import UserSerializer
-from main.utils import send_email_verification
+from main.view_sets import send_email_verification
 
 
 class UserViewSet(

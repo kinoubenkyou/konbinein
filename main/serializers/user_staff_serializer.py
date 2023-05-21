@@ -1,9 +1,7 @@
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import CharField
-from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
 
-from main.models.organization import Organization
 from main.models.staff import Staff
 
 
@@ -13,16 +11,13 @@ class UserStaffSerializer(ModelSerializer):
             "does_organization_agree",
             "does_user_agree",
             "id",
+            "organization",
             "organization_code",
-            "organization_id",
         )
         model = Staff
         read_only_fields = ("does_organization_agree", "does_user_agree")
 
     organization_code = CharField(read_only=True, source="organization.code")
-    organization_id = PrimaryKeyRelatedField(
-        queryset=Organization.objects.all(), source="organization"
-    )
 
     def create(self, validated_data):
         staff_attributes = {
@@ -33,7 +28,7 @@ class UserStaffSerializer(ModelSerializer):
         }
         return super().create(staff_attributes)
 
-    def validate_organization_id(self, value):
+    def validate_organization(self, value):
         if Staff.objects.filter(
             organization=value, user=self.context["view"].kwargs["user_id"]
         ).exists():
