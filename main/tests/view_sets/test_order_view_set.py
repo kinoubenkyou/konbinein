@@ -24,9 +24,13 @@ class OrderViewSetTestCase(StaffTestCase):
             2, product=Iterator(products)
         )
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        built_product_total = sum(
+            built_product_item.total for built_product_item in built_product_items
+        )
         data = {
             "code": built_order.code,
             "created_at": built_order.created_at,
+            "product_total": built_product_total,
             "productitem_set": tuple(
                 {
                     "name": built_product_item.name,
@@ -37,10 +41,7 @@ class OrderViewSetTestCase(StaffTestCase):
                 }
                 for built_product_item in built_product_items
             ),
-            "total": sum(
-                built_product_item.price * built_product_item.quantity
-                for built_product_item in built_product_items
-            ),
+            "total": built_product_total,
         }
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_201_CREATED)
@@ -64,9 +65,13 @@ class OrderViewSetTestCase(StaffTestCase):
             2, product=Iterator(products)
         )
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        built_product_total = sum(
+            built_product_item.total for built_product_item in built_product_items
+        )
         data = {
             "code": order.code,
             "created_at": built_order.created_at,
+            "product_total": built_product_total,
             "productitem_set": tuple(
                 {
                     "name": built_product_item.name,
@@ -77,10 +82,7 @@ class OrderViewSetTestCase(StaffTestCase):
                 }
                 for built_product_item in built_product_items
             ),
-            "total": sum(
-                built_product_item.price * built_product_item.quantity
-                for built_product_item in built_product_items
-            ),
+            "total": built_product_total,
         }
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
@@ -95,9 +97,13 @@ class OrderViewSetTestCase(StaffTestCase):
             2, product=Iterator(products)
         )
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        built_product_total = sum(
+            built_product_item.total for built_product_item in built_product_items
+        )
         data = {
             "code": built_order.code,
             "created_at": built_order.created_at,
+            "product_total": built_product_total,
             "productitem_set": tuple(
                 {
                     "name": built_product_item.name,
@@ -108,10 +114,7 @@ class OrderViewSetTestCase(StaffTestCase):
                 }
                 for built_product_item in built_product_items
             ),
-            "total": sum(
-                built_product_item.price * built_product_item.quantity
-                for built_product_item in built_product_items
-            ),
+            "total": built_product_total,
         }
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
@@ -125,6 +128,39 @@ class OrderViewSetTestCase(StaffTestCase):
             },
         )
 
+    def test_create__product_total_incorrect(self):
+        built_order = OrderFactory.build(organization=self.organization)
+        products = ProductFactory.create_batch(2, organization_id=self.organization.id)
+        built_product_items = ProductItemFactory.build_batch(
+            2, product=Iterator(products)
+        )
+        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        built_product_total = (
+            sum(built_product_item.total for built_product_item in built_product_items)
+            + 1
+        )
+        data = {
+            "code": built_order.code,
+            "created_at": built_order.created_at,
+            "product_total": built_product_total,
+            "productitem_set": tuple(
+                {
+                    "name": built_product_item.name,
+                    "product": built_product_item.product_id,
+                    "quantity": built_product_item.quantity,
+                    "price": built_product_item.price,
+                    "total": built_product_item.total,
+                }
+                for built_product_item in built_product_items
+            ),
+            "total": built_product_total,
+        }
+        response = self.client.post(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json(), {"non_field_errors": ["Product total is incorrect."]}
+        )
+
     def test_create__productitem_set_total_incorrect(self):
         built_order = OrderFactory.build(organization=self.organization)
         products = ProductFactory.create_batch(2, organization_id=self.organization.id)
@@ -132,9 +168,13 @@ class OrderViewSetTestCase(StaffTestCase):
             2, product=Iterator(products)
         )
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        built_product_total = sum(
+            built_product_item.total for built_product_item in built_product_items
+        )
         data = {
             "code": built_order.code,
             "created_at": built_order.created_at,
+            "product_total": built_product_total,
             "productitem_set": tuple(
                 {
                     "name": built_product_item.name,
@@ -145,10 +185,7 @@ class OrderViewSetTestCase(StaffTestCase):
                 }
                 for built_product_item in built_product_items
             ),
-            "total": sum(
-                built_product_item.price * built_product_item.quantity
-                for built_product_item in built_product_items
-            ),
+            "total": built_product_total,
         }
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
@@ -169,9 +206,13 @@ class OrderViewSetTestCase(StaffTestCase):
             2, product=Iterator(products)
         )
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        built_product_total = sum(
+            built_product_item.total for built_product_item in built_product_items
+        )
         data = {
             "code": built_order.code,
             "created_at": built_order.created_at,
+            "product_total": built_product_total,
             "productitem_set": tuple(
                 {
                     "name": built_product_item.name,
@@ -182,11 +223,7 @@ class OrderViewSetTestCase(StaffTestCase):
                 }
                 for built_product_item in built_product_items
             ),
-            "total": sum(
-                built_product_item.price * built_product_item.quantity
-                for built_product_item in built_product_items
-            )
-            + 1,
+            "total": built_product_total + 1,
         }
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
@@ -245,6 +282,46 @@ class OrderViewSetTestCase(StaffTestCase):
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assertGetResponseData(response.json(), orders)
+
+    def test_list__filter__product_total__gte(self):
+        orders = OrderFactory.create_batch(3, organization=self.organization)
+        product_items = ProductItemFactory.create_batch(6, order=Iterator(orders))
+        orders.sort(key=lambda order_: order_.product_total, reverse=True)
+        orders.pop()
+        product_item_dict = {}
+        for order in orders:
+            product_item_dict[order.id] = tuple(
+                product_item
+                for product_item in product_items
+                if product_item.order_id == order.id
+            )
+        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        data = {"product_total__gte": orders[-1].product_total}
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self._assertGetResponseData(
+            response.json(), orders, product_item_dict=product_item_dict
+        )
+
+    def test_list__filter__product_total__lte(self):
+        orders = OrderFactory.create_batch(3, organization=self.organization)
+        product_items = ProductItemFactory.create_batch(6, order=Iterator(orders))
+        orders.sort(key=lambda order_: order_.product_total)
+        orders.pop()
+        product_item_dict = {}
+        for order in orders:
+            product_item_dict[order.id] = tuple(
+                product_item
+                for product_item in product_items
+                if product_item.order_id == order.id
+            )
+        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        data = {"product_total__lte": orders[-1].product_total}
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self._assertGetResponseData(
+            response.json(), orders, product_item_dict=product_item_dict
+        )
 
     def test_list__filter__productitem__name__in(self):
         order = OrderFactory.create(organization=self.organization)
@@ -343,6 +420,26 @@ class OrderViewSetTestCase(StaffTestCase):
         orders.sort(key=lambda order: order.created_at)
         self._assertGetResponseData(response.json(), orders, is_ordered=True)
 
+    def test_list__sort__product_total(self):
+        orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
+        product_item_dict = {}
+        for order in orders:
+            product_item_dict[order.id] = ProductItemFactory.create_batch(
+                2, order=order
+            )
+        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
+        response = self.client.get(
+            path, data={"ordering": "product_total"}, format="json"
+        )
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        orders.sort(key=lambda order: order.product_total)
+        self._assertGetResponseData(
+            response.json(),
+            orders,
+            is_ordered=True,
+            product_item_dict=product_item_dict,
+        )
+
     def test_list__sort__total(self):
         orders = OrderFactory.create_batch(2, organization_id=self.organization.id)
         product_item_dict = {}
@@ -373,6 +470,9 @@ class OrderViewSetTestCase(StaffTestCase):
             "order-detail",
             kwargs={"organization_id": self.organization.id, "pk": order.id},
         )
+        built_product_total = sum(
+            built_product_item.total for built_product_item in built_product_items
+        )
         data = {
             "code": built_order.code,
             "created_at": built_order.created_at,
@@ -393,10 +493,8 @@ class OrderViewSetTestCase(StaffTestCase):
                     "total": built_product_items[1].total,
                 },
             ),
-            "total": sum(
-                product_item.price * product_item.quantity
-                for product_item in built_product_items
-            ),
+            "product_total": built_product_total,
+            "total": built_product_total,
         }
         response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
@@ -439,6 +537,7 @@ class OrderViewSetTestCase(StaffTestCase):
                 "code": order.code,
                 "created_at": order.created_at.isoformat(),
                 "id": order.id,
+                "product_total": str(order.product_total),
                 "total": str(order.total),
             }
             for order in orders

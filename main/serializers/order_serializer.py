@@ -10,7 +10,14 @@ from main.serializers.product_item_serializer import ProductItemSerializer
 
 class OrderSerializer(ModelSerializer):
     class Meta:
-        fields = ("code", "created_at", "id", "productitem_set", "total")
+        fields = (
+            "code",
+            "created_at",
+            "id",
+            "productitem_set",
+            "product_total",
+            "total",
+        )
         model = Order
 
     productitem_set = ProductItemSerializer(allow_empty=False, many=True)
@@ -55,11 +62,14 @@ class OrderSerializer(ModelSerializer):
         return order
 
     def validate(self, data):
-        calculated_total = sum(
+        calculated_product_total = sum(
             Decimal(product_item_data["price"]) * int(product_item_data["quantity"])
             for product_item_data in data["productitem_set"]
         )
-        if Decimal(data["total"]) != calculated_total:
+        product_total = Decimal(data["product_total"])
+        if product_total != calculated_product_total:
+            raise ValidationError(detail="Product total is incorrect.")
+        if Decimal(data["total"]) != product_total:
             raise ValidationError(detail="Total is incorrect.")
         return data
 
