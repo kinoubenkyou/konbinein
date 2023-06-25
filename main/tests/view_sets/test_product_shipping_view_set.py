@@ -1,6 +1,3 @@
-from random import shuffle
-
-from factory import Iterator
 from rest_framework.reverse import reverse
 from rest_framework.status import (
     HTTP_200_OK,
@@ -29,7 +26,7 @@ class ProductShippingViewSetTestCase(StaffTestCase):
             "code": built_product_shipping.code,
             "fixed_fee": built_product_shipping.fixed_fee,
             "name": built_product_shipping.name,
-            "products": tuple(product.id for product in products),
+            "products": [product.id for product in products],
             "unit_fee": built_product_shipping.unit_fee,
             "zones": built_product_shipping.zones,
         }
@@ -59,7 +56,7 @@ class ProductShippingViewSetTestCase(StaffTestCase):
             "code": product_shipping.code,
             "fixed_fee": built_product_shipping.fixed_fee,
             "name": built_product_shipping.name,
-            "products": tuple(product.id for product in products),
+            "products": [product.id for product in products],
             "unit_fee": built_product_shipping.unit_fee,
             "zones": built_product_shipping.zones,
         }
@@ -71,7 +68,7 @@ class ProductShippingViewSetTestCase(StaffTestCase):
 
     def test_create__products_already_have_shipping_with_zones(self):
         zones = faker.random_choices(
-            elements=tuple(choice[0] for choice in ZONE_CHOICES), length=3
+            elements=[choice[0] for choice in ZONE_CHOICES], length=3
         )
         product_shipping = ProductShippingFactory.create(
             organization=self.organization, zones=zones[0:2]
@@ -88,7 +85,7 @@ class ProductShippingViewSetTestCase(StaffTestCase):
             "code": built_product_shipping.code,
             "fixed_fee": built_product_shipping.fixed_fee,
             "name": built_product_shipping.name,
-            "products": tuple(product.id for product in products[1:3]),
+            "products": [product.id for product in products[1:3]],
             "unit_fee": built_product_shipping.unit_fee,
             "zones": zones[1:3],
         }
@@ -111,7 +108,7 @@ class ProductShippingViewSetTestCase(StaffTestCase):
             "code": built_product_shipping.code,
             "fixed_fee": built_product_shipping.fixed_fee,
             "name": built_product_shipping.name,
-            "products": tuple(product.id for product in products),
+            "products": [product.id for product in products],
             "unit_fee": built_product_shipping.unit_fee,
             "zones": built_product_shipping.zones,
         }
@@ -138,254 +135,275 @@ class ProductShippingViewSetTestCase(StaffTestCase):
         product_shipping_list = ProductShippingFactory.create_batch(
             2, organization=self.organization
         )
+        product_shipping_dicts = [
+            {"object": product_shipping, "product_dicts": []}
+            for product_shipping in product_shipping_list
+        ]
         path = reverse(
             "productshipping-list", kwargs={"organization_id": self.organization.id}
         )
         data = {
-            "code__in": tuple(
+            "code__in": [
                 product_shipping.code for product_shipping in product_shipping_list
-            )
+            ]
         }
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(response.json(), product_shipping_list)
+        self._assert_get_response(response.json(), product_shipping_dicts, False)
 
     def test_list__filter__fixed_fee__gte(self):
-        fixed_fee = [
-            faker.pydecimal(left_digits=2, positive=True, right_digits=4)
-            for _ in range(3)
-        ]
-        fixed_fee.sort(reverse=True)
-        ProductShippingFactory.create(
-            organization=self.organization, fixed_fee=fixed_fee.pop()
-        )
         product_shipping_list = ProductShippingFactory.create_batch(
-            2,
-            organization=self.organization,
-            fixed_fee=Iterator(fixed_fee),
+            3, organization=self.organization
         )
+        product_shipping_list.sort(
+            key=lambda product_shipping: product_shipping.fixed_fee, reverse=True
+        )
+        product_shipping_list.pop()
+        product_shipping_dicts = [
+            {"object": product_shipping, "product_dicts": []}
+            for product_shipping in product_shipping_list
+        ]
         path = reverse(
             "productshipping-list", kwargs={"organization_id": self.organization.id}
         )
         data = {"fixed_fee__gte": product_shipping_list[-1].fixed_fee}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(response.json(), product_shipping_list)
+        self._assert_get_response(response.json(), product_shipping_dicts, False)
 
     def test_list__filter__fixed_fee__lte(self):
-        fixed_fee = [
-            faker.pydecimal(left_digits=2, positive=True, right_digits=4)
-            for _ in range(3)
-        ]
-        fixed_fee.sort()
-        ProductShippingFactory.create(
-            organization=self.organization, fixed_fee=fixed_fee.pop()
-        )
         product_shipping_list = ProductShippingFactory.create_batch(
-            2,
-            organization=self.organization,
-            fixed_fee=Iterator(fixed_fee),
+            3, organization=self.organization
         )
+        product_shipping_list.sort(
+            key=lambda product_shipping: product_shipping.fixed_fee
+        )
+        product_shipping_list.pop()
+        product_shipping_dicts = [
+            {"object": product_shipping, "product_dicts": []}
+            for product_shipping in product_shipping_list
+        ]
         path = reverse(
             "productshipping-list", kwargs={"organization_id": self.organization.id}
         )
         data = {"fixed_fee__lte": product_shipping_list[-1].fixed_fee}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(response.json(), product_shipping_list)
-
-    def test_list__filter__unit_fee__gte(self):
-        unit_fee = [
-            faker.pydecimal(left_digits=2, positive=True, right_digits=4)
-            for _ in range(3)
-        ]
-        unit_fee.sort(reverse=True)
-        ProductShippingFactory.create(
-            organization=self.organization, unit_fee=unit_fee.pop()
-        )
-        product_shipping_list = ProductShippingFactory.create_batch(
-            2,
-            organization=self.organization,
-            unit_fee=Iterator(unit_fee),
-        )
-        path = reverse(
-            "productshipping-list", kwargs={"organization_id": self.organization.id}
-        )
-        data = {"unit_fee__gte": product_shipping_list[-1].unit_fee}
-        response = self.client.get(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(response.json(), product_shipping_list)
-
-    def test_list__filter__unit_fee__lte(self):
-        unit_fee = [
-            faker.pydecimal(left_digits=2, positive=True, right_digits=4)
-            for _ in range(3)
-        ]
-        unit_fee.sort()
-        ProductShippingFactory.create(
-            organization=self.organization, unit_fee=unit_fee.pop()
-        )
-        product_shipping_list = ProductShippingFactory.create_batch(
-            2,
-            organization=self.organization,
-            unit_fee=Iterator(unit_fee),
-        )
-        path = reverse(
-            "productshipping-list", kwargs={"organization_id": self.organization.id}
-        )
-        data = {"unit_fee__lte": product_shipping_list[-1].unit_fee}
-        response = self.client.get(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(response.json(), product_shipping_list)
+        self._assert_get_response(response.json(), product_shipping_dicts, False)
 
     def test_list__filter__name__in(self):
         ProductShippingFactory.create(organization=self.organization)
         product_shipping_list = ProductShippingFactory.create_batch(
             2, organization=self.organization
         )
+        product_shipping_dicts = [
+            {"object": product_shipping, "product_dicts": []}
+            for product_shipping in product_shipping_list
+        ]
         path = reverse(
             "productshipping-list", kwargs={"organization_id": self.organization.id}
         )
         data = {
-            "name__in": tuple(
+            "name__in": [
                 product_shipping.name for product_shipping in product_shipping_list
-            )
+            ]
         }
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(response.json(), product_shipping_list)
+        self._assert_get_response(response.json(), product_shipping_dicts, False)
+
+    def test_list__filter__unit_fee__gte(self):
+        product_shipping_list = ProductShippingFactory.create_batch(
+            3, organization=self.organization
+        )
+        product_shipping_list.sort(
+            key=lambda product_shipping: product_shipping.unit_fee, reverse=True
+        )
+        product_shipping_list.pop()
+        product_shipping_dicts = [
+            {"object": product_shipping, "product_dicts": []}
+            for product_shipping in product_shipping_list
+        ]
+        path = reverse(
+            "productshipping-list", kwargs={"organization_id": self.organization.id}
+        )
+        data = {"unit_fee__gte": product_shipping_list[-1].unit_fee}
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self._assert_get_response(response.json(), product_shipping_dicts, False)
+
+    def test_list__filter__unit_fee__lte(self):
+        product_shipping_list = ProductShippingFactory.create_batch(
+            3, organization=self.organization
+        )
+        product_shipping_list.sort(
+            key=lambda product_shipping: product_shipping.unit_fee
+        )
+        product_shipping_list.pop()
+        product_shipping_dicts = [
+            {"object": product_shipping, "product_dicts": []}
+            for product_shipping in product_shipping_list
+        ]
+        path = reverse(
+            "productshipping-list", kwargs={"organization_id": self.organization.id}
+        )
+        data = {"unit_fee__lte": product_shipping_list[-1].unit_fee}
+        response = self.client.get(path, data, format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self._assert_get_response(response.json(), product_shipping_dicts, False)
 
     def test_list__filter__products__id__in(self):
-        ProductShippingFactory.create(organization=self.organization)
+        product_shipping = ProductShippingFactory.create(organization=self.organization)
+        products = ProductFactory.create_batch(2, organization=self.organization)
+        product_shipping.products.set(products)
         product_shipping_list = ProductShippingFactory.create_batch(
             2, organization=self.organization
         )
-        product_dict = {}
-        for product_shipping in product_shipping_list:
-            products = ProductFactory.create_batch(2, organization=self.organization)
-            product_shipping.products.set(products)
-            product_dict[product_shipping.id] = products
+        product_shipping_dicts = [
+            {
+                "object": product_shipping,
+                "product_dicts": [
+                    {"object": product}
+                    for product in self._create_and_set_products(product_shipping)
+                ],
+            }
+            for product_shipping in product_shipping_list
+        ]
         path = reverse(
             "productshipping-list", kwargs={"organization_id": self.organization.id}
         )
         data = {
-            "products__in": tuple(
-                product.id
-                for product_shipping_id in product_dict
-                for product in product_dict[product_shipping_id]
-            )
+            "products__in": [
+                product_dict["object"].id
+                for product_shipping_dict in product_shipping_dicts
+                for product_dict in product_shipping_dict["product_dicts"]
+            ]
         }
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(
-            response.json(), product_shipping_list, product_dict=product_dict
-        )
+        self._assert_get_response(response.json(), product_shipping_dicts, False)
 
     def test_list__filter__zones__overlap(self):
         zones = [choice[0] for choice in ZONE_CHOICES]
-        shuffle(zones)
-        ProductShippingFactory.create(organization=self.organization, zones=zones[0:2])
+        ProductShippingFactory.create(
+            organization=self.organization, zones=[zones.pop(), zones.pop()]
+        )
+        product_shipping_list = ProductShippingFactory.create_batch(
+            2, organization=self.organization, zones=[zones.pop(), zones.pop()]
+        )
+        product_shipping_dicts = [
+            {"object": product_shipping, "product_dicts": []}
+            for product_shipping in product_shipping_list
+        ]
         path = reverse(
             "productshipping-list", kwargs={"organization_id": self.organization.id}
         )
-        product_shipping_list = ProductShippingFactory.create_batch(
-            2, organization=self.organization, zones=Iterator((zones[2:4], zones[4:6]))
-        )
-        data = {"zones__overlap": zones[3:5]}
+        data = {
+            "zones__overlap": [
+                product_shipping_dict["object"].zones[0]
+                for product_shipping_dict in product_shipping_dicts
+            ]
+        }
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(response.json(), product_shipping_list)
+        self._assert_get_response(response.json(), product_shipping_dicts, False)
 
     def test_list__paginate(self):
         product_shipping_list = ProductShippingFactory.create_batch(
             4, organization=self.organization
         )
         product_shipping_list.sort(key=lambda product_shipping: product_shipping.id)
-        paginated_product_shipping_list = (
-            product_shipping_list[1],
-            product_shipping_list[2],
-        )
-        product_dict = {}
-        for product_shipping in paginated_product_shipping_list:
-            products = ProductFactory.create_batch(2, organization=self.organization)
-            product_shipping.products.set(products)
-            product_dict[product_shipping.id] = products
+        product_shipping_dicts = [
+            {
+                "object": product_shipping,
+                "product_dicts": [
+                    {"object": product}
+                    for product in self._create_and_set_products(product_shipping)
+                ],
+            }
+            for product_shipping in product_shipping_list[1:3]
+        ]
         path = reverse(
             "productshipping-list", kwargs={"organization_id": self.organization.id}
         )
         data = {"limit": 2, "offset": 1, "ordering": "id"}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(
-            response.json()["results"],
-            paginated_product_shipping_list,
-            is_ordered=True,
-            product_dict=product_dict,
+        self._assert_get_response(
+            response.json()["results"], product_shipping_dicts, False
         )
 
     def test_list__sort__code(self):
         product_shipping_list = ProductShippingFactory.create_batch(
             2, organization_id=self.organization.id
         )
+        product_shipping_list.sort(key=lambda product_shipping: product_shipping.code)
+        product_shipping_dicts = [
+            {"object": product_shipping, "product_dicts": []}
+            for product_shipping in product_shipping_list
+        ]
         path = reverse(
             "productshipping-list", kwargs={"organization_id": self.organization.id}
         )
         response = self.client.get(path, data={"ordering": "code"}, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        product_shipping_list.sort(key=lambda product_shipping: product_shipping.code)
-        self._assertGetResponseData(
-            response.json(), product_shipping_list, is_ordered=True
-        )
+        self._assert_get_response(response.json(), product_shipping_dicts, True)
 
     def test_list__sort__fixed_fee(self):
         product_shipping_list = ProductShippingFactory.create_batch(
             2, organization_id=self.organization.id
         )
+        product_shipping_list.sort(
+            key=lambda product_shipping: product_shipping.fixed_fee
+        )
+        product_shipping_dicts = [
+            {"object": product_shipping, "product_dicts": []}
+            for product_shipping in product_shipping_list
+        ]
         path = reverse(
             "productshipping-list", kwargs={"organization_id": self.organization.id}
         )
         response = self.client.get(path, data={"ordering": "fixed_fee"}, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        product_shipping_list.sort(
-            key=lambda product_shipping: product_shipping.fixed_fee
-        )
-        self._assertGetResponseData(
-            response.json(), product_shipping_list, is_ordered=True
-        )
+        self._assert_get_response(response.json(), product_shipping_dicts, True)
 
     def test_list__sort__name(self):
         product_shipping_list = ProductShippingFactory.create_batch(
             2, organization_id=self.organization.id
         )
+        product_shipping_list.sort(key=lambda product_shipping: product_shipping.name)
+        product_shipping_dicts = [
+            {"object": product_shipping, "product_dicts": []}
+            for product_shipping in product_shipping_list
+        ]
         path = reverse(
             "productshipping-list", kwargs={"organization_id": self.organization.id}
         )
         response = self.client.get(path, data={"ordering": "name"}, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        product_shipping_list.sort(key=lambda product_shipping: product_shipping.name)
-        self._assertGetResponseData(
-            response.json(), product_shipping_list, is_ordered=True
-        )
+        self._assert_get_response(response.json(), product_shipping_dicts, True)
 
     def test_list__sort__unit_fee(self):
         product_shipping_list = ProductShippingFactory.create_batch(
             2, organization_id=self.organization.id
         )
+        product_shipping_list.sort(
+            key=lambda product_shipping: product_shipping.unit_fee
+        )
+        product_shipping_dicts = [
+            {"object": product_shipping, "product_dicts": []}
+            for product_shipping in product_shipping_list
+        ]
         path = reverse(
             "productshipping-list", kwargs={"organization_id": self.organization.id}
         )
         response = self.client.get(path, data={"ordering": "unit_fee"}, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        product_shipping_list.sort(
-            key=lambda product_shipping: product_shipping.unit_fee
-        )
-        self._assertGetResponseData(
-            response.json(), product_shipping_list, is_ordered=True
-        )
+        self._assert_get_response(response.json(), product_shipping_dicts, True)
 
     def test_partial_update(self):
         zones = faker.random_choices(
-            elements=tuple(choice[0] for choice in ZONE_CHOICES), length=3
+            elements=[choice[0] for choice in ZONE_CHOICES], length=3
         )
         product_shipping = ProductShippingFactory.create(
             organization=self.organization, zones=zones[0:2]
@@ -401,7 +419,7 @@ class ProductShippingViewSetTestCase(StaffTestCase):
             "code": built_product_shipping.code,
             "fixed_fee": built_product_shipping.fixed_fee,
             "name": built_product_shipping.name,
-            "products": tuple(product.id for product in products[1:3]),
+            "products": [product.id for product in products[1:3]],
             "unit_fee": built_product_shipping.unit_fee,
             "zones": zones[1:3],
         }
@@ -424,24 +442,56 @@ class ProductShippingViewSetTestCase(StaffTestCase):
 
     def test_retrieve(self):
         product_shipping = ProductShippingFactory.create(organization=self.organization)
-        products = ProductFactory.create_batch(2, organization=self.organization)
-        product_shipping.products.set(products)
+        product_shipping_dicts = [
+            {
+                "object": product_shipping,
+                "product_dicts": [
+                    {"object": product}
+                    for product in self._create_and_set_products(product_shipping)
+                ],
+            }
+        ]
         path = reverse(
             "productshipping-detail",
             kwargs={"organization_id": self.organization.id, "pk": product_shipping.id},
         )
         response = self.client.get(path, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(
-            (response.json(),),
-            (product_shipping,),
-            products,
-        )
+        self._assert_get_response([response.json()], product_shipping_dicts, False)
 
-    def _assertGetResponseData(
-        self, actual1, product_shipping_list, is_ordered=False, product_dict=None
+    def _assert_get_response(
+        self, product_shipping_data_list, product_shipping_dicts, is_ordered
     ):
-        actual2 = {dict_["id"]: dict_.pop("products") for dict_ in actual1}
+        if not is_ordered:
+            product_shipping_data_list.sort(
+                key=lambda product_shipping_data: product_shipping_data["id"]
+            )
+            product_shipping_dicts.sort(
+                key=lambda product_shipping_dict: product_shipping_dict["object"].id
+            )
+        self.assertEqual(
+            [
+                product_shipping_data["id"]
+                for product_shipping_data in product_shipping_data_list
+            ],
+            [
+                product_shipping_dict["object"].id
+                for product_shipping_dict in product_shipping_dicts
+            ],
+        )
+        for index, product_shipping_data in enumerate(product_shipping_data_list):
+            product_ids = product_shipping_data.pop("products")
+            product_ids.sort()
+            expected = [
+                product_dict["object"].id
+                for product_dict in product_shipping_dicts[index]["product_dicts"]
+            ]
+            expected.sort()
+            self.assertEqual(product_ids, expected)
+        product_shipping_list = [
+            product_shipping_dict["object"]
+            for product_shipping_dict in product_shipping_dicts
+        ]
         expected = [
             {
                 "code": product_shipping.code,
@@ -453,15 +503,9 @@ class ProductShippingViewSetTestCase(StaffTestCase):
             }
             for product_shipping in product_shipping_list
         ]
-        if is_ordered:
-            self.assertSequenceEqual(actual1, expected)
-        else:
-            self.assertCountEqual(actual1, expected)
-        if product_dict is not None:
-            self.assertCountEqual(
-                tuple(id_ for id_ in actual2), tuple(id_ for id_ in product_dict)
-            )
-            for id_, product_ids in actual2.items():
-                self.assertCountEqual(
-                    product_ids, (product.id for product in product_dict[id_])
-                )
+        self.assertEqual(product_shipping_data_list, expected)
+
+    def _create_and_set_products(self, product_shipping):
+        products = ProductFactory.create_batch(2, organization=self.organization)
+        product_shipping.products.set(products)
+        return products

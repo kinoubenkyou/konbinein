@@ -58,92 +58,100 @@ class UserStaffViewSetTestCase(UserTestCase):
         self.assertFalse(Staff.objects.filter(id=staff.id).exists())
 
     def test_list__filter__does_organization_agree(self):
+        StaffFactory.create(does_organization_agree=False, user=self.user)
         staffs = StaffFactory.create_batch(
             2, does_organization_agree=True, user=self.user
         )
-        StaffFactory.create(does_organization_agree=False, user=self.user)
+        staff_dicts = [{"object": staff} for staff in staffs]
         path = reverse("user-staff-list", kwargs={"user_id": self.user.id})
         data = {"does_organization_agree": True}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(response.json(), staffs)
+        self._assert_get_response(response.json(), staff_dicts, False)
 
     def test_list__filter__does_user_agree(self):
-        staffs = StaffFactory.create_batch(2, does_user_agree=True, user=self.user)
         StaffFactory.create(does_user_agree=False, user=self.user)
+        staffs = StaffFactory.create_batch(2, does_user_agree=True, user=self.user)
+        staff_dicts = [{"object": staff} for staff in staffs]
         path = reverse("user-staff-list", kwargs={"user_id": self.user.id})
-        response = self.client.get(path, data={"does_user_agree": True}, format="json")
+        data = {"does_user_agree": True}
+        response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(response.json(), staffs)
+        self._assert_get_response(response.json(), staff_dicts, False)
 
     def test_list__filter__organization_id__in(self):
         StaffFactory.create(user=self.user)
         staffs = StaffFactory.create_batch(2, user=self.user)
+        staff_dicts = [{"object": staff} for staff in staffs]
         path = reverse("user-staff-list", kwargs={"user_id": self.user.id})
-        data = {"organization_id__in": tuple(staff.organization_id for staff in staffs)}
+        data = {"organization_id__in": [staff.organization_id for staff in staffs]}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(response.json(), staffs)
+        self._assert_get_response(response.json(), staff_dicts, False)
 
     def test_list__paginate(self):
         staffs = StaffFactory.create_batch(4, user_id=self.user.id)
+        staffs.sort(key=lambda staff: staff.id)
+        staff_dicts = [{"object": staff} for staff in staffs[1:3]]
         path = reverse("user-staff-list", kwargs={"user_id": self.user.id})
         data = {"limit": 2, "offset": 1, "ordering": "id"}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        staffs.sort(key=lambda staff: staff.id)
-        self._assertGetResponseData(
-            response.json()["results"], (staffs[1], staffs[2]), is_ordered=True
-        )
+        self._assert_get_response(response.json()["results"], staff_dicts, True)
 
     def test_list__sort__does_organization_agree(self):
-        does_organization_agree_list = (False, True)
         staffs = StaffFactory.create_batch(
             2,
-            does_organization_agree=Iterator(does_organization_agree_list),
+            does_organization_agree=Iterator([False, True]),
             user=self.user,
         )
+        staffs.sort(key=lambda staff: staff.does_organization_agree)
+        staff_dicts = [{"object": staff} for staff in staffs]
         path = reverse("user-staff-list", kwargs={"user_id": self.user.id})
         data = {"ordering": "does_organization_agree"}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        staffs.sort(key=lambda staff: staff.does_organization_agree)
-        self._assertGetResponseData(response.json(), staffs, is_ordered=True)
+        self._assert_get_response(response.json(), staff_dicts, True)
 
     def test_list__sort__does_user_agree(self):
-        does_user_agree_list = (False, True)
         staffs = StaffFactory.create_batch(
-            2, does_user_agree=Iterator(does_user_agree_list), user=self.user
+            2,
+            does_user_agree=Iterator([False, True]),
+            user=self.user,
         )
+        staffs.sort(key=lambda staff: staff.does_user_agree)
+        staff_dicts = [{"object": staff} for staff in staffs]
         path = reverse("user-staff-list", kwargs={"user_id": self.user.id})
         data = {"ordering": "does_user_agree"}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        staffs.sort(key=lambda staff: staff.does_user_agree)
-        self._assertGetResponseData(response.json(), staffs, is_ordered=True)
+        self._assert_get_response(response.json(), staff_dicts, True)
 
     def test_list__sort__organization_code(self):
         staffs = StaffFactory.create_batch(2, user=self.user)
+        staffs.sort(key=lambda staff: staff.organization.code)
+        staff_dicts = [{"object": staff} for staff in staffs]
         path = reverse("user-staff-list", kwargs={"user_id": self.user.id})
         data = {"ordering": "organization__code"}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        staffs.sort(key=lambda staff: staff.organization.code)
-        self._assertGetResponseData(response.json(), staffs, is_ordered=True)
+        self._assert_get_response(response.json(), staff_dicts, True)
 
     def test_retrieve(self):
         staff = StaffFactory.create(user=self.user)
+        staff_dicts = [{"object": staff}]
         path = reverse(
             "user-staff-detail", kwargs={"pk": staff.id, "user_id": self.user.id}
         )
         response = self.client.get(path, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(
-            (response.json(),),
-            (staff,),
-        )
+        self._assert_get_response([response.json()], staff_dicts, False)
 
-    def _assertGetResponseData(self, actual, staffs, is_ordered=False):
+    def _assert_get_response(self, staff_data_list, staff_dicts, is_ordered):
+        if not is_ordered:
+            staff_data_list.sort(key=lambda staff_data: staff_data["id"])
+            staff_dicts.sort(key=lambda staff_dict: staff_dict["object"].id)
+        staffs = [staff_dict["object"] for staff_dict in staff_dicts]
         expected = [
             {
                 "does_organization_agree": staff.does_organization_agree,
@@ -154,7 +162,4 @@ class UserStaffViewSetTestCase(UserTestCase):
             }
             for staff in staffs
         ]
-        if is_ordered:
-            self.assertEqual(actual, expected)
-        else:
-            self.assertCountEqual(actual, expected)
+        self.assertEqual(staff_data_list, expected)

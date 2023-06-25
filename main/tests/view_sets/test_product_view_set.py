@@ -1,4 +1,3 @@
-from factory import Iterator
 from rest_framework.reverse import reverse
 from rest_framework.status import (
     HTTP_200_OK,
@@ -9,7 +8,6 @@ from rest_framework.status import (
 
 from main.factories.product_factory import ProductFactory
 from main.models.product import Product
-from main.tests import faker
 from main.tests.staff_test_case import StaffTestCase
 
 
@@ -55,92 +53,94 @@ class ProductViewSetTestCase(StaffTestCase):
 
     def test_list__filter__code__in(self):
         ProductFactory.create(organization=self.organization)
-        products = ProductFactory.create_batch(2, organization=self.organization)
+        product_dicts = [
+            {"object": product}
+            for product in ProductFactory.create_batch(
+                2, organization=self.organization
+            )
+        ]
         path = reverse("product-list", kwargs={"organization_id": self.organization.id})
-        data = {"code__in": tuple(product.code for product in products)}
+        data = {
+            "code__in": [product_dict["object"].code for product_dict in product_dicts]
+        }
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(response.json(), products)
+        self._assert_get_response(response.json(), product_dicts, False)
 
     def test_list__filter__name__in(self):
         ProductFactory.create(organization=self.organization)
-        products = ProductFactory.create_batch(2, organization=self.organization)
+        product_dicts = [
+            {"object": product}
+            for product in ProductFactory.create_batch(
+                2, organization=self.organization
+            )
+        ]
         path = reverse("product-list", kwargs={"organization_id": self.organization.id})
-        data = {"name__in": tuple(product.name for product in products)}
+        data = {
+            "name__in": [product_dict["object"].name for product_dict in product_dicts]
+        }
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(response.json(), products)
+        self._assert_get_response(response.json(), product_dicts, False)
 
     def test_list__filter__price__gte(self):
-        prices = [
-            faker.pydecimal(left_digits=2, positive=True, right_digits=4)
-            for _ in range(3)
-        ]
-        prices.sort(reverse=True)
-        ProductFactory.create(organization=self.organization, price=prices.pop())
-        products = ProductFactory.create_batch(
-            2,
-            organization=self.organization,
-            price=Iterator(prices),
-        )
+        products = ProductFactory.create_batch(2, organization=self.organization)
+        products.sort(key=lambda product: product.price, reverse=True)
+        products.pop()
+        product_dicts = [{"object": product} for product in products]
         path = reverse("product-list", kwargs={"organization_id": self.organization.id})
         data = {"price__gte": products[-1].price}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(response.json(), products)
+        self._assert_get_response(response.json(), product_dicts, False)
 
     def test_list__filter__price__lte(self):
-        prices = [
-            faker.pydecimal(left_digits=2, positive=True, right_digits=4)
-            for _ in range(3)
-        ]
-        prices.sort()
-        ProductFactory.create(organization=self.organization, price=prices.pop())
-        products = ProductFactory.create_batch(
-            2,
-            organization=self.organization,
-            price=Iterator(prices),
-        )
+        products = ProductFactory.create_batch(2, organization=self.organization)
+        products.sort(key=lambda product: product.price)
+        products.pop()
+        product_dicts = [{"object": product} for product in products]
         path = reverse("product-list", kwargs={"organization_id": self.organization.id})
         data = {"price__lte": products[-1].price}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(response.json(), products)
+        self._assert_get_response(response.json(), product_dicts, False)
 
     def test_list__paginate(self):
         products = ProductFactory.create_batch(4, organization_id=self.organization.id)
+        products.sort(key=lambda product: product.id)
+        product_dicts = [{"object": product} for product in products[1:3]]
         path = reverse("product-list", kwargs={"organization_id": self.organization.id})
         data = {"limit": 2, "offset": 1, "ordering": "id"}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        products.sort(key=lambda product: product.id)
-        self._assertGetResponseData(
-            response.json()["results"], (products[1], products[2]), is_ordered=True
-        )
+        self._assert_get_response(response.json()["results"], product_dicts, True)
 
     def test_list__sort__code(self):
         products = ProductFactory.create_batch(2, organization_id=self.organization.id)
+        products.sort(key=lambda product: product.code)
+        product_dicts = [{"object": product} for product in products]
         path = reverse("product-list", kwargs={"organization_id": self.organization.id})
         response = self.client.get(path, data={"ordering": "code"}, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        products.sort(key=lambda product: product.code)
-        self._assertGetResponseData(response.json(), products, is_ordered=True)
+        self._assert_get_response(response.json(), product_dicts, True)
 
     def test_list__sort__name(self):
         products = ProductFactory.create_batch(2, organization_id=self.organization.id)
+        products.sort(key=lambda product: product.name)
+        product_dicts = [{"object": product} for product in products]
         path = reverse("product-list", kwargs={"organization_id": self.organization.id})
         response = self.client.get(path, data={"ordering": "name"}, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        products.sort(key=lambda product: product.name)
-        self._assertGetResponseData(response.json(), products, is_ordered=True)
+        self._assert_get_response(response.json(), product_dicts, True)
 
     def test_list__sort__price(self):
         products = ProductFactory.create_batch(2, organization_id=self.organization.id)
+        products.sort(key=lambda product: product.price)
+        product_dicts = [{"object": product} for product in products]
         path = reverse("product-list", kwargs={"organization_id": self.organization.id})
         response = self.client.get(path, data={"ordering": "price"}, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        products.sort(key=lambda product: product.price)
-        self._assertGetResponseData(response.json(), products, is_ordered=True)
+        self._assert_get_response(response.json(), product_dicts, True)
 
     def test_partial_update(self):
         product = ProductFactory.create(organization_id=self.organization.id)
@@ -161,18 +161,20 @@ class ProductViewSetTestCase(StaffTestCase):
 
     def test_retrieve(self):
         product = ProductFactory.create(organization_id=self.organization.id)
+        product_dicts = [{"object": product}]
         path = reverse(
             "product-detail",
             kwargs={"organization_id": self.organization.id, "pk": product.id},
         )
         response = self.client.get(path, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assertGetResponseData(
-            (response.json(),),
-            (product,),
-        )
+        self._assert_get_response([response.json()], product_dicts, False)
 
-    def _assertGetResponseData(self, actual, products, is_ordered=False):
+    def _assert_get_response(self, product_data_list, product_dicts, is_ordered):
+        if not is_ordered:
+            product_data_list.sort(key=lambda product_data: product_data["id"])
+            product_dicts.sort(key=lambda product_dict: product_dict["object"].id)
+        products = [product_dict["object"] for product_dict in product_dicts]
         expected = [
             {
                 "code": product.code,
@@ -182,7 +184,4 @@ class ProductViewSetTestCase(StaffTestCase):
             }
             for product in products
         ]
-        if is_ordered:
-            self.assertEqual(actual, expected)
-        else:
-            self.assertCountEqual(actual, expected)
+        self.assertEqual(product_data_list, expected)
