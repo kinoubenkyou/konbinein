@@ -84,14 +84,18 @@ class UserViewSetTestCase(UserTestCase):
         )
 
     def test_retrieve(self):
+        user_dicts = [{"object": self.user}]
         path = reverse("user-detail", kwargs={"user_id": self.user.id})
         response = self.client.get(path, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertEqual(
-            response.json(),
-            {
-                "email": self.user.email,
-                "id": self.user.id,
-                "name": self.user.name,
-            },
-        )
+        self._assert_get_response([response.json()], user_dicts, False)
+
+    def _assert_get_response(self, user_data_list, user_dicts, is_ordered):
+        if not is_ordered:
+            user_data_list.sort(key=lambda user_data: user_data["id"])
+            user_dicts.sort(key=lambda user_dict: user_dict["object"].id)
+        users = [user_dict["object"] for user_dict in user_dicts]
+        expected = [
+            {"email": user.email, "id": user.id, "name": user.name} for user in users
+        ]
+        self.assertEqual(user_data_list, expected)
