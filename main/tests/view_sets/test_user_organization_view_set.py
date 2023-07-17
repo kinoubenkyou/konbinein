@@ -7,6 +7,36 @@ from main.tests.user_test_case import UserTestCase
 
 
 class UserOrganizationViewSetTestCase(UserTestCase):
+    def test_list__filter__code__icontains(self):
+        organization_dicts = [
+            {"object": organization}
+            for organization in OrganizationFactory.create_batch(
+                2, code=Iterator(range(2), getter=lambda n: f"-code-{n}")
+            )
+        ]
+        response = self.client.get(
+            reverse("user-organization-list", kwargs={"user_id": self.user.id}),
+            data={"code__icontains": "code-"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self._assert_get_response(response.json(), organization_dicts, False)
+
+    def test_list__filter__name__icontains(self):
+        organization_dicts = [
+            {"object": organization}
+            for organization in OrganizationFactory.create_batch(
+                2, name=Iterator(range(2), getter=lambda n: f"-name-{n}")
+            )
+        ]
+        response = self.client.get(
+            reverse("user-organization-list", kwargs={"user_id": self.user.id}),
+            data={"name__icontains": "name-"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self._assert_get_response(response.json(), organization_dicts, False)
+
     def test_list__paginate(self):
         organizations = OrganizationFactory.create_batch(4)
         organizations.sort(key=lambda organization: organization.id)
@@ -18,19 +48,6 @@ class UserOrganizationViewSetTestCase(UserTestCase):
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assert_get_response(response.json()["results"], organization_dicts, True)
-
-    def test_list__search__code(self):
-        codes = ["search1", "search2"]
-        organization_dicts = [
-            {"object": organization}
-            for organization in OrganizationFactory.create_batch(
-                2, code=Iterator(codes)
-            )
-        ]
-        path = reverse("user-organization-list", kwargs={"user_id": self.user.id})
-        response = self.client.get(path, data={"search": "search"}, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assert_get_response(response.json(), organization_dicts, False)
 
     def test_list__sort__code(self):
         organizations = OrganizationFactory.create_batch(2)

@@ -1,3 +1,4 @@
+from factory import Iterator
 from rest_framework.reverse import reverse
 from rest_framework.status import (
     HTTP_200_OK,
@@ -51,34 +52,34 @@ class ProductViewSetTestCase(StaffTestCase):
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
         self.assertFalse(Product.objects.filter(id=product.id).exists())
 
-    def test_list__filter__code__in(self):
+    def test_list__filter__code__icontains(self):
         ProductFactory.create(organization=self.organization)
         product_dicts = [
             {"object": product}
             for product in ProductFactory.create_batch(
-                2, organization=self.organization
+                2,
+                code=Iterator(range(2), getter=lambda n: f"-code-{n}"),
+                organization=self.organization,
             )
         ]
         path = reverse("product-list", kwargs={"organization_id": self.organization.id})
-        data = {
-            "code__in": [product_dict["object"].code for product_dict in product_dicts]
-        }
+        data = {"code__icontains": "code-"}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assert_get_response(response.json(), product_dicts, False)
 
-    def test_list__filter__name__in(self):
+    def test_list__filter__name__icontains(self):
         ProductFactory.create(organization=self.organization)
         product_dicts = [
             {"object": product}
             for product in ProductFactory.create_batch(
-                2, organization=self.organization
+                2,
+                name=Iterator(range(2), getter=lambda n: f"-name-{n}"),
+                organization=self.organization,
             )
         ]
         path = reverse("product-list", kwargs={"organization_id": self.organization.id})
-        data = {
-            "name__in": [product_dict["object"].name for product_dict in product_dicts]
-        }
+        data = {"name__icontains": "name-"}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assert_get_response(response.json(), product_dicts, False)

@@ -1,3 +1,4 @@
+from factory import Iterator
 from rest_framework.reverse import reverse
 from rest_framework.status import (
     HTTP_200_OK,
@@ -130,23 +131,20 @@ class ProductShippingViewSetTestCase(StaffTestCase):
             ProductShipping.objects.filter(id=product_shipping.id).exists()
         )
 
-    def test_list__filter__code__in(self):
+    def test_list__filter__code__icontains(self):
         ProductShippingFactory.create(organization=self.organization)
-        product_shipping_list = ProductShippingFactory.create_batch(
-            2, organization=self.organization
-        )
         product_shipping_dicts = [
             {"object": product_shipping, "product_dicts": []}
-            for product_shipping in product_shipping_list
+            for product_shipping in ProductShippingFactory.create_batch(
+                2,
+                code=Iterator(range(2), getter=lambda n: f"-code-{n}"),
+                organization=self.organization,
+            )
         ]
         path = reverse(
             "productshipping-list", kwargs={"organization_id": self.organization.id}
         )
-        data = {
-            "code__in": [
-                product_shipping.code for product_shipping in product_shipping_list
-            ]
-        }
+        data = {"code__icontains": "code-"}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assert_get_response(response.json(), product_shipping_dicts, False)
@@ -191,23 +189,20 @@ class ProductShippingViewSetTestCase(StaffTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assert_get_response(response.json(), product_shipping_dicts, False)
 
-    def test_list__filter__name__in(self):
+    def test_list__filter__name__icontains(self):
         ProductShippingFactory.create(organization=self.organization)
-        product_shipping_list = ProductShippingFactory.create_batch(
-            2, organization=self.organization
-        )
         product_shipping_dicts = [
             {"object": product_shipping, "product_dicts": []}
-            for product_shipping in product_shipping_list
+            for product_shipping in ProductShippingFactory.create_batch(
+                2,
+                name=Iterator(range(2), getter=lambda n: f"-name-{n}"),
+                organization=self.organization,
+            )
         ]
         path = reverse(
             "productshipping-list", kwargs={"organization_id": self.organization.id}
         )
-        data = {
-            "name__in": [
-                product_shipping.name for product_shipping in product_shipping_list
-            ]
-        }
+        data = {"name__icontains": "name-"}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assert_get_response(response.json(), product_shipping_dicts, False)

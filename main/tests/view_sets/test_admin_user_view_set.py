@@ -7,6 +7,34 @@ from main.tests.admin_test_case import AdminTestCase
 
 
 class AdminUserViewSetTestCase(AdminTestCase):
+    def test_list__filter__email__icontains(self):
+        user_dicts = [
+            {"object": user}
+            for user in UserFactory.create_batch(
+                2, email=Iterator(range(2), getter=lambda n: f"-email-{n}")
+            )
+        ]
+        response = self.client.get(
+            reverse("admin-user-list"),
+            data={"email__icontains": "email-"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self._assert_get_response(response.json(), user_dicts, False)
+
+    def test_list__filter__name__icontains(self):
+        user_dicts = [
+            {"object": user}
+            for user in UserFactory.create_batch(
+                2, name=Iterator(range(2), getter=lambda n: f"-name-{n}")
+            )
+        ]
+        response = self.client.get(
+            reverse("admin-user-list"), data={"name__icontains": "name-"}, format="json"
+        )
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self._assert_get_response(response.json(), user_dicts, False)
+
     def test_list__paginate(self):
         users = UserFactory.create_batch(3)
         users.append(self.user)
@@ -17,15 +45,6 @@ class AdminUserViewSetTestCase(AdminTestCase):
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assert_get_response(response.json()["results"], user_dicts, True)
-
-    def test_list__search__email(self):
-        emails = ["search1@email.com", "search2@email.com"]
-        users = UserFactory.create_batch(2, email=Iterator(emails))
-        user_dicts = [{"object": user} for user in users]
-        path = reverse("admin-user-list")
-        response = self.client.get(path, data={"search": "search"}, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assert_get_response(response.json(), user_dicts, False)
 
     def test_list__sort__email(self):
         users = [UserFactory.create(), self.user]

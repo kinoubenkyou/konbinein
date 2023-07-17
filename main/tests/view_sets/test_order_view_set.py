@@ -239,14 +239,18 @@ class OrderViewSetTestCase(StaffTestCase):
         self.assertFalse(Order.objects.filter(id=order.id).exists())
         self.assertFalse(ProductItem.objects.filter(order_id=order.id).exists())
 
-    def test_list__filter__code__in(self):
+    def test_list__filter__code__icontains(self):
         OrderFactory.create(organization=self.organization)
         order_dicts = [
             {"object": order, "product_item_dicts": []}
-            for order in OrderFactory.create_batch(2, organization=self.organization)
+            for order in OrderFactory.create_batch(
+                2,
+                code=Iterator(range(2), getter=lambda n: f"-code-{n}"),
+                organization=self.organization,
+            )
         ]
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {"code__in": [order_dict["object"].code for order_dict in order_dicts]}
+        data = {"code__icontains": "code-"}
         response = self.client.get(path, data, format="json")
         self._assert_get_response(response.json(), order_dicts, False)
 
@@ -294,7 +298,7 @@ class OrderViewSetTestCase(StaffTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assert_get_response(response.json(), order_dicts, False)
 
-    def test_list__filter__productitem__name__in(self):
+    def test_list__filter__productitem__product__in(self):
         order = OrderFactory.create(organization=self.organization)
         ProductItemFactory.create_batch(2, order=order)
         order_dicts = [
@@ -309,10 +313,9 @@ class OrderViewSetTestCase(StaffTestCase):
         ]
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
         data = {
-            "productitem__name__in": [
-                product_item_dict["object"].name
+            "productitem__product__in": [
+                order_dict["product_item_dicts"][0]["object"].product.id
                 for order_dict in order_dicts
-                for product_item_dict in order_dict["product_item_dicts"]
             ]
         }
         response = self.client.get(path, data, format="json")
