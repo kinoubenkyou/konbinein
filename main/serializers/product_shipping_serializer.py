@@ -14,12 +14,7 @@ class ProductShippingSerializer(ModelSerializer):
             **validated_data,
             "organization_id": self.context["view"].kwargs["organization_id"],
         }
-        product_data_list = product_shipping_attributes.pop("products", ())
-        product_shipping = super().create(product_shipping_attributes)
-        product_shipping.products.set(
-            product_data.id for product_data in product_data_list
-        )
-        return product_shipping
+        return super().create(product_shipping_attributes)
 
     def update(self, instance, validated_data):
         product_shipping_attributes = {

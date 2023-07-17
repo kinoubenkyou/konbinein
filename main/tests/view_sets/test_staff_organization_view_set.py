@@ -6,7 +6,7 @@ from main.models.organization import Organization
 from main.tests.staff_test_case import StaffTestCase
 
 
-class OrganizationViewSetTestCase(StaffTestCase):
+class StaffOrganizationViewSetTestCase(StaffTestCase):
     def test_destroy(self):
         path = reverse(
             "organization-detail", kwargs={"organization_id": self.organization.id}

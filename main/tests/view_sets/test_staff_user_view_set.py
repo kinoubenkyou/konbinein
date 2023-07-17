@@ -6,7 +6,7 @@ from main.factories.user_factory import UserFactory
 from main.tests.staff_test_case import StaffTestCase
 
 
-class OrganizationUserViewSetTestCase(StaffTestCase):
+class StaffUserViewSetTestCase(StaffTestCase):
     def test_list__filter__email__icontains(self):
         user_dicts = [
             {"object": user}
