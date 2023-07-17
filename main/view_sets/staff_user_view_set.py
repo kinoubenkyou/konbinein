@@ -8,7 +8,7 @@ from main.serializers.user_serializer import UserSerializer
 from main.view_sets.filter_mixin import FilterMixin
 
 
-class OrganizationUserViewSet(FilterMixin, ListModelMixin, GenericViewSet):
+class StaffUserViewSet(FilterMixin, ListModelMixin, GenericViewSet):
     filter_set_class = UserFilterSet
     ordering_fields = ("email", "id")
     permission_classes = (StaffPermission,)

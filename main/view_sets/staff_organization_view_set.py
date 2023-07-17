@@ -10,7 +10,7 @@ from main.permissions.staff_permission import StaffPermission
 from main.serializers.organization_serializer import OrganizationSerializer
 
 
-class OrganizationViewSet(
+class StaffOrganizationViewSet(
     DestroyModelMixin, GenericViewSet, RetrieveModelMixin, UpdateModelMixin
 ):
     permission_classes = (StaffPermission,)

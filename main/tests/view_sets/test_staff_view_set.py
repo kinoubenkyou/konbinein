@@ -12,7 +12,7 @@ from main.models.staff import Staff
 from main.tests.staff_test_case import StaffTestCase
 
 
-class OrganizationStaffViewSetTestCase(StaffTestCase):
+class StaffViewSetTestCase(StaffTestCase):
     def test_agreeing(self):
         staff = StaffFactory.create(organization=self.organization)
         path = reverse(

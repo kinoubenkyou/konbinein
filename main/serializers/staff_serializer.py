@@ -5,7 +5,7 @@ from rest_framework.serializers import ModelSerializer
 from main.models.staff import Staff
 
 
-class OrganizationStaffSerializer(ModelSerializer):
+class StaffSerializer(ModelSerializer):
     class Meta:
         fields = (
             "does_organization_agree",
