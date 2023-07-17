@@ -79,12 +79,12 @@ class UserStaffViewSetTestCase(UserTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assert_get_response(response.json(), staff_dicts, False)
 
-    def test_list__filter__organization_id__in(self):
+    def test_list__filter__organization__in(self):
         StaffFactory.create(user=self.user)
         staffs = StaffFactory.create_batch(2, user=self.user)
         staff_dicts = [{"object": staff} for staff in staffs]
         path = reverse("user-staff-list", kwargs={"user_id": self.user.id})
-        data = {"organization_id__in": [staff.organization_id for staff in staffs]}
+        data = {"organization__in": [staff.organization_id for staff in staffs]}
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assert_get_response(response.json(), staff_dicts, False)

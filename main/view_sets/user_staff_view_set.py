@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.viewsets import GenericViewSet
 
-from main.filter_sets.user_staff_filter_set import UserStaffFilterSet
+from main.filter_sets.staff_filter_set import StaffFilterSet
 from main.models.staff import Staff
 from main.permissions.user_permission import UserPermission
 from main.serializers.user_staff_serializer import UserStaffSerializer
@@ -24,7 +24,7 @@ class UserStaffViewSet(
     ListModelMixin,
     RetrieveModelMixin,
 ):
-    filter_set_class = UserStaffFilterSet
+    filter_set_class = StaffFilterSet
     ordering_fields = (
         "does_organization_agree",
         "does_user_agree",
