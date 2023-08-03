@@ -15,4 +15,6 @@ class ProductItemFactory(DjangoModelFactory):
     price = Faker("pydecimal", left_digits=2, positive=True, right_digits=4)
     product = SubFactory(ProductFactory)
     quantity = Faker("pyint", max_value=100, min_value=1)
-    total = LazyAttribute(lambda product: product.price * product.quantity)
+    total = LazyAttribute(
+        lambda product_item: product_item.price * product_item.quantity
+    )

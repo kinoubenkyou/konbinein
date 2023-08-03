@@ -23,18 +23,6 @@ class ProductShippingSerializer(ModelSerializer):
         }
         return super().update(instance, product_shipping_attributes)
 
-    def validate(self, data):
-        query_set = ProductShipping.objects.filter(
-            organization=self.context["view"].kwargs["organization_id"],
-            products__in=data["products"],
-            zones__overlap=data["zones"],
-        )
-        if self.instance is not None:
-            query_set = query_set.exclude(id=self.instance.id)
-        if query_set.exists():
-            raise ValidationError(detail="Products already have shipping with zones.")
-        return data
-
     def validate_code(self, value):
         query_set = ProductShipping.objects.filter(
             code=value, organization=self.context["view"].kwargs["organization_id"]
