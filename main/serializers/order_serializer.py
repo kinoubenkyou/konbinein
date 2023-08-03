@@ -6,9 +6,10 @@ from rest_framework.serializers import ModelSerializer
 
 from main.models.order import Order
 from main.serializers.product_item_serializer import ProductItemSerializer
+from main.serializers.write_nested_mixin import WriteNestedMixin
 
 
-class OrderSerializer(ModelSerializer):
+class OrderSerializer(WriteNestedMixin, ModelSerializer):
     class Meta:
         fields = (
             "code",
@@ -30,8 +31,9 @@ class OrderSerializer(ModelSerializer):
         }
         product_item_data_list = order_attributes.pop("productitem_set", ())
         order = super().create(order_attributes)
-        for product_item_data in product_item_data_list:
-            ProductItemSerializer().create({**product_item_data, "order": order})
+        self._write_nested_objects(
+            product_item_data_list, {}, "order", order, ProductItemSerializer()
+        )
         return order
 
     @atomic
@@ -46,19 +48,13 @@ class OrderSerializer(ModelSerializer):
             for product_item in instance.productitem_set.all()
         }
         order = super().update(instance, order_attributes)
-        for product_item_data in product_item_data_list:
-            product_item_id = product_item_data.get("id")
-            if product_item_id is None:
-                ProductItemSerializer().create({**product_item_data, "order": order})
-            else:
-                ProductItemSerializer().update(
-                    product_item_dict[product_item_id], product_item_data
-                )
-        for product_item_id, product_item in product_item_dict.items():
-            if product_item_id not in (
-                data.get("id") for data in product_item_data_list
-            ):
-                product_item.delete()
+        self._write_nested_objects(
+            product_item_data_list,
+            product_item_dict,
+            "order",
+            order,
+            ProductItemSerializer(),
+        )
         return order
 
     def validate(self, data):

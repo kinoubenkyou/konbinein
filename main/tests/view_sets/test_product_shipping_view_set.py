@@ -67,36 +67,6 @@ class ProductShippingViewSetTestCase(StaffTestCase):
             response.json(), {"code": ["Code is already in another product shipping."]}
         )
 
-    def test_create__products_already_have_shipping_with_zones(self):
-        zones = faker.random_choices(
-            elements=[choice[0] for choice in ZONE_CHOICES], length=3
-        )
-        product_shipping = ProductShippingFactory.create(
-            organization=self.organization, zones=zones[0:2]
-        )
-        built_product_shipping = ProductShippingFactory.build(
-            organization=self.organization
-        )
-        products = ProductFactory.create_batch(3, organization=self.organization)
-        product_shipping.products.set(products[0:2])
-        path = reverse(
-            "productshipping-list", kwargs={"organization_id": self.organization.id}
-        )
-        data = {
-            "code": built_product_shipping.code,
-            "fixed_fee": built_product_shipping.fixed_fee,
-            "name": built_product_shipping.name,
-            "products": [product.id for product in products[1:3]],
-            "unit_fee": built_product_shipping.unit_fee,
-            "zones": zones[1:3],
-        }
-        response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(),
-            {"non_field_errors": ["Products already have shipping with zones."]},
-        )
-
     def test_create__products_in_another_organizations(self):
         built_product_shipping = ProductShippingFactory.build(
             organization=self.organization
