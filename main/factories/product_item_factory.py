@@ -10,11 +10,13 @@ class ProductItemFactory(DjangoModelFactory):
     class Meta:
         model = ProductItem
 
+    item_total = LazyAttribute(
+        lambda product_item: product_item.price * product_item.quantity
+    )
     name = Sequence(lambda n: f"name{n}")
     order = SubFactory(OrderFactory)
     price = Faker("pydecimal", left_digits=2, positive=True, right_digits=4)
     product = SubFactory(ProductFactory)
     quantity = Faker("pyint", max_value=100, min_value=1)
-    total = LazyAttribute(
-        lambda product_item: product_item.price * product_item.quantity
-    )
+    subtotal = LazyAttribute(lambda product_item: product_item.item_total)
+    total = LazyAttribute(lambda product_item: product_item.subtotal)

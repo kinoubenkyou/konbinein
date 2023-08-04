@@ -11,14 +11,29 @@ from main.models.product_item import ProductItem
 
 class ProductItemSerializer(ModelSerializer):
     class Meta:
-        fields = ("id", "name", "product", "quantity", "total", "price")
+        fields = (
+            "id",
+            "item_total",
+            "name",
+            "product",
+            "price",
+            "quantity",
+            "subtotal",
+            "total",
+        )
         model = ProductItem
 
     id = IntegerField(required=False)
     product = PrimaryKeyRelatedField(queryset=Product.objects.all(), required=True)
 
     def validate(self, data):
-        if Decimal(data["total"]) != Decimal(data["price"]) * int(data["quantity"]):
+        item_total = Decimal(data["item_total"])
+        if item_total != Decimal(data["price"]) * int(data["quantity"]):
+            raise ValidationError(detail="Item total is incorrect.")
+        subtotal = Decimal(data["subtotal"])
+        if subtotal != item_total:
+            raise ValidationError(detail="Subtotal is incorrect.")
+        if Decimal(data["total"]) != subtotal:
             raise ValidationError(detail="Total is incorrect.")
         return data
 

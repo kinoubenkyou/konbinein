@@ -58,12 +58,11 @@ class OrderSerializer(WriteNestedMixin, ModelSerializer):
         return order
 
     def validate(self, data):
-        calculated_product_total = sum(
+        product_total = Decimal(data["product_total"])
+        if product_total != sum(
             Decimal(product_item_data["price"]) * int(product_item_data["quantity"])
             for product_item_data in data["productitem_set"]
-        )
-        product_total = Decimal(data["product_total"])
-        if product_total != calculated_product_total:
+        ):
             raise ValidationError(detail="Product total is incorrect.")
         if Decimal(data["total"]) != product_total:
             raise ValidationError(detail="Total is incorrect.")
