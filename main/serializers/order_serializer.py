@@ -60,7 +60,7 @@ class OrderSerializer(WriteNestedMixin, ModelSerializer):
     def validate(self, data):
         product_total = Decimal(data["product_total"])
         if product_total != sum(
-            Decimal(product_item_data["price"]) * int(product_item_data["quantity"])
+            Decimal(product_item_data["total"])
             for product_item_data in data["productitem_set"]
         ):
             raise ValidationError(detail="Product total is incorrect.")
@@ -77,3 +77,10 @@ class OrderSerializer(WriteNestedMixin, ModelSerializer):
         if query_set.exists():
             raise ValidationError(detail="Code is already in another order.")
         return value
+
+    def to_internal_value(self, data):
+        for product_item_data in data["productitem_set"]:
+            product_item_data["order_id"] = (
+                self.instance.id if self.instance is not None else None
+            )
+        return super().to_internal_value(data)
