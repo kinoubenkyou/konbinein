@@ -11,7 +11,9 @@ class OrderViewSet(FilterMixin, ModelViewSet):
     filter_set_class = OrderFilterSet
     ordering_fields = ("code", "created_at", "id", "product_total", "total")
     permission_classes = (StaffPermission,)
-    queryset = Order.objects.all()
+    queryset = Order.objects.prefetch_related(
+        "productitem_set__productshippingitem_set"
+    ).all()
     serializer_class = OrderSerializer
 
     def get_queryset(self):
