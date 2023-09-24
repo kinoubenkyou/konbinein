@@ -9,20 +9,22 @@ class OrderWithRelatedFactory:
     @classmethod
     def create(
         cls,
-        order_factory_kwargs,
-        organization,
-        product,
-        product_item_count,
-        product_shipping,
-        product_shipping_item_count,
+        order_kwargs=None,
+        product=None,
+        product_item_count=0,
+        product_kwargs=None,
+        product_shipping=None,
+        product_shipping_item_count=0,
+        product_shipping_kwargs=None,
     ):
         order = cls._build(
-            order_factory_kwargs,
-            organization,
+            order_kwargs,
             product,
             product_item_count,
+            product_kwargs,
             product_shipping,
             product_shipping_item_count,
+            product_shipping_kwargs,
         )
         order.save()
         for product_item in order.product_items:
@@ -34,22 +36,24 @@ class OrderWithRelatedFactory:
         return order
 
     @classmethod
-    def get_data(
+    def create_data(
         cls,
-        order_kwargs,
-        organization,
-        product,
-        product_item_count,
-        product_shipping,
-        product_shipping_item_count,
+        order_kwargs=None,
+        product=None,
+        product_item_count=0,
+        product_kwargs=None,
+        product_shipping=None,
+        product_shipping_item_count=0,
+        product_shipping_kwargs=None,
     ):
         order = cls._build(
             order_kwargs,
-            organization,
             product,
             product_item_count,
+            product_kwargs,
             product_shipping,
             product_shipping_item_count,
+            product_shipping_kwargs,
         )
         for product_item in order.product_items:
             product_item.product.save()
@@ -59,7 +63,7 @@ class OrderWithRelatedFactory:
             "code": order.code,
             "created_at": order.created_at,
             "productitem_set": [
-                cls._get_product_item_data(product_item)
+                cls._create_product_item_data(product_item)
                 for product_item in order.product_items
             ],
             "product_total": order.product_total,
@@ -69,17 +73,18 @@ class OrderWithRelatedFactory:
     @staticmethod
     def _build(
         order_kwargs,
-        organization,
         product,
         product_item_count,
+        product_kwargs,
         product_shipping,
         product_shipping_item_count,
+        product_shipping_kwargs,
     ):
-        order = OrderFactory.build(organization=organization, **order_kwargs)
+        order = OrderFactory.build(**order_kwargs or {})
         order.product_items = ProductItemFactory.build_batch(
             product_item_count,
             order=order,
-            product=product or ProductFactory.build(organization=organization),
+            product=product or ProductFactory.build(**product_kwargs or {}),
         )
         for product_item in order.product_items:
             product_item.product_shipping_items = (
@@ -87,7 +92,7 @@ class OrderWithRelatedFactory:
                     product_shipping_item_count,
                     product_item=product_item,
                     product_shipping=product_shipping
-                    or ProductShippingFactory.build(organization=organization),
+                    or ProductShippingFactory.build(**product_shipping_kwargs or {}),
                 )
             )
             product_item.shipping_total = sum(
@@ -103,14 +108,14 @@ class OrderWithRelatedFactory:
         return order
 
     @classmethod
-    def _get_product_item_data(cls, product_item):
+    def _create_product_item_data(cls, product_item):
         return {
             "name": product_item.name,
             "item_total": product_item.item_total,
             "price": product_item.price,
             "product": product_item.product.id,
             "productshippingitem_set": [
-                cls._get_product_shipping_item_data(product_shipping_item)
+                cls._create_product_shipping_item_data(product_shipping_item)
                 for product_shipping_item in product_item.product_shipping_items
             ],
             "quantity": product_item.quantity,
@@ -120,7 +125,7 @@ class OrderWithRelatedFactory:
         }
 
     @staticmethod
-    def _get_product_shipping_item_data(product_shipping_item):
+    def _create_product_shipping_item_data(product_shipping_item):
         return {
             "fixed_fee": product_shipping_item.fixed_fee,
             "item_total": product_shipping_item.item_total,

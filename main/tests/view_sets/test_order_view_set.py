@@ -97,7 +97,13 @@ class OrderViewSetTestCaseMixin:
 class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
     def test_create(self):
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.get_data({}, self.organization, None, 2, None, 2)
+        data = OrderWithRelatedFactory.create_data(
+            order_kwargs={"organization": self.organization},
+            product_item_count=2,
+            product_kwargs={"organization": self.organization},
+            product_shipping_item_count=2,
+            product_shipping_kwargs={"organization": self.organization},
+        )
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_201_CREATED)
         filter_ = {**data, "organization_id": self.organization.id}
@@ -121,8 +127,17 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
 
     def test_create__code_already_in_another_order(self):
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        order = OrderWithRelatedFactory.create({}, self.organization, None, 0, None, 0)
-        data = OrderWithRelatedFactory.get_data({}, self.organization, None, 1, None, 0)
+        order = OrderWithRelatedFactory.create(
+            order_kwargs={"organization": self.organization},
+            product_kwargs={"organization": self.organization},
+            product_shipping_kwargs={"organization": self.organization},
+        )
+        data = OrderWithRelatedFactory.create_data(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+            product_shipping_kwargs={"organization": self.organization},
+        )
         data["code"] = order.code
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
@@ -132,7 +147,12 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
 
     def test_create__product_total_incorrect(self):
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.get_data({}, self.organization, None, 1, None, 0)
+        data = OrderWithRelatedFactory.create_data(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+            product_shipping_kwargs={"organization": self.organization},
+        )
         data["product_total"] += 1
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
@@ -142,14 +162,23 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
 
     def test_create__total_incorrect(self):
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.get_data({}, self.organization, None, 1, None, 0)
+        data = OrderWithRelatedFactory.create_data(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+            product_shipping_kwargs={"organization": self.organization},
+        )
         data["total"] += 1
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), {"non_field_errors": ["Total is incorrect."]})
 
     def test_destroy(self):
-        order = OrderWithRelatedFactory.create({}, self.organization, None, 0, None, 0)
+        order = OrderWithRelatedFactory.create(
+            order_kwargs={"organization": self.organization},
+            product_kwargs={"organization": self.organization},
+            product_shipping_kwargs={"organization": self.organization},
+        )
         path = reverse(
             "order-detail",
             kwargs={"organization_id": self.organization.id, "pk": order.id},
@@ -160,15 +189,16 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         self.assertFalse(ProductItem.objects.filter(order_id=order.id).exists())
 
     def test_list__filter__code__icontains(self):
-        OrderWithRelatedFactory.create({}, self.organization, None, 0, None, 0)
+        OrderWithRelatedFactory.create(
+            order_kwargs={"organization": self.organization},
+            product_kwargs={"organization": self.organization},
+            product_shipping_kwargs={"organization": self.organization},
+        )
         for n in range(2):
             OrderWithRelatedFactory.create(
-                {"code": f"-code-{n}"},
-                self.organization,
-                None,
-                0,
-                None,
-                0,
+                order_kwargs={"code": f"-code-{n}", "organization": self.organization},
+                product_kwargs={"organization": self.organization},
+                product_shipping_kwargs={"organization": self.organization},
             )
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
         data = {"code__icontains": "code-"}
@@ -186,7 +216,9 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
                     order.created_at
                     for order in [
                         OrderWithRelatedFactory.create(
-                            {}, self.organization, None, 0, None, 0
+                            order_kwargs={"organization": self.organization},
+                            product_kwargs={"organization": self.organization},
+                            product_shipping_kwargs={"organization": self.organization},
                         )
                         for _ in range(3)
                     ]
@@ -208,7 +240,9 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
                     order.created_at
                     for order in [
                         OrderWithRelatedFactory.create(
-                            {}, self.organization, None, 0, None, 0
+                            order_kwargs={"organization": self.organization},
+                            product_kwargs={"organization": self.organization},
+                            product_shipping_kwargs={"organization": self.organization},
                         )
                         for _ in range(3)
                     ]
@@ -230,7 +264,11 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
                     order.product_total
                     for order in [
                         OrderWithRelatedFactory.create(
-                            {}, self.organization, None, 1, None, 1
+                            order_kwargs={"organization": self.organization},
+                            product_item_count=1,
+                            product_kwargs={"organization": self.organization},
+                            product_shipping_item_count=1,
+                            product_shipping_kwargs={"organization": self.organization},
                         )
                         for _ in range(3)
                     ]
@@ -252,7 +290,11 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
                     order.product_total
                     for order in [
                         OrderWithRelatedFactory.create(
-                            {}, self.organization, None, 1, None, 1
+                            order_kwargs={"organization": self.organization},
+                            product_item_count=1,
+                            product_kwargs={"organization": self.organization},
+                            product_shipping_item_count=1,
+                            product_shipping_kwargs={"organization": self.organization},
                         )
                         for _ in range(3)
                     ]
@@ -267,14 +309,22 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         )
 
     def test_list__filter__productitem__product__in(self):
-        OrderWithRelatedFactory.create({}, self.organization, None, 1, None, 0)
+        OrderWithRelatedFactory.create(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+            product_shipping_kwargs={"organization": self.organization},
+        )
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
         data = {
             "productitem__product__in": [
                 order.productitem_set.all()[0].product.id
                 for order in [
                     OrderWithRelatedFactory.create(
-                        {}, self.organization, None, 1, None, 0
+                        order_kwargs={"organization": self.organization},
+                        product_item_count=1,
+                        product_kwargs={"organization": self.organization},
+                        product_shipping_kwargs={"organization": self.organization},
                     )
                     for _ in range(2)
                 ]
@@ -295,7 +345,10 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
                     order.product_total
                     for order in [
                         OrderWithRelatedFactory.create(
-                            {}, self.organization, None, 1, None, 1
+                            order_kwargs={"organization": self.organization},
+                            product_item_count=1,
+                            product_kwargs={"organization": self.organization},
+                            product_shipping_kwargs={"organization": self.organization},
                         )
                         for _ in range(3)
                     ]
@@ -317,7 +370,11 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
                     order.product_total
                     for order in [
                         OrderWithRelatedFactory.create(
-                            {}, self.organization, None, 1, None, 1
+                            order_kwargs={"organization": self.organization},
+                            product_item_count=1,
+                            product_kwargs={"organization": self.organization},
+                            product_shipping_item_count=1,
+                            product_shipping_kwargs={"organization": self.organization},
                         )
                         for _ in range(3)
                     ]
@@ -333,7 +390,11 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
 
     def test_list__paginate(self):
         for _ in range(4):
-            OrderWithRelatedFactory.create({}, self.organization, None, 0, None, 0)
+            OrderWithRelatedFactory.create(
+                order_kwargs={"organization": self.organization},
+                product_kwargs={"organization": self.organization},
+                product_shipping_kwargs={"organization": self.organization},
+            )
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
         data = {"limit": 2, "offset": 1, "ordering": "id"}
         response = self.client.get(path, data, format="json")
@@ -345,7 +406,11 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
 
     def test_list__sort__code(self):
         for _ in range(2):
-            OrderWithRelatedFactory.create({}, self.organization, None, 0, None, 0)
+            OrderWithRelatedFactory.create(
+                order_kwargs={"organization": self.organization},
+                product_kwargs={"organization": self.organization},
+                product_shipping_kwargs={"organization": self.organization},
+            )
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
         data = {"ordering": "code"}
         response = self.client.get(path, data=data, format="json")
@@ -357,7 +422,11 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
 
     def test_list__sort__created_at(self):
         for _ in range(2):
-            OrderWithRelatedFactory.create({}, self.organization, None, 0, None, 0)
+            OrderWithRelatedFactory.create(
+                order_kwargs={"organization": self.organization},
+                product_kwargs={"organization": self.organization},
+                product_shipping_kwargs={"organization": self.organization},
+            )
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
         data = {"ordering": "created_at"}
         response = self.client.get(path, data=data, format="json")
@@ -369,7 +438,13 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
 
     def test_list__sort__product_total(self):
         for _ in range(2):
-            OrderWithRelatedFactory.create({}, self.organization, None, 1, None, 1)
+            OrderWithRelatedFactory.create(
+                order_kwargs={"organization": self.organization},
+                product_item_count=1,
+                product_kwargs={"organization": self.organization},
+                product_shipping_item_count=1,
+                product_shipping_kwargs={"organization": self.organization},
+            )
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
         data = {"ordering": "product_total"}
         response = self.client.get(path, data=data, format="json")
@@ -381,7 +456,13 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
 
     def test_list__sort__total(self):
         for _ in range(2):
-            OrderWithRelatedFactory.create({}, self.organization, None, 1, None, 1)
+            OrderWithRelatedFactory.create(
+                order_kwargs={"organization": self.organization},
+                product_item_count=1,
+                product_kwargs={"organization": self.organization},
+                product_shipping_item_count=1,
+                product_shipping_kwargs={"organization": self.organization},
+            )
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
         data = {"ordering": "total"}
         response = self.client.get(path, data=data, format="json")
@@ -392,12 +473,24 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         )
 
     def test_partial_update(self):
-        order = OrderWithRelatedFactory.create({}, self.organization, None, 2, None, 2)
+        order = OrderWithRelatedFactory.create(
+            order_kwargs={"organization": self.organization},
+            product_item_count=2,
+            product_kwargs={"organization": self.organization},
+            product_shipping_item_count=2,
+            product_shipping_kwargs={"organization": self.organization},
+        )
         path = reverse(
             "order-detail",
             kwargs={"organization_id": self.organization.id, "pk": order.id},
         )
-        data = OrderWithRelatedFactory.get_data({}, self.organization, None, 2, None, 2)
+        data = OrderWithRelatedFactory.create_data(
+            order_kwargs={"organization": self.organization},
+            product_item_count=2,
+            product_kwargs={"organization": self.organization},
+            product_shipping_item_count=2,
+            product_shipping_kwargs={"organization": self.organization},
+        )
         product_item = order.product_items[0]
         data["productitem_set"][0]["id"] = product_item.id
         data["productitem_set"][0]["productshippingitem_set"][0][
@@ -425,7 +518,13 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
                 self.assertIsNotNone(product_shipping_item)
 
     def test_retrieve(self):
-        order = OrderWithRelatedFactory.create({}, self.organization, None, 2, None, 2)
+        order = OrderWithRelatedFactory.create(
+            order_kwargs={"organization": self.organization},
+            product_item_count=2,
+            product_kwargs={"organization": self.organization},
+            product_shipping_item_count=2,
+            product_shipping_kwargs={"organization": self.organization},
+        )
         path = reverse(
             "order-detail",
             kwargs={"organization_id": self.organization.id, "pk": order.id},
@@ -441,7 +540,12 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
 class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
     def test_create__item_total_incorrect(self):
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.get_data({}, self.organization, None, 1, None, 0)
+        data = OrderWithRelatedFactory.create_data(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+            product_shipping_kwargs={"organization": self.organization},
+        )
         data["productitem_set"][0]["item_total"] += 1
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
@@ -452,7 +556,12 @@ class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
 
     def test_create__item_subtotal_incorrect(self):
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.get_data({}, self.organization, None, 1, None, 0)
+        data = OrderWithRelatedFactory.create_data(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+            product_shipping_kwargs={"organization": self.organization},
+        )
         data["productitem_set"][0]["subtotal"] += 1
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
@@ -463,8 +572,12 @@ class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
 
     def test_create__product_in_another_organization(self):
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.get_data(
-            {}, self.organization, ProductFactory.create(), 1, None, 0
+        data = OrderWithRelatedFactory.create_data(
+            order_kwargs={"organization": self.organization},
+            product=ProductFactory.create(),
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+            product_shipping_kwargs={"organization": self.organization},
         )
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
@@ -479,7 +592,12 @@ class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
 
     def test_create__total_incorrect(self):
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.get_data({}, self.organization, None, 1, None, 0)
+        data = OrderWithRelatedFactory.create_data(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+            product_shipping_kwargs={"organization": self.organization},
+        )
         data["productitem_set"][0]["total"] += 1
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
@@ -489,12 +607,21 @@ class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         )
 
     def test_partial_update__product_item_not_belong_to_order(self):
-        order = OrderWithRelatedFactory.create({}, self.organization, None, 0, None, 0)
+        order = OrderWithRelatedFactory.create(
+            order_kwargs={"organization": self.organization},
+            product_kwargs={"organization": self.organization},
+            product_shipping_kwargs={"organization": self.organization},
+        )
         path = reverse(
             "order-detail",
             kwargs={"organization_id": self.organization.id, "pk": order.id},
         )
-        data = OrderWithRelatedFactory.get_data({}, self.organization, None, 1, None, 0)
+        data = OrderWithRelatedFactory.create_data(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+            product_shipping_kwargs={"organization": self.organization},
+        )
         data["productitem_set"][0]["id"] = 0
         response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
@@ -507,7 +634,13 @@ class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
 class ProductShippingItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
     def test_create__item_total_incorrect(self):
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.get_data({}, self.organization, None, 1, None, 1)
+        data = OrderWithRelatedFactory.create_data(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+            product_shipping_item_count=1,
+            product_shipping_kwargs={"organization": self.organization},
+        )
         data["productitem_set"][0]["productshippingitem_set"][0]["item_total"] += 1
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
@@ -526,7 +659,13 @@ class ProductShippingItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTest
 
     def test_create__item_subtotal_incorrect(self):
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.get_data({}, self.organization, None, 1, None, 1)
+        data = OrderWithRelatedFactory.create_data(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+            product_shipping_item_count=1,
+            product_shipping_kwargs={"organization": self.organization},
+        )
         data["productitem_set"][0]["productshippingitem_set"][0]["subtotal"] += 1
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
@@ -545,8 +684,12 @@ class ProductShippingItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTest
 
     def test_create__product_item_in_another_organization(self):
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.get_data(
-            {}, self.organization, None, 1, ProductShippingFactory.create(), 1
+        data = OrderWithRelatedFactory.create_data(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+            product_shipping=ProductShippingFactory.create(),
+            product_shipping_item_count=1,
         )
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
@@ -569,7 +712,13 @@ class ProductShippingItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTest
 
     def test_create__total_incorrect(self):
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.get_data({}, self.organization, None, 1, None, 1)
+        data = OrderWithRelatedFactory.create_data(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+            product_shipping_item_count=1,
+            product_shipping_kwargs={"organization": self.organization},
+        )
         data["productitem_set"][0]["productshippingitem_set"][0]["total"] += 1
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
@@ -587,12 +736,22 @@ class ProductShippingItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTest
         )
 
     def test_partial_update__product_shipping_item_not_belong_to_order(self):
-        order = OrderWithRelatedFactory.create({}, self.organization, None, 0, None, 0)
+        order = OrderWithRelatedFactory.create(
+            order_kwargs={"organization": self.organization},
+            product_kwargs={"organization": self.organization},
+            product_shipping_kwargs={"organization": self.organization},
+        )
         path = reverse(
             "order-detail",
             kwargs={"organization_id": self.organization.id, "pk": order.id},
         )
-        data = OrderWithRelatedFactory.get_data({}, self.organization, None, 1, None, 1)
+        data = OrderWithRelatedFactory.create_data(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+            product_shipping_item_count=1,
+            product_shipping_kwargs={"organization": self.organization},
+        )
         data["productitem_set"][0]["productshippingitem_set"][0]["id"] = 0
         response = self.client.patch(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
