@@ -17,6 +17,7 @@ coverage = "^7.0.5"
 django-filter = "^22.1"
 pycountry = "^22.3.5"
 celery = "^5.3.4"
+flower = "^2.0.1"
 
 
 [build-system]
