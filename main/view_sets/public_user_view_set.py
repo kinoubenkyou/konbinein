@@ -74,4 +74,9 @@ class PublicUserViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
 
     def perform_create(self, serializer):
         user = serializer.save()
-        send_email_verification(self.request, user)
+        uri_path = reverse(
+            "public-user-email-verifying",
+            kwargs={"pk": user.id},
+            request=self.request,
+        )
+        send_email_verification.delay(user.email, user.email_verifying_token, uri_path)

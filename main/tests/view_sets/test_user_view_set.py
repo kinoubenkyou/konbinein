@@ -1,5 +1,6 @@
 from django.contrib.auth.hashers import check_password
 from django.core import mail
+from django.test import override_settings
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 
@@ -8,6 +9,7 @@ from main.models.user import User
 from main.tests.user_test_case import UserTestCase
 
 
+@override_settings(task_always_eager=True)
 class UserViewSetTestCase(UserTestCase):
     def test_de_authenticating(self):
         path = reverse("user-de-authenticating", kwargs={"user_id": self.user.id})
