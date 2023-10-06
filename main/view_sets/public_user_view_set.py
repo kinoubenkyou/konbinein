@@ -1,5 +1,4 @@
 from django.contrib.auth.hashers import check_password
-from django.core.mail import send_mail
 from django.utils.http import urlencode
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
@@ -14,7 +13,7 @@ from rest_framework.viewsets import GenericViewSet
 from main.models.user import User
 from main.serializers.public_user_create_serializer import PublicUserCreateSerializer
 from main.serializers.public_user_update_serializer import PublicUserUpdateSerializer
-from main.view_sets import send_email_verification
+from main.view_sets import send_email, send_email_verification
 
 
 class PublicUserViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
@@ -64,19 +63,13 @@ class PublicUserViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
             request=request,
         )
         query = urlencode({"token": user.password_resetting_token})
-        send_mail(
-            from_email=None,
+        send_email.delay(
             message=f"{uri_path}?{query}",
-            recipient_list=(user.email,),
+            recipient_list=[user.email],
             subject="Konbinein Password Reset",
         )
         return Response(status=HTTP_204_NO_CONTENT)
 
     def perform_create(self, serializer):
         user = serializer.save()
-        uri_path = reverse(
-            "public-user-email-verifying",
-            kwargs={"pk": user.id},
-            request=self.request,
-        )
-        send_email_verification.delay(user.email, user.email_verifying_token, uri_path)
+        send_email_verification(self.request, user)

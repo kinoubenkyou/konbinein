@@ -9,7 +9,6 @@ from main.models.user import User
 from main.tests.user_test_case import UserTestCase
 
 
-@override_settings(task_always_eager=True)
 class UserViewSetTestCase(UserTestCase):
     def test_de_authenticating(self):
         path = reverse("user-de-authenticating", kwargs={"user_id": self.user.id})
@@ -25,6 +24,7 @@ class UserViewSetTestCase(UserTestCase):
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
         self.assertFalse(User.objects.filter(id=self.user.id).exists())
 
+    @override_settings(task_always_eager=True)
     def test_partial_update(self):
         path = reverse("user-detail", kwargs={"user_id": self.user.id})
         built_user = UserFactory.build()

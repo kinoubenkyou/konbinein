@@ -16,7 +16,6 @@ from main.models.user import User
 from main.tests import faker
 
 
-@override_settings(task_always_eager=True)
 class PublicUserViewSetTestCase(APITestCase):
     def test_authenticating(self):
         password = f"password{faker.unique.random_int()}"
@@ -47,6 +46,7 @@ class PublicUserViewSetTestCase(APITestCase):
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), ["Password is incorrect."])
 
+    @override_settings(task_always_eager=True)
     def test_create(self):
         path = reverse("public-user-list")
         built_user = UserFactory.build()
@@ -127,6 +127,7 @@ class PublicUserViewSetTestCase(APITestCase):
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), {"token": ["Token doesn't match."]})
 
+    @override_settings(task_always_eager=True)
     def test_password_resetting(self):
         user = UserFactory.create()
         path = reverse("public-user-password-resetting")
