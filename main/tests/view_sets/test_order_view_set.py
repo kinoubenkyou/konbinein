@@ -15,86 +15,7 @@ from main.models.product_shipping_item import ProductShippingItem
 from main.tests.staff_test_case import StaffTestCase
 
 
-class OrderViewSetTestCaseMixin:
-    @classmethod
-    def _get_expected_data_list(cls, kwargs):
-        filter_ = {
-            key: value
-            for key, value in kwargs.items()
-            if key not in ["limit", "offset", "ordering"]
-        }
-        order_query_set = Order.objects.filter(**filter_)
-        if "ordering" in kwargs:
-            order_query_set = order_query_set.order_by(kwargs["ordering"])
-        offset = kwargs.get("offset", 0)
-        return [
-            {
-                "code": order.code,
-                "created_at": order.created_at.isoformat(),
-                "id": order.id,
-                "productitem_set": [
-                    cls._get_product_item_data(product_item)
-                    for product_item in order.productitem_set.order_by("id")
-                ],
-                "product_total": str(order.product_total),
-                "total": str(order.total),
-            }
-            for order in order_query_set[
-                offset : (kwargs["limit"] + offset) if "limit" in kwargs else None
-            ]
-        ]
-
-    @classmethod
-    def _get_product_item_data(cls, product_item):
-        return {
-            "id": product_item.id,
-            "item_total": str(product_item.item_total),
-            "name": product_item.name,
-            "product": product_item.product_id,
-            "price": str(product_item.price),
-            "productshippingitem_set": [
-                cls._get_product_shipping_item_data(product_shipping_item)
-                for product_shipping_item in (
-                    product_item.productshippingitem_set.order_by("id")
-                )
-            ],
-            "quantity": product_item.quantity,
-            "shipping_total": str(product_item.shipping_total),
-            "subtotal": str(product_item.subtotal),
-            "total": str(product_item.total),
-        }
-
-    @staticmethod
-    def _get_product_shipping_item_data(product_shipping_item):
-        return {
-            "fixed_fee": str(product_shipping_item.fixed_fee),
-            "id": product_shipping_item.id,
-            "item_total": str(product_shipping_item.item_total),
-            "name": product_shipping_item.name,
-            "product_shipping": product_shipping_item.product_shipping_id,
-            "subtotal": str(product_shipping_item.subtotal),
-            "total": str(product_shipping_item.total),
-            "unit_fee": str(product_shipping_item.unit_fee),
-        }
-
-    @staticmethod
-    def _sorted_data_list_by_id(order_data_list):
-        for order_data in order_data_list:
-            order_data["productitem_set"] = sorted(
-                order_data["productitem_set"],
-                key=lambda product_item_data: product_item_data["id"],
-            )
-            for product_item_data in order_data["productitem_set"]:
-                product_item_data["productshippingitem_set"] = sorted(
-                    product_item_data["productshippingitem_set"],
-                    key=lambda product_shipping_item_data: product_shipping_item_data[
-                        "id"
-                    ],
-                )
-        return order_data_list
-
-
-class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
+class OrderViewSetTestCase(StaffTestCase):
     def test_create(self):
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
         data = OrderWithRelatedFactory.create_data(
@@ -204,8 +125,8 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         data = {"code__icontains": "code-"}
         response = self.client.get(path, data, format="json")
         self.assertCountEqual(
-            self._sorted_data_list_by_id(response.json()),
-            self._get_expected_data_list(data),
+            _sorted_data_list_by_id(response.json()),
+            _get_expected_data_list(data),
         )
 
     def test_list__filter__created_at__gte(self):
@@ -228,8 +149,8 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertCountEqual(
-            self._sorted_data_list_by_id(response.json()),
-            self._get_expected_data_list(data),
+            _sorted_data_list_by_id(response.json()),
+            _get_expected_data_list(data),
         )
 
     def test_list__filter__created_at__lte(self):
@@ -252,8 +173,8 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertCountEqual(
-            self._sorted_data_list_by_id(response.json()),
-            self._get_expected_data_list(data),
+            _sorted_data_list_by_id(response.json()),
+            _get_expected_data_list(data),
         )
 
     def test_list__filter__product_total__gte(self):
@@ -278,8 +199,8 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertCountEqual(
-            self._sorted_data_list_by_id(response.json()),
-            self._get_expected_data_list(data),
+            _sorted_data_list_by_id(response.json()),
+            _get_expected_data_list(data),
         )
 
     def test_list__filter__product_total__lte(self):
@@ -304,8 +225,8 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertCountEqual(
-            self._sorted_data_list_by_id(response.json()),
-            self._get_expected_data_list(data),
+            _sorted_data_list_by_id(response.json()),
+            _get_expected_data_list(data),
         )
 
     def test_list__filter__productitem__product__in(self):
@@ -333,8 +254,8 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertCountEqual(
-            self._sorted_data_list_by_id(response.json()),
-            self._get_expected_data_list(data),
+            _sorted_data_list_by_id(response.json()),
+            _get_expected_data_list(data),
         )
 
     def test_list__filter__total__gte(self):
@@ -358,8 +279,8 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertCountEqual(
-            self._sorted_data_list_by_id(response.json()),
-            self._get_expected_data_list(data),
+            _sorted_data_list_by_id(response.json()),
+            _get_expected_data_list(data),
         )
 
     def test_list__filter__total__lte(self):
@@ -384,8 +305,8 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertCountEqual(
-            self._sorted_data_list_by_id(response.json()),
-            self._get_expected_data_list(data),
+            _sorted_data_list_by_id(response.json()),
+            _get_expected_data_list(data),
         )
 
     def test_list__paginate(self):
@@ -400,8 +321,8 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         response = self.client.get(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(
-            self._sorted_data_list_by_id(response.json()["results"]),
-            self._get_expected_data_list(data),
+            _sorted_data_list_by_id(response.json()["results"]),
+            _get_expected_data_list(data),
         )
 
     def test_list__sort__code(self):
@@ -416,8 +337,8 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         response = self.client.get(path, data=data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(
-            self._sorted_data_list_by_id(response.json()),
-            self._get_expected_data_list(data),
+            _sorted_data_list_by_id(response.json()),
+            _get_expected_data_list(data),
         )
 
     def test_list__sort__created_at(self):
@@ -432,8 +353,8 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         response = self.client.get(path, data=data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(
-            self._sorted_data_list_by_id(response.json()),
-            self._get_expected_data_list(data),
+            _sorted_data_list_by_id(response.json()),
+            _get_expected_data_list(data),
         )
 
     def test_list__sort__product_total(self):
@@ -450,8 +371,8 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         response = self.client.get(path, data=data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(
-            self._sorted_data_list_by_id(response.json()),
-            self._get_expected_data_list(data),
+            _sorted_data_list_by_id(response.json()),
+            _get_expected_data_list(data),
         )
 
     def test_list__sort__total(self):
@@ -468,8 +389,8 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         response = self.client.get(path, data=data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(
-            self._sorted_data_list_by_id(response.json()),
-            self._get_expected_data_list(data),
+            _sorted_data_list_by_id(response.json()),
+            _get_expected_data_list(data),
         )
 
     def test_partial_update(self):
@@ -532,12 +453,12 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         response = self.client.get(path, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(
-            self._sorted_data_list_by_id([response.json()]),
-            self._get_expected_data_list({"id": order.id}),
+            _sorted_data_list_by_id([response.json()]),
+            _get_expected_data_list({"id": order.id}),
         )
 
 
-class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
+class ProductItemValidationTestCase(StaffTestCase):
     def test_create__item_total_incorrect(self):
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
         data = OrderWithRelatedFactory.create_data(
@@ -631,7 +552,7 @@ class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         )
 
 
-class ProductShippingItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
+class ProductShippingItemValidationTestCase(StaffTestCase):
     def test_create__item_total_incorrect(self):
         path = reverse("order-list", kwargs={"organization_id": self.organization.id})
         data = OrderWithRelatedFactory.create_data(
@@ -772,3 +693,78 @@ class ProductShippingItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTest
                 ]
             },
         )
+
+
+def _get_expected_data_list(kwargs):
+    filter_ = {
+        key: value
+        for key, value in kwargs.items()
+        if key not in ["limit", "offset", "ordering"]
+    }
+    order_query_set = Order.objects.filter(**filter_)
+    if "ordering" in kwargs:
+        order_query_set = order_query_set.order_by(kwargs["ordering"])
+    offset = kwargs.get("offset", 0)
+    return [
+        {
+            "code": order.code,
+            "created_at": order.created_at.isoformat(),
+            "id": order.id,
+            "productitem_set": [
+                _get_product_item_data(product_item)
+                for product_item in order.productitem_set.order_by("id")
+            ],
+            "product_total": str(order.product_total),
+            "total": str(order.total),
+        }
+        for order in order_query_set[
+            offset : (kwargs["limit"] + offset) if "limit" in kwargs else None
+        ]
+    ]
+
+
+def _get_product_item_data(product_item):
+    return {
+        "id": product_item.id,
+        "item_total": str(product_item.item_total),
+        "name": product_item.name,
+        "product": product_item.product_id,
+        "price": str(product_item.price),
+        "productshippingitem_set": [
+            _get_product_shipping_item_data(product_shipping_item)
+            for product_shipping_item in (
+                product_item.productshippingitem_set.order_by("id")
+            )
+        ],
+        "quantity": product_item.quantity,
+        "shipping_total": str(product_item.shipping_total),
+        "subtotal": str(product_item.subtotal),
+        "total": str(product_item.total),
+    }
+
+
+def _get_product_shipping_item_data(product_shipping_item):
+    return {
+        "fixed_fee": str(product_shipping_item.fixed_fee),
+        "id": product_shipping_item.id,
+        "item_total": str(product_shipping_item.item_total),
+        "name": product_shipping_item.name,
+        "product_shipping": product_shipping_item.product_shipping_id,
+        "subtotal": str(product_shipping_item.subtotal),
+        "total": str(product_shipping_item.total),
+        "unit_fee": str(product_shipping_item.unit_fee),
+    }
+
+
+def _sorted_data_list_by_id(order_data_list):
+    for order_data in order_data_list:
+        order_data["productitem_set"] = sorted(
+            order_data["productitem_set"],
+            key=lambda product_item_data: product_item_data["id"],
+        )
+        for product_item_data in order_data["productitem_set"]:
+            product_item_data["productshippingitem_set"] = sorted(
+                product_item_data["productshippingitem_set"],
+                key=lambda product_shipping_item_data: product_shipping_item_data["id"],
+            )
+    return order_data_list

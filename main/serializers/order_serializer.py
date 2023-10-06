@@ -5,11 +5,11 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ModelSerializer
 
 from main.models.order import Order
+from main.serializers import _write_nested_objects
 from main.serializers.product_item_serializer import ProductItemSerializer
-from main.serializers.write_nested_mixin import WriteNestedMixin
 
 
-class OrderSerializer(WriteNestedMixin, ModelSerializer):
+class OrderSerializer(ModelSerializer):
     class Meta:
         fields = (
             "code",
@@ -31,7 +31,7 @@ class OrderSerializer(WriteNestedMixin, ModelSerializer):
         }
         product_item_data_list = order_attributes.pop("productitem_set", ())
         order = super().create(order_attributes)
-        self._write_nested_objects(
+        _write_nested_objects(
             product_item_data_list, {}, "order", order, ProductItemSerializer()
         )
         return order
@@ -48,7 +48,7 @@ class OrderSerializer(WriteNestedMixin, ModelSerializer):
             for product_item in instance.productitem_set.all()
         }
         order = super().update(instance, order_attributes)
-        self._write_nested_objects(
+        _write_nested_objects(
             product_item_data_list,
             product_item_dict,
             "order",

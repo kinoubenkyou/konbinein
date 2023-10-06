@@ -5,7 +5,6 @@ from rest_framework.mixins import (
     UpdateModelMixin,
 )
 from rest_framework.response import Response
-from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.viewsets import GenericViewSet
 
@@ -33,12 +32,5 @@ class UserViewSet(
     def perform_update(self, serializer):
         current_email = serializer.instance.email
         user = serializer.save()
-        uri_path = reverse(
-            "public-user-email-verifying",
-            kwargs={"pk": user.id},
-            request=self.request,
-        )
         if current_email != user.email:
-            send_email_verification.delay(
-                user.email, user.email_verifying_token, uri_path
-            )
+            send_email_verification(self.request, user)

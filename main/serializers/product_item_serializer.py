@@ -8,13 +8,13 @@ from rest_framework.serializers import ModelSerializer
 
 from main.models.product import Product
 from main.models.product_item import ProductItem
+from main.serializers import _write_nested_objects
 from main.serializers.product_shipping_item_serializer import (
     ProductShippingItemSerializer,
 )
-from main.serializers.write_nested_mixin import WriteNestedMixin
 
 
-class ProductItemSerializer(WriteNestedMixin, ModelSerializer):
+class ProductItemSerializer(ModelSerializer):
     class Meta:
         fields = (
             "id",
@@ -41,7 +41,7 @@ class ProductItemSerializer(WriteNestedMixin, ModelSerializer):
             "productshippingitem_set", ()
         )
         product_item = super().create(product_item_attributes)
-        self._write_nested_objects(
+        _write_nested_objects(
             product_shipping_item_data_list,
             {},
             "product_item",
@@ -61,7 +61,7 @@ class ProductItemSerializer(WriteNestedMixin, ModelSerializer):
             for product_shipping_item in instance.productshippingitem_set.all()
         }
         product_item = super().update(instance, product_item_attributes)
-        self._write_nested_objects(
+        _write_nested_objects(
             product_shipping_item_data_list,
             product_shipping_item_dict,
             "product_item",
