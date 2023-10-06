@@ -1,5 +1,6 @@
 from django.contrib.auth.hashers import check_password, make_password
 from django.core import mail
+from django.test import override_settings
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.status import (
@@ -15,6 +16,7 @@ from main.models.user import User
 from main.tests import faker
 
 
+@override_settings(task_always_eager=True)
 class PublicUserViewSetTestCase(APITestCase):
     def test_authenticating(self):
         password = f"password{faker.unique.random_int()}"
