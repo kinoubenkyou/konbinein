@@ -1,20 +1,10 @@
-from django.contrib.postgres.fields import ArrayField
-from django.db.models import (
-    CASCADE,
-    CharField,
-    DecimalField,
-    ForeignKey,
-    ManyToManyField,
-    Model,
-    UniqueConstraint,
-)
+from django.db.models import ManyToManyField, UniqueConstraint
 
-from main.models import ZONE_CHOICES
-from main.models.organization import Organization
 from main.models.product import Product
+from main.models.shipping import Shipping
 
 
-class ProductShipping(Model):
+class ProductShipping(Shipping):
     class Meta:
         constraints = (
             UniqueConstraint(
@@ -24,10 +14,4 @@ class ProductShipping(Model):
             ),
         )
 
-    code = CharField(max_length=255)
-    fixed_fee = DecimalField(decimal_places=4, max_digits=19)
-    name = CharField(max_length=255)
-    organization = ForeignKey(Organization, on_delete=CASCADE)
     products = ManyToManyField(Product)
-    unit_fee = DecimalField(decimal_places=4, max_digits=19)
-    zones = ArrayField(CharField(max_length=255, choices=ZONE_CHOICES))
