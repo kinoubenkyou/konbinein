@@ -217,7 +217,7 @@ class ProductShippingViewSetTestCase(StaffTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self._assert_get_response(response.json(), product_shipping_dicts, False)
 
-    def test_list__filter__products__id__in(self):
+    def test_list__filter__products__in(self):
         product_shipping = ProductShippingFactory.create(organization=self.organization)
         products = ProductFactory.create_batch(2, organization=self.organization)
         product_shipping.products.set(products)
