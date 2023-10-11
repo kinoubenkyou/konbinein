@@ -1,7 +1,8 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db.models import CASCADE, CharField, DecimalField, ForeignKey, Model
 
-from main.models import ZONE_CHOICES, Organization
+from main.models import ZONE_CHOICES
+from main.models.organization import Organization
 
 
 class Shipping(Model):

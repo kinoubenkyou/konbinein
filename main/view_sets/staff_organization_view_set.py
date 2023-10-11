@@ -11,7 +11,7 @@ from main.serializers.organization_serializer import OrganizationSerializer
 
 
 class StaffOrganizationViewSet(
-    DestroyModelMixin, GenericViewSet, RetrieveModelMixin, UpdateModelMixin
+    DestroyModelMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet
 ):
     permission_classes = (StaffPermission,)
     queryset = Organization.objects.all()

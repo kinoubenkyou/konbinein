@@ -50,6 +50,18 @@ class ProductItemSerializer(ModelSerializer):
         )
         return product_item
 
+    def to_internal_value(self, data):
+        instance = ProductItem.objects.filter(
+            id=data.get("id"), order_id=data["order_id"]
+        ).first()
+        self.context["instance"] = instance
+        for product_shipping_item_data in data["productshippingitem_set"]:
+            product_shipping_item_data["product_item_id"] = (
+                instance.id if instance is not None else None
+            )
+            product_shipping_item_data["quantity"] = data["quantity"]
+        return super().to_internal_value(data)
+
     @atomic
     def update(self, instance, validated_data):
         product_item_attributes = {**validated_data}
@@ -82,23 +94,11 @@ class ProductItemSerializer(ModelSerializer):
         return data
 
     def validate_id(self, value):
-        if value is not None and self.context["instance"] is None:
-            raise ValidationError(detail="Product item does not belong to order.")
+        if self.context["instance"] is None:
+            raise ValidationError(detail="Product item can't be found.")
         return value
 
     def validate_product(self, value):
         if value.organization_id != int(self.context["view"].kwargs["organization_id"]):
             raise ValidationError(detail="Product is in another organization.")
         return value
-
-    def to_internal_value(self, data):
-        instance = ProductItem.objects.filter(
-            id=data.get("id"), order_id=data["order_id"]
-        ).first()
-        self.context["instance"] = instance
-        for product_shipping_item_data in data["productshippingitem_set"]:
-            product_shipping_item_data["product_item_id"] = (
-                instance.id if instance is not None else None
-            )
-            product_shipping_item_data["quantity"] = data["quantity"]
-        return super().to_internal_value(data)

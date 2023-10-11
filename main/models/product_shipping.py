@@ -10,7 +10,7 @@ class ProductShipping(Shipping):
             UniqueConstraint(
                 "code",
                 "organization",
-                name="main_product_shipping_rule_code_organization_id",
+                name="main_product_shipping_code_organization_id",
             ),
         )
 

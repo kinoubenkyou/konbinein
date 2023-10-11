@@ -15,7 +15,7 @@ from main.view_sets import send_email_verification
 
 
 class UserViewSet(
-    DestroyModelMixin, GenericViewSet, UpdateModelMixin, RetrieveModelMixin
+    DestroyModelMixin, UpdateModelMixin, RetrieveModelMixin, GenericViewSet
 ):
     lookup_url_kwarg = "user_id"
     permission_classes = (UserPermission,)

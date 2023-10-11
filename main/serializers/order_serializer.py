@@ -36,6 +36,13 @@ class OrderSerializer(ModelSerializer):
         )
         return order
 
+    def to_internal_value(self, data):
+        for product_item_data in data["productitem_set"]:
+            product_item_data["order_id"] = (
+                self.instance.id if self.instance is not None else None
+            )
+        return super().to_internal_value(data)
+
     @atomic
     def update(self, instance, validated_data):
         order_attributes = {
@@ -77,10 +84,3 @@ class OrderSerializer(ModelSerializer):
         if query_set.exists():
             raise ValidationError(detail="Code is already in another order.")
         return value
-
-    def to_internal_value(self, data):
-        for product_item_data in data["productitem_set"]:
-            product_item_data["order_id"] = (
-                self.instance.id if self.instance is not None else None
-            )
-        return super().to_internal_value(data)
