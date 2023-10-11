@@ -20,9 +20,9 @@ class UserStaffViewSet(
     FilterMixin,
     CreateModelMixin,
     DestroyModelMixin,
-    GenericViewSet,
     ListModelMixin,
     RetrieveModelMixin,
+    GenericViewSet,
 ):
     filter_set_class = StaffFilterSet
     ordering_fields = (
