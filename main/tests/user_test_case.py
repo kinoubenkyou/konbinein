@@ -8,7 +8,9 @@ from main.tests import faker
 
 
 class UserTestCase(APITestCase):
+    is_organization_view_set = False
     is_user_system_administrator = False
+    is_user_view_set = True
 
     @classmethod
     def setUpClass(cls):

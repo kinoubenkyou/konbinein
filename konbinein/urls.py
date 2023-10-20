@@ -19,12 +19,14 @@ router.register(
     r"admin/organizations", AdminOrganizationViewSet, basename="admin-organization"
 )
 router.register(r"admin/users", AdminUserViewSet, basename="admin-user")
-router.register(r"organizations", StaffOrganizationViewSet)
 router.register(
     r"organizations/(?P<organization_id>[^/.]+)/order-shippings",
     OrderShippingViewSet,
 )
 router.register(r"organizations/(?P<organization_id>[^/.]+)/orders", OrderViewSet)
+router.register(
+    r"organizations/(?P<organization_id>[^/.]+)/organizations", StaffOrganizationViewSet
+)
 router.register(r"organizations/(?P<organization_id>[^/.]+)/products", ProductViewSet)
 router.register(
     r"organizations/(?P<organization_id>[^/.]+)/product-shippings",
@@ -40,7 +42,6 @@ router.register(
     StaffUserViewSet,
     basename="organization-user",
 )
-router.register(r"users", UserViewSet)
 router.register(
     r"users/(?P<user_id>[^/.]+)/organizations",
     UserOrganizationViewSet,
@@ -49,5 +50,6 @@ router.register(
 router.register(
     r"users/(?P<user_id>[^/.]+)/staffs", UserStaffViewSet, basename="user-staff"
 )
+router.register(r"users/(?P<user_id>[^/.]+)/users", UserViewSet)
 router.register(r"public/users", PublicUserViewSet, basename="public-user")
 urlpatterns = router.urls

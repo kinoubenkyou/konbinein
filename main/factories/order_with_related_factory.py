@@ -6,9 +6,8 @@ from main.factories.product_shipping_item_factory import ProductShippingItemFact
 
 
 class OrderWithRelatedFactory:
-    @classmethod
-    def create(
-        cls,
+    def __init__(
+        self,
         order_kwargs=None,
         product=None,
         product_item_count=0,
@@ -17,106 +16,93 @@ class OrderWithRelatedFactory:
         product_shipping_item_count=0,
         product_shipping_kwargs=None,
     ):
-        order = cls._build(
-            order_kwargs,
-            product,
-            product_item_count,
-            product_kwargs,
-            product_shipping,
-            product_shipping_item_count,
-            product_shipping_kwargs,
+        self.order_kwargs = order_kwargs
+        self.product = product or ProductFactory.build(**product_kwargs or {})
+        self.product_item_count = product_item_count
+        self.product_shipping = product_shipping or ProductShippingFactory.build(
+            **product_shipping_kwargs or {}
         )
+        self.product_shipping_item_count = product_shipping_item_count
+
+    def create(self):
+        order = self._build()
         order.save()
-        for product_item in order.product_items:
-            product_item.product.save()
-            product_item.save()
-            for product_shipping_item in product_item.product_shipping_items:
-                product_shipping_item.product_shipping.save()
-                product_shipping_item.save()
+        self._create_product_item(order)
         return order
 
-    @classmethod
-    def create_data(
-        cls,
-        order_kwargs=None,
-        product=None,
-        product_item_count=0,
-        product_kwargs=None,
-        product_shipping=None,
-        product_shipping_item_count=0,
-        product_shipping_kwargs=None,
-    ):
-        order = cls._build(
-            order_kwargs,
-            product,
-            product_item_count,
-            product_kwargs,
-            product_shipping,
-            product_shipping_item_count,
-            product_shipping_kwargs,
-        )
-        for product_item in order.product_items:
-            product_item.product.save()
-            for product_shipping_item in product_item.product_shipping_items:
-                product_shipping_item.product_shipping.save()
+    def create_batch(self, order_count):
+        return [self.create() for _ in range(order_count)]
+
+    def get_deserializer_data(self):
+        order = self._build()
         return {
             "code": order.code,
             "created_at": order.created_at,
             "productitem_set": [
-                cls._create_product_item_data(product_item)
-                for product_item in order.product_items
+                self._get_deserializer_product_item_data(product_item)
+                for product_item in order.cached_product_items
             ],
             "product_total": order.product_total,
             "total": order.total,
         }
 
-    @staticmethod
-    def _build(
-        order_kwargs,
-        product,
-        product_item_count,
-        product_kwargs,
-        product_shipping,
-        product_shipping_item_count,
-        product_shipping_kwargs,
-    ):
-        order = OrderFactory.build(**order_kwargs or {})
-        order.product_items = ProductItemFactory.build_batch(
-            product_item_count,
-            order=order,
-            product=product or ProductFactory.build(**product_kwargs or {}),
-        )
-        for product_item in order.product_items:
-            product_item.product_shipping_items = (
-                ProductShippingItemFactory.build_batch(
-                    product_shipping_item_count,
-                    product_item=product_item,
-                    product_shipping=product_shipping
-                    or ProductShippingFactory.build(**product_shipping_kwargs or {}),
-                )
-            )
-            product_item.shipping_total = sum(
-                product_shipping_item.total
-                for product_shipping_item in product_item.product_shipping_items
-            )
-            product_item.subtotal = product_item.item_total
-            product_item.total = product_item.subtotal + product_item.shipping_total
+    def _build(self):
+        order = OrderFactory.build(**self.order_kwargs or {})
+        self._build_product_item(order)
         order.product_total = sum(
-            product_item.total for product_item in order.product_items
+            product_item.total for product_item in order.cached_product_items
         )
         order.total = order.product_total
         return order
 
+    def _build_product_item(self, order):
+        order.cached_product_items = ProductItemFactory.build_batch(
+            self.product_item_count,
+            order=order,
+            product=self.product,
+        )
+        for product_item in order.cached_product_items:
+            self._build_product_shipping_item(product_item)
+            product_item.shipping_total = sum(
+                product_shipping_item.total
+                for product_shipping_item in product_item.cached_product_shipping_items
+            )
+            product_item.subtotal = product_item.item_total
+            product_item.total = product_item.subtotal + product_item.shipping_total
+
+    def _build_product_shipping_item(self, product_item):
+        product_item.cached_product_shipping_items = (
+            ProductShippingItemFactory.build_batch(
+                self.product_shipping_item_count,
+                product_item=product_item,
+                product_shipping=self.product_shipping,
+            )
+        )
+
     @classmethod
-    def _create_product_item_data(cls, product_item):
+    def _create_product_item(cls, order):
+        for product_item in order.cached_product_items:
+            product_item.product.save()
+            product_item.save()
+            cls._create_product_shipping_item(product_item)
+
+    @staticmethod
+    def _create_product_shipping_item(product_item):
+        for product_shipping_item in product_item.cached_product_shipping_items:
+            product_shipping_item.product_shipping.save()
+            product_shipping_item.save()
+
+    @classmethod
+    def _get_deserializer_product_item_data(cls, product_item):
+        product_item.product.save()
         return {
             "name": product_item.name,
             "item_total": product_item.item_total,
             "price": product_item.price,
             "product": product_item.product.id,
             "productshippingitem_set": [
-                cls._create_product_shipping_item_data(product_shipping_item)
-                for product_shipping_item in product_item.product_shipping_items
+                cls._get_deserializer_product_shipping_item_data(product_shipping_item)
+                for product_shipping_item in product_item.cached_product_shipping_items
             ],
             "quantity": product_item.quantity,
             "shipping_total": product_item.shipping_total,
@@ -125,7 +111,8 @@ class OrderWithRelatedFactory:
         }
 
     @staticmethod
-    def _create_product_shipping_item_data(product_shipping_item):
+    def _get_deserializer_product_shipping_item_data(product_shipping_item):
+        product_shipping_item.product_shipping.save()
         return {
             "fixed_fee": product_shipping_item.fixed_fee,
             "item_total": product_shipping_item.item_total,

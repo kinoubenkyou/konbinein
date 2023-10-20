@@ -14,4 +14,4 @@ class ProductShipping(Shipping):
             ),
         )
 
-    products = ManyToManyField(Product)
+    products = ManyToManyField(Product, blank=True)

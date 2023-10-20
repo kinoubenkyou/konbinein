@@ -1,84 +1,41 @@
 from factory import Iterator
-from rest_framework.reverse import reverse
-from rest_framework.status import HTTP_200_OK
 
 from main.factories.organization_factory import OrganizationFactory
+from main.models.organization import Organization
 from main.tests.user_test_case import UserTestCase
+from main.tests.view_sets.view_set_mixin import ViewSetTestCaseMixin
 
 
-class UserOrganizationViewSetTestCase(UserTestCase):
+class UserOrganizationViewSetTestCase(ViewSetTestCaseMixin, UserTestCase):
+    basename = "user-organization"
+    model = Organization
+
     def test_list__filter__code__icontains(self):
-        organization_dicts = [
-            {"object": organization}
-            for organization in OrganizationFactory.create_batch(
-                2, code=Iterator(range(2), getter=lambda n: f"-code-{n}")
-            )
-        ]
-        response = self.client.get(
-            reverse("user-organization-list", kwargs={"user_id": self.user.id}),
-            data={"code__icontains": "code-"},
-            format="json",
+        OrganizationFactory.create()
+        OrganizationFactory.create_batch(
+            2, code=Iterator(range(2), getter=lambda n: f"-code-{n}")
         )
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assert_get_response(response.json(), organization_dicts, False)
+        self._act_and_assert_list_test({"code__icontains": "code-"})
 
     def test_list__filter__name__icontains(self):
-        organization_dicts = [
-            {"object": organization}
-            for organization in OrganizationFactory.create_batch(
-                2, name=Iterator(range(2), getter=lambda n: f"-name-{n}")
-            )
-        ]
-        response = self.client.get(
-            reverse("user-organization-list", kwargs={"user_id": self.user.id}),
-            data={"name__icontains": "name-"},
-            format="json",
+        OrganizationFactory.create()
+        OrganizationFactory.create_batch(
+            2, name=Iterator(range(2), getter=lambda n: f"-name-{n}")
         )
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assert_get_response(response.json(), organization_dicts, False)
+        self._act_and_assert_list_test({"name__icontains": "name-"})
 
     def test_list__paginate(self):
-        organizations = OrganizationFactory.create_batch(4)
-        organizations.sort(key=lambda organization: organization.id)
-        organization_dicts = [
-            {"object": organization} for organization in organizations[1:3]
-        ]
-        path = reverse("user-organization-list", kwargs={"user_id": self.user.id})
-        data = {"limit": 2, "offset": 1, "ordering": "id"}
-        response = self.client.get(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assert_get_response(response.json()["results"], organization_dicts, True)
+        OrganizationFactory.create_batch(4)
+        self._act_and_assert_list_test({"limit": 2, "offset": 1, "ordering": "id"})
 
     def test_list__sort__code(self):
-        organizations = OrganizationFactory.create_batch(2)
-        organizations.sort(key=lambda organization: organization.code)
-        organization_dicts = [
-            {"object": organization} for organization in organizations
-        ]
-        path = reverse("user-organization-list", kwargs={"user_id": self.user.id})
-        response = self.client.get(path, data={"ordering": "code"}, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assert_get_response(response.json(), organization_dicts, True)
+        OrganizationFactory.create_batch(2)
+        self._act_and_assert_list_test({"ordering": "code"})
 
-    def _assert_get_response(
-        self, organization_data_list, organization_dicts, is_ordered
-    ):
-        if not is_ordered:
-            organization_data_list.sort(
-                key=lambda organization_data: organization_data["id"]
-            )
-            organization_dicts.sort(
-                key=lambda organization_dict: organization_dict["object"].id
-            )
-        organizations = [
-            organization_dict["object"] for organization_dict in organization_dicts
-        ]
-        expected = [
-            {
-                "code": organization.code,
-                "id": organization.id,
-                "name": organization.name,
-            }
-            for organization in organizations
-        ]
-        self.assertEqual(organization_data_list, expected)
+    @staticmethod
+    def _serializer_data(organization):
+        return {
+            "code": organization.code,
+            "id": organization.id,
+            "name": organization.name,
+        }

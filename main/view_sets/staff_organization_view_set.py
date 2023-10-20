@@ -16,4 +16,6 @@ class StaffOrganizationViewSet(
     permission_classes = (StaffPermission,)
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
-    lookup_url_kwarg = "organization_id"
+
+    def get_queryset(self):
+        return super().get_queryset().filter(id=self.kwargs["organization_id"])
