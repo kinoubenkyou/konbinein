@@ -17,10 +17,12 @@ from main.view_sets import send_email_verification
 class UserViewSet(
     DestroyModelMixin, UpdateModelMixin, RetrieveModelMixin, GenericViewSet
 ):
-    lookup_url_kwarg = "user_id"
     permission_classes = (UserPermission,)
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def get_queryset(self):
+        return super().get_queryset().filter(id=self.kwargs["user_id"])
 
     @action(detail=True, methods=("post",))
     def de_authenticating(self, request, *args, **kwargs):

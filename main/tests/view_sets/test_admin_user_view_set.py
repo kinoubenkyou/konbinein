@@ -1,66 +1,37 @@
 from factory import Iterator
-from rest_framework.reverse import reverse
-from rest_framework.status import HTTP_200_OK
 
 from main.factories.user_factory import UserFactory
+from main.models.user import User
 from main.tests.admin_test_case import AdminTestCase
+from main.tests.view_sets.view_set_mixin import ViewSetTestCaseMixin
 
 
-class AdminUserViewSetTestCase(AdminTestCase):
+class AdminUserViewSetTestCase(ViewSetTestCaseMixin, AdminTestCase):
+    basename = "admin-user"
+    model = User
+
     def test_list__filter__email__icontains(self):
-        user_dicts = [
-            {"object": user}
-            for user in UserFactory.create_batch(
-                2, email=Iterator(range(2), getter=lambda n: f"-email-{n}")
-            )
-        ]
-        response = self.client.get(
-            reverse("admin-user-list"),
-            data={"email__icontains": "email-"},
-            format="json",
+        UserFactory.create()
+        UserFactory.create_batch(
+            2, email=Iterator(range(2), getter=lambda n: f"-email-{n}")
         )
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assert_get_response(response.json(), user_dicts, False)
+        self._act_and_assert_list_test({"email__icontains": "email-"})
 
     def test_list__filter__name__icontains(self):
-        user_dicts = [
-            {"object": user}
-            for user in UserFactory.create_batch(
-                2, name=Iterator(range(2), getter=lambda n: f"-name-{n}")
-            )
-        ]
-        response = self.client.get(
-            reverse("admin-user-list"), data={"name__icontains": "name-"}, format="json"
+        UserFactory.create()
+        UserFactory.create_batch(
+            2, name=Iterator(range(2), getter=lambda n: f"-name-{n}")
         )
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assert_get_response(response.json(), user_dicts, False)
+        self._act_and_assert_list_test({"name__icontains": "name-"})
 
     def test_list__paginate(self):
-        users = UserFactory.create_batch(3)
-        users.append(self.user)
-        users.sort(key=lambda user: user.id)
-        user_dicts = [{"object": user} for user in users[1:3]]
-        path = reverse("admin-user-list")
-        data = {"limit": 2, "offset": 1, "ordering": "id"}
-        response = self.client.get(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assert_get_response(response.json()["results"], user_dicts, True)
+        UserFactory.create_batch(4)
+        self._act_and_assert_list_test({"limit": 2, "offset": 1, "ordering": "id"})
 
     def test_list__sort__email(self):
-        users = [UserFactory.create(), self.user]
-        users.sort(key=lambda user: user.email)
-        user_dicts = [{"object": user} for user in users]
-        path = reverse("admin-user-list")
-        response = self.client.get(path, data={"ordering": "email"}, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assert_get_response(response.json(), user_dicts, True)
+        UserFactory.create_batch(2)
+        self._act_and_assert_list_test({"ordering": "email"})
 
-    def _assert_get_response(self, user_data_list, user_dicts, is_ordered):
-        if not is_ordered:
-            user_data_list.sort(key=lambda user_data: user_data["id"])
-            user_dicts.sort(key=lambda user_dict: user_dict["object"].id)
-        users = [user_dict["object"] for user_dict in user_dicts]
-        expected = [
-            {"email": user.email, "id": user.id, "name": user.name} for user in users
-        ]
-        self.assertEqual(user_data_list, expected)
+    @staticmethod
+    def _serializer_data(user):
+        return {"email": user.email, "id": user.id, "name": user.name}

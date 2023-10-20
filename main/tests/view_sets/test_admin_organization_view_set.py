@@ -1,29 +1,24 @@
-from rest_framework.reverse import reverse
-from rest_framework.status import HTTP_201_CREATED
-
 from main.factories.organization_factory import OrganizationFactory
 from main.models.organization import Organization
-from main.models.staff import Staff
 from main.tests.admin_test_case import AdminTestCase
+from main.tests.view_sets.view_set_mixin import ViewSetTestCaseMixin
 
 
-class AdminOrganizationViewSetTestCase(AdminTestCase):
+class AdminOrganizationViewSetTestCase(ViewSetTestCaseMixin, AdminTestCase):
+    basename = "admin-organization"
+    model = Organization
+
     def test_create(self):
-        path = reverse("admin-organization-list")
-        built_organization = OrganizationFactory.build()
-        data = {
-            "code": built_organization.code,
-            "name": built_organization.name,
-            "user": self.user.id,
-        }
-        response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_201_CREATED)
+        data = self._deserializer_data()
         filter_ = {**data}
         del filter_["user"]
-        organization = Organization.objects.filter(**filter_).first()
-        self.assertIsNotNone(organization)
-        self.assertTrue(
-            Staff.objects.filter(
-                organization=organization.id, user=self.user.id
-            ).exists()
-        )
+        self._act_and_assert_create_test(data, filter_)
+
+    @classmethod
+    def _deserializer_data(cls):
+        organization = OrganizationFactory.build()
+        return {
+            "code": organization.code,
+            "name": organization.name,
+            "user": cls.user.id,
+        }

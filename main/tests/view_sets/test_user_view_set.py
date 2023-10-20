@@ -1,17 +1,23 @@
 from django.contrib.auth.hashers import check_password
-from django.core import mail
 from django.test import override_settings
 from rest_framework.reverse import reverse
-from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_204_NO_CONTENT
 
 from main.factories.user_factory import UserFactory
 from main.models.user import User
 from main.tests.user_test_case import UserTestCase
+from main.tests.view_sets.view_set_mixin import ViewSetTestCaseMixin
 
 
-class UserViewSetTestCase(UserTestCase):
+class UserViewSetTestCase(ViewSetTestCaseMixin, UserTestCase):
+    basename = "user"
+    model = User
+
     def test_de_authenticating(self):
-        path = reverse("user-de-authenticating", kwargs={"user_id": self.user.id})
+        path = reverse(
+            "user-de-authenticating",
+            kwargs={"pk": self.user.id, "user_id": self.user.id},
+        )
         response = self.client.post(path, format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
         self.assertIsNone(
@@ -19,85 +25,61 @@ class UserViewSetTestCase(UserTestCase):
         )
 
     def test_destroy(self):
-        path = reverse("user-detail", kwargs={"user_id": self.user.id})
-        response = self.client.delete(path, format="json")
-        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
-        self.assertFalse(User.objects.filter(id=self.user.id).exists())
+        self._act_and_assert_destroy_test(self.user.id)
 
     @override_settings(task_always_eager=True)
     def test_partial_update(self):
-        path = reverse("user-detail", kwargs={"user_id": self.user.id})
-        built_user = UserFactory.build()
-        password = "password"
         data = {
-            "email": built_user.email,
-            "name": built_user.name,
-            "password": password,
+            **self._deserializer_data(),
             "current_password": self.user_current_password,
-        }
-        response = self.client.patch(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        filter_ = {**data, "id": self.user.id}
-        del filter_["password"]
-        del filter_["current_password"]
-        user = User.objects.filter(**filter_).first()
-        self.assertIsNotNone(user)
-        self.assertTrue(check_password(password, user.hashed_password))
-        dict_ = mail.outbox[0].__dict__
-        body = (
-            f"http://testserver/public/users/{self.user.id}/email_verifying"
-            f"?token={user.email_verifying_token}"
-        )
-        self.assertEqual(dict_["body"], body)
-        self.assertEqual(dict_["from_email"], "webmaster@localhost")
-        self.assertEqual(dict_["subject"], "Konbinein Email Verification")
-        self.assertCountEqual(dict_["to"], (built_user.email,))
-
-    def test_partial_update__current_password_required(self):
-        built_user = UserFactory.build()
-        path = reverse("user-detail", kwargs={"user_id": self.user.id})
-        data = {
-            "email": built_user.email,
             "password": "password",
         }
-        response = self.client.patch(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(),
+        filter_ = {**data}
+        del filter_["current_password"]
+        self._act_and_assert_partial_update_test(data, filter_, self.user.id)
+        del filter_["password"]
+        user = User.objects.filter(**filter_).first()
+        body = (
+            f"http://testserver/public/users/{user.id}/email_verifying"
+            f"?token={user.email_verifying_token}"
+        )
+        self._assert_email(body, "Konbinein Email Verification", [user.email])
+
+    def test_partial_update__current_password_required(self):
+        data = {**self._deserializer_data(), "password": "password"}
+        self._act_and_assert_partial_update_validation_test(
+            data,
             {
                 "email": ["Current password is required."],
                 "password": ["Current password is required."],
             },
+            self.user.id,
         )
 
     def test_partial_update__current_password_incorrect(self):
-        built_user = UserFactory.build()
-        path = reverse("user-detail", kwargs={"user_id": self.user.id})
         data = {
-            "email": built_user.email,
-            "name": built_user.name,
-            "password": "password",
+            **self._deserializer_data(),
             "current_password": "password",
+            "password": "password",
         }
-        response = self.client.patch(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(), {"current_password": ["Current password is incorrect."]}
+        self._act_and_assert_partial_update_validation_test(
+            data, {"current_password": ["Current password is incorrect."]}, self.user.id
         )
 
     def test_retrieve(self):
-        user_dicts = [{"object": self.user}]
-        path = reverse("user-detail", kwargs={"user_id": self.user.id})
-        response = self.client.get(path, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self._assert_get_response([response.json()], user_dicts, False)
+        self._act_and_assert_retrieve_test(self.user.id)
 
-    def _assert_get_response(self, user_data_list, user_dicts, is_ordered):
-        if not is_ordered:
-            user_data_list.sort(key=lambda user_data: user_data["id"])
-            user_dicts.sort(key=lambda user_dict: user_dict["object"].id)
-        users = [user_dict["object"] for user_dict in user_dicts]
-        expected = [
-            {"email": user.email, "id": user.id, "name": user.name} for user in users
-        ]
-        self.assertEqual(user_data_list, expected)
+    def _assert_saved_object(self, filter_):
+        password = filter_.pop("password")
+        user = User.objects.filter(**filter_).first()
+        self.assertIsNotNone(user)
+        self.assertTrue(check_password(password, user.hashed_password))
+
+    @staticmethod
+    def _deserializer_data():
+        user = UserFactory.build()
+        return {"email": user.email, "name": user.name}
+
+    @staticmethod
+    def _serializer_data(user):
+        return {"email": user.email, "id": user.id, "name": user.name}

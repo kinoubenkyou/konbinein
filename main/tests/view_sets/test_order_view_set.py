@@ -1,11 +1,3 @@
-from rest_framework.reverse import reverse
-from rest_framework.status import (
-    HTTP_200_OK,
-    HTTP_201_CREATED,
-    HTTP_204_NO_CONTENT,
-    HTTP_400_BAD_REQUEST,
-)
-
 from main.factories.order_with_related_factory import OrderWithRelatedFactory
 from main.factories.product_factory import ProductFactory
 from main.factories.product_shipping_factory import ProductShippingFactory
@@ -13,499 +5,381 @@ from main.models.order import Order
 from main.models.product_item import ProductItem
 from main.models.product_shipping_item import ProductShippingItem
 from main.tests.staff_test_case import StaffTestCase
+from main.tests.view_sets.view_set_mixin import ViewSetTestCaseMixin
 
 
-class OrderValidationTestCase(StaffTestCase):
-    def test_create__code_already_in_another_order(self):
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        order = OrderWithRelatedFactory.create(
-            order_kwargs={"organization": self.organization},
-            product_kwargs={"organization": self.organization},
-            product_shipping_kwargs={"organization": self.organization},
+class OrderViewSetTestCaseMixin(ViewSetTestCaseMixin):
+    basename = "order"
+    model = Order
+
+    def _assert_destroyed_order(self, order):
+        self.assertIsNone(Order.objects.filter(id=order.id).first())
+        self._assert_destroyed_product_item(order.cached_product_items)
+
+    def _assert_destroyed_product_item(self, product_items):
+        self.assertIsNone(
+            ProductItem.objects.filter(
+                id__in=[product_item.id for product_item in product_items]
+            ).first()
         )
-        data = OrderWithRelatedFactory.create_data(
+        self._assert_destroyed_product_shipping_item(
+            [
+                product_shipping_item
+                for product_item in product_items
+                for product_shipping_item in product_item.cached_product_shipping_items
+            ]
+        )
+
+    def _assert_destroyed_product_shipping_item(self, product_shipping_items):
+        self.assertIsNone(
+            ProductShippingItem.objects.filter(
+                id__in=[
+                    product_shipping_item.id
+                    for product_shipping_item in product_shipping_items
+                ]
+            ).first()
+        )
+
+    def _assert_saved_object(self, filter_):
+        product_item_filters = filter_.pop("productitem_set")
+        order = Order.objects.filter(**filter_).first()
+        self.assertIsNotNone(order)
+        for product_item_filter in product_item_filters:
+            product_item_filter["order_id"] = order.id
+            self._assert_saved_product_item(product_item_filter)
+
+    def _assert_saved_product_item(self, product_item_filter):
+        product_item_shipping_filters = product_item_filter.pop(
+            "productshippingitem_set"
+        )
+        product_item = ProductItem.objects.filter(**product_item_filter).first()
+        self.assertIsNotNone(product_item)
+        for product_item_shipping_filter in product_item_shipping_filters:
+            product_item_shipping_filter["product_item_id"] = product_item.id
+            self._assert_saved_product_shipping_item(product_item_shipping_filter)
+
+    def _assert_saved_product_shipping_item(self, product_item_shipping_filter):
+        self.assertIsNotNone(
+            ProductShippingItem.objects.filter(**product_item_shipping_filter).first()
+        )
+
+    @classmethod
+    def _serializer_data(cls, order):
+        product_item_data_list = [
+            cls._product_item_data(product_item)
+            for product_item in order.productitem_set.order_by("id")
+        ]
+        product_item_data_list.sort(
+            key=lambda product_item_data: product_item_data["id"]
+        )
+        return {
+            "code": order.code,
+            "created_at": order.created_at.isoformat(),
+            "id": order.id,
+            "productitem_set": product_item_data_list,
+            "product_total": str(order.product_total),
+            "total": str(order.total),
+        }
+
+    @classmethod
+    def _product_item_data(cls, product_item):
+        product_shipping_item_data_list = [
+            cls._product_shipping_item_data(product_shipping_item)
+            for product_shipping_item in (
+                product_item.productshippingitem_set.order_by("id")
+            )
+        ]
+        product_shipping_item_data_list.sort(
+            key=lambda product_shipping_item_data: product_shipping_item_data["id"]
+        )
+        return {
+            "id": product_item.id,
+            "item_total": str(product_item.item_total),
+            "name": product_item.name,
+            "product": product_item.product_id,
+            "price": str(product_item.price),
+            "productshippingitem_set": product_shipping_item_data_list,
+            "quantity": product_item.quantity,
+            "shipping_total": str(product_item.shipping_total),
+            "subtotal": str(product_item.subtotal),
+            "total": str(product_item.total),
+        }
+
+    @staticmethod
+    def _product_shipping_item_data(product_shipping_item):
+        return {
+            "fixed_fee": str(product_shipping_item.fixed_fee),
+            "id": product_shipping_item.id,
+            "item_total": str(product_shipping_item.item_total),
+            "name": product_shipping_item.name,
+            "product_shipping": product_shipping_item.product_shipping_id,
+            "subtotal": str(product_shipping_item.subtotal),
+            "total": str(product_shipping_item.total),
+            "unit_fee": str(product_shipping_item.unit_fee),
+        }
+
+
+class OrderValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
+    def test_create__code_already_in_another_order(self):
+        order = OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+        ).create()
+        data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
             product_item_count=1,
             product_kwargs={"organization": self.organization},
-            product_shipping_kwargs={"organization": self.organization},
-        )
+        ).get_deserializer_data()
         data["code"] = order.code
-        response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(), {"code": ["Code is already in another order."]}
+        self._act_and_assert_create_validation_test(
+            data, {"code": ["Code is already in another order."]}
         )
 
     def test_create__product_total_incorrect(self):
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.create_data(
+        data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
             product_item_count=1,
             product_kwargs={"organization": self.organization},
-            product_shipping_kwargs={"organization": self.organization},
-        )
+        ).get_deserializer_data()
         data["product_total"] += 1
-        response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(), {"non_field_errors": ["Product total is incorrect."]}
+        self._act_and_assert_create_validation_test(
+            data, {"non_field_errors": ["Product total is incorrect."]}
         )
 
     def test_create__total_incorrect(self):
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.create_data(
+        data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
             product_item_count=1,
             product_kwargs={"organization": self.organization},
-            product_shipping_kwargs={"organization": self.organization},
-        )
+        ).get_deserializer_data()
         data["total"] += 1
-        response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json(), {"non_field_errors": ["Total is incorrect."]})
+        self._act_and_assert_create_validation_test(
+            data, {"non_field_errors": ["Total is incorrect."]}
+        )
 
 
-class OrderViewSetTestCase(StaffTestCase):
+class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
     def test_create(self):
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.create_data(
+        data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
             product_item_count=2,
             product_kwargs={"organization": self.organization},
             product_shipping_item_count=2,
             product_shipping_kwargs={"organization": self.organization},
-        )
-        response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_201_CREATED)
+        ).get_deserializer_data()
         filter_ = {**data, "organization_id": self.organization.id}
-        product_item_data_list = filter_.pop("productitem_set")
-        order = Order.objects.filter(**filter_).first()
-        self.assertIsNotNone(order)
-        for product_item_data in product_item_data_list:
-            filter_ = {**product_item_data, "order_id": order.id}
-            product_shipping_item_data_list = filter_.pop("productshippingitem_set")
-            product_item = ProductItem.objects.filter(**filter_).first()
-            self.assertIsNotNone(product_item)
-            for product_shipping_item_data in product_shipping_item_data_list:
-                filter_ = {
-                    **product_shipping_item_data,
-                    "product_item_id": product_item.id,
-                }
-                product_shipping_item = ProductShippingItem.objects.filter(
-                    **filter_
-                ).first()
-                self.assertIsNotNone(product_shipping_item)
+        self._act_and_assert_create_test(data, filter_)
 
     def test_destroy(self):
-        order = OrderWithRelatedFactory.create(
+        order = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
+            product_item_count=2,
             product_kwargs={"organization": self.organization},
+            product_shipping_item_count=2,
             product_shipping_kwargs={"organization": self.organization},
-        )
-        path = reverse(
-            "order-detail",
-            kwargs={"organization_id": self.organization.id, "pk": order.id},
-        )
-        response = self.client.delete(path, format="json")
-        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
-        self.assertFalse(Order.objects.filter(id=order.id).exists())
-        self.assertFalse(ProductItem.objects.filter(order_id=order.id).exists())
+        ).create()
+        self._act_and_assert_destroy_test_response_status(order.id)
+        self._assert_destroyed_order(order)
 
     def test_list__filter__code__icontains(self):
-        OrderWithRelatedFactory.create(
+        OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
-            product_kwargs={"organization": self.organization},
-            product_shipping_kwargs={"organization": self.organization},
-        )
+        ).create()
         for n in range(2):
-            OrderWithRelatedFactory.create(
+            OrderWithRelatedFactory(
                 order_kwargs={"code": f"-code-{n}", "organization": self.organization},
-                product_kwargs={"organization": self.organization},
-                product_shipping_kwargs={"organization": self.organization},
-            )
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {"code__icontains": "code-"}
-        response = self.client.get(path, data, format="json")
-        self.assertCountEqual(
-            _normalized(response.json()),
-            _expected_data_list(data),
-        )
+            ).create()
+        self._act_and_assert_list_test({"code__icontains": "code-"})
 
     def test_list__filter__created_at__gte(self):
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {
-            "created_at__gte": sorted(
-                [
-                    order.created_at
-                    for order in [
-                        OrderWithRelatedFactory.create(
-                            order_kwargs={"organization": self.organization},
-                            product_kwargs={"organization": self.organization},
-                            product_shipping_kwargs={"organization": self.organization},
-                        )
-                        for _ in range(3)
-                    ]
-                ]
-            )[1]
-        }
-        response = self.client.get(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertCountEqual(
-            _normalized(response.json()),
-            _expected_data_list(data),
-        )
+        orders = OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+        ).create_batch(3)
+        orders.sort(key=lambda order: order.created_at, reverse=True)
+        self._act_and_assert_list_test({"created_at__gte": orders[1].created_at})
 
     def test_list__filter__created_at__lte(self):
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {
-            "created_at__lte": sorted(
-                [
-                    order.created_at
-                    for order in [
-                        OrderWithRelatedFactory.create(
-                            order_kwargs={"organization": self.organization},
-                            product_kwargs={"organization": self.organization},
-                            product_shipping_kwargs={"organization": self.organization},
-                        )
-                        for _ in range(3)
-                    ]
-                ]
-            )[1]
-        }
-        response = self.client.get(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertCountEqual(
-            _normalized(response.json()),
-            _expected_data_list(data),
-        )
+        orders = OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+        ).create_batch(3)
+        orders.sort(key=lambda order: order.created_at)
+        self._act_and_assert_list_test({"created_at__lte": orders[1].created_at})
 
     def test_list__filter__product_total__gte(self):
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {
-            "product_total__gte": sorted(
-                [
-                    order.product_total
-                    for order in [
-                        OrderWithRelatedFactory.create(
-                            order_kwargs={"organization": self.organization},
-                            product_item_count=1,
-                            product_kwargs={"organization": self.organization},
-                            product_shipping_item_count=1,
-                            product_shipping_kwargs={"organization": self.organization},
-                        )
-                        for _ in range(3)
-                    ]
-                ]
-            )[1]
-        }
-        response = self.client.get(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertCountEqual(
-            _normalized(response.json()),
-            _expected_data_list(data),
-        )
+        orders = OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+            product_item_count=2,
+            product_kwargs={"organization": self.organization},
+            product_shipping_item_count=2,
+            product_shipping_kwargs={"organization": self.organization},
+        ).create_batch(3)
+        orders.sort(key=lambda order: order.product_total, reverse=True)
+        self._act_and_assert_list_test({"product_total__gte": orders[1].product_total})
 
     def test_list__filter__product_total__lte(self):
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {
-            "product_total__lte": sorted(
-                [
-                    order.product_total
-                    for order in [
-                        OrderWithRelatedFactory.create(
-                            order_kwargs={"organization": self.organization},
-                            product_item_count=1,
-                            product_kwargs={"organization": self.organization},
-                            product_shipping_item_count=1,
-                            product_shipping_kwargs={"organization": self.organization},
-                        )
-                        for _ in range(3)
-                    ]
-                ]
-            )[1]
-        }
-        response = self.client.get(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertCountEqual(
-            _normalized(response.json()),
-            _expected_data_list(data),
-        )
+        orders = OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+            product_item_count=2,
+            product_kwargs={"organization": self.organization},
+            product_shipping_item_count=2,
+            product_shipping_kwargs={"organization": self.organization},
+        ).create_batch(3)
+        orders.sort(key=lambda order: order.product_total)
+        self._act_and_assert_list_test({"product_total__lte": orders[1].product_total})
 
     def test_list__filter__productitem__product__in(self):
-        OrderWithRelatedFactory.create(
+        OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
             product_item_count=1,
             product_kwargs={"organization": self.organization},
-            product_shipping_kwargs={"organization": self.organization},
-        )
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {
-            "productitem__product__in": [
-                order.productitem_set.all()[0].product.id
-                for order in [
-                    OrderWithRelatedFactory.create(
-                        order_kwargs={"organization": self.organization},
-                        product_item_count=1,
-                        product_kwargs={"organization": self.organization},
-                        product_shipping_kwargs={"organization": self.organization},
-                    )
-                    for _ in range(2)
+        ).create()
+        orders = OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+        ).create_batch(2)
+        self._act_and_assert_list_test(
+            {
+                "productitem__product__in": [
+                    order.productitem_set.all()[0].product.id for order in orders
                 ]
-            ]
-        }
-        response = self.client.get(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertCountEqual(
-            _normalized(response.json()),
-            _expected_data_list(data),
+            }
         )
 
     def test_list__filter__total__gte(self):
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {
-            "total__gte": sorted(
-                [
-                    order.product_total
-                    for order in [
-                        OrderWithRelatedFactory.create(
-                            order_kwargs={"organization": self.organization},
-                            product_item_count=1,
-                            product_kwargs={"organization": self.organization},
-                            product_shipping_kwargs={"organization": self.organization},
-                        )
-                        for _ in range(3)
-                    ]
-                ]
-            )[1]
-        }
-        response = self.client.get(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertCountEqual(
-            _normalized(response.json()),
-            _expected_data_list(data),
-        )
+        orders = OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+            product_item_count=2,
+            product_kwargs={"organization": self.organization},
+            product_shipping_item_count=2,
+            product_shipping_kwargs={"organization": self.organization},
+        ).create_batch(3)
+        orders.sort(key=lambda order: order.total, reverse=True)
+        self._act_and_assert_list_test({"total__gte": orders[1].total})
 
     def test_list__filter__total__lte(self):
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {
-            "total__lte": sorted(
-                [
-                    order.product_total
-                    for order in [
-                        OrderWithRelatedFactory.create(
-                            order_kwargs={"organization": self.organization},
-                            product_item_count=1,
-                            product_kwargs={"organization": self.organization},
-                            product_shipping_item_count=1,
-                            product_shipping_kwargs={"organization": self.organization},
-                        )
-                        for _ in range(3)
-                    ]
-                ]
-            )[1]
-        }
-        response = self.client.get(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertCountEqual(
-            _normalized(response.json()),
-            _expected_data_list(data),
-        )
+        orders = OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+            product_item_count=2,
+            product_kwargs={"organization": self.organization},
+            product_shipping_item_count=2,
+            product_shipping_kwargs={"organization": self.organization},
+        ).create_batch(3)
+        orders.sort(key=lambda order: order.total)
+        self._act_and_assert_list_test({"total__lte": orders[1].total})
 
     def test_list__paginate(self):
-        for _ in range(4):
-            OrderWithRelatedFactory.create(
-                order_kwargs={"organization": self.organization},
-                product_kwargs={"organization": self.organization},
-                product_shipping_kwargs={"organization": self.organization},
-            )
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {"limit": 2, "offset": 1, "ordering": "id"}
-        response = self.client.get(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertEqual(
-            _normalized(response.json()["results"]),
-            _expected_data_list(data),
-        )
+        OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+            product_item_count=2,
+            product_kwargs={"organization": self.organization},
+            product_shipping_item_count=2,
+            product_shipping_kwargs={"organization": self.organization},
+        ).create_batch(4)
+        self._act_and_assert_list_test({"limit": 2, "offset": 1, "ordering": "id"})
 
     def test_list__sort__code(self):
-        for _ in range(2):
-            OrderWithRelatedFactory.create(
-                order_kwargs={"organization": self.organization},
-                product_kwargs={"organization": self.organization},
-                product_shipping_kwargs={"organization": self.organization},
-            )
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {"ordering": "code"}
-        response = self.client.get(path, data=data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertEqual(
-            _normalized(response.json()),
-            _expected_data_list(data),
-        )
+        OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+        ).create_batch(2)
+        self._act_and_assert_list_test({"ordering": "code"})
 
     def test_list__sort__created_at(self):
-        for _ in range(2):
-            OrderWithRelatedFactory.create(
-                order_kwargs={"organization": self.organization},
-                product_kwargs={"organization": self.organization},
-                product_shipping_kwargs={"organization": self.organization},
-            )
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {"ordering": "created_at"}
-        response = self.client.get(path, data=data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertEqual(
-            _normalized(response.json()),
-            _expected_data_list(data),
-        )
+        OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+        ).create_batch(2)
+        self._act_and_assert_list_test({"ordering": "created_at"})
 
     def test_list__sort__product_total(self):
-        for _ in range(2):
-            OrderWithRelatedFactory.create(
-                order_kwargs={"organization": self.organization},
-                product_item_count=1,
-                product_kwargs={"organization": self.organization},
-                product_shipping_item_count=1,
-                product_shipping_kwargs={"organization": self.organization},
-            )
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {"ordering": "product_total"}
-        response = self.client.get(path, data=data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertEqual(
-            _normalized(response.json()),
-            _expected_data_list(data),
-        )
+        OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+            product_item_count=2,
+            product_kwargs={"organization": self.organization},
+            product_shipping_item_count=2,
+            product_shipping_kwargs={"organization": self.organization},
+        ).create_batch(2)
+        self._act_and_assert_list_test({"ordering": "product_total"})
 
     def test_list__sort__total(self):
-        for _ in range(2):
-            OrderWithRelatedFactory.create(
-                order_kwargs={"organization": self.organization},
-                product_item_count=1,
-                product_kwargs={"organization": self.organization},
-                product_shipping_item_count=1,
-                product_shipping_kwargs={"organization": self.organization},
-            )
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = {"ordering": "total"}
-        response = self.client.get(path, data=data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertEqual(
-            _normalized(response.json()),
-            _expected_data_list(data),
-        )
+        OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+            product_item_count=2,
+            product_kwargs={"organization": self.organization},
+            product_shipping_item_count=2,
+            product_shipping_kwargs={"organization": self.organization},
+        ).create_batch(2)
+        self._act_and_assert_list_test({"ordering": "total"})
 
     def test_partial_update(self):
-        order = OrderWithRelatedFactory.create(
+        order = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
             product_item_count=2,
             product_kwargs={"organization": self.organization},
             product_shipping_item_count=2,
             product_shipping_kwargs={"organization": self.organization},
-        )
-        path = reverse(
-            "order-detail",
-            kwargs={"organization_id": self.organization.id, "pk": order.id},
-        )
-        data = OrderWithRelatedFactory.create_data(
+        ).create()
+        data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
             product_item_count=2,
             product_kwargs={"organization": self.organization},
             product_shipping_item_count=2,
             product_shipping_kwargs={"organization": self.organization},
-        )
-        product_item = order.product_items[0]
+        ).get_deserializer_data()
+        product_item = order.cached_product_items[0]
         data["productitem_set"][0]["id"] = product_item.id
         data["productitem_set"][0]["productshippingitem_set"][0][
             "id"
-        ] = product_item.product_shipping_items[0].id
-        response = self.client.patch(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
+        ] = product_item.cached_product_shipping_items[0].id
         filter_ = {**data, "organization_id": self.organization.id}
-        product_item_data_list = filter_.pop("productitem_set")
-        order = Order.objects.filter(**filter_).first()
-        self.assertIsNotNone(order)
-        for product_item_data in product_item_data_list:
-            filter_ = {**product_item_data, "order_id": order.id}
-            product_shipping_item_data_list = filter_.pop("productshippingitem_set")
-            product_item = ProductItem.objects.filter(**filter_).first()
-            self.assertIsNotNone(product_item)
-            for product_shipping_item_data in product_shipping_item_data_list:
-                filter_ = {
-                    **product_shipping_item_data,
-                    "product_item_id": product_item.id,
-                }
-                product_shipping_item = ProductShippingItem.objects.filter(
-                    **filter_
-                ).first()
-                self.assertIsNotNone(product_shipping_item)
+        self._act_and_assert_partial_update_test(data, filter_, order.id)
 
     def test_retrieve(self):
-        order = OrderWithRelatedFactory.create(
-            order_kwargs={"organization": self.organization},
-            product_item_count=2,
-            product_kwargs={"organization": self.organization},
-            product_shipping_item_count=2,
-            product_shipping_kwargs={"organization": self.organization},
-        )
-        path = reverse(
-            "order-detail",
-            kwargs={"organization_id": self.organization.id, "pk": order.id},
-        )
-        response = self.client.get(path, format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertEqual(
-            _normalized([response.json()]),
-            _expected_data_list({"id": order.id}),
+        self._act_and_assert_retrieve_test(
+            OrderWithRelatedFactory(
+                order_kwargs={"organization": self.organization},
+                product_item_count=2,
+                product_kwargs={"organization": self.organization},
+                product_shipping_item_count=2,
+                product_shipping_kwargs={"organization": self.organization},
+            )
+            .create()
+            .id
         )
 
 
-class ProductItemValidationTestCase(StaffTestCase):
+class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
     def test_create__item_total_incorrect(self):
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.create_data(
+        data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
             product_item_count=1,
             product_kwargs={"organization": self.organization},
-            product_shipping_kwargs={"organization": self.organization},
-        )
+        ).get_deserializer_data()
         data["productitem_set"][0]["item_total"] += 1
-        response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(),
+        self._act_and_assert_create_validation_test(
+            data,
             {"productitem_set": [{"non_field_errors": ["Item total is incorrect."]}]},
         )
 
     def test_create__item_subtotal_incorrect(self):
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.create_data(
+        data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
             product_item_count=1,
             product_kwargs={"organization": self.organization},
-            product_shipping_kwargs={"organization": self.organization},
-        )
+        ).get_deserializer_data()
         data["productitem_set"][0]["subtotal"] += 1
-        response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(),
+        self._act_and_assert_create_validation_test(
+            data,
             {"productitem_set": [{"non_field_errors": ["Subtotal is incorrect."]}]},
         )
 
     def test_create__product_in_another_organization(self):
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.create_data(
+        data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
             product=ProductFactory.create(),
             product_item_count=1,
             product_kwargs={"organization": self.organization},
-            product_shipping_kwargs={"organization": self.organization},
-        )
-        response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(),
+        ).get_deserializer_data()
+        self._act_and_assert_create_validation_test(
+            data,
             {
                 "productitem_set": [
                     {"product": ["Product is in another organization."]},
@@ -514,61 +388,46 @@ class ProductItemValidationTestCase(StaffTestCase):
         )
 
     def test_create__total_incorrect(self):
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.create_data(
+        data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
             product_item_count=1,
             product_kwargs={"organization": self.organization},
-            product_shipping_kwargs={"organization": self.organization},
-        )
+        ).get_deserializer_data()
         data["productitem_set"][0]["total"] += 1
-        response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(),
+        self._act_and_assert_create_validation_test(
+            data,
             {"productitem_set": [{"non_field_errors": ["Total is incorrect."]}]},
         )
 
     def test_partial_update__product_item_not_belong_to_order(self):
-        order = OrderWithRelatedFactory.create(
-            order_kwargs={"organization": self.organization},
-            product_kwargs={"organization": self.organization},
-            product_shipping_kwargs={"organization": self.organization},
-        )
-        path = reverse(
-            "order-detail",
-            kwargs={"organization_id": self.organization.id, "pk": order.id},
-        )
-        data = OrderWithRelatedFactory.create_data(
+        data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
             product_item_count=1,
             product_kwargs={"organization": self.organization},
-            product_shipping_kwargs={"organization": self.organization},
-        )
+        ).get_deserializer_data()
         data["productitem_set"][0]["id"] = 0
-        response = self.client.patch(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(),
+        order = OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+        ).create()
+        self._act_and_assert_partial_update_validation_test(
+            data,
             {"productitem_set": [{"id": ["Product item can't be found."]}]},
+            order.id,
         )
 
 
-class ProductShippingItemValidationTestCase(StaffTestCase):
+class ProductShippingItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
     def test_create__item_total_incorrect(self):
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.create_data(
+        data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
             product_item_count=1,
             product_kwargs={"organization": self.organization},
             product_shipping_item_count=1,
             product_shipping_kwargs={"organization": self.organization},
-        )
+        ).get_deserializer_data()
         data["productitem_set"][0]["productshippingitem_set"][0]["item_total"] += 1
-        response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(),
+        self._act_and_assert_create_validation_test(
+            data,
             {
                 "productitem_set": [
                     {
@@ -581,19 +440,16 @@ class ProductShippingItemValidationTestCase(StaffTestCase):
         )
 
     def test_create__item_subtotal_incorrect(self):
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.create_data(
+        data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
             product_item_count=1,
             product_kwargs={"organization": self.organization},
             product_shipping_item_count=1,
             product_shipping_kwargs={"organization": self.organization},
-        )
+        ).get_deserializer_data()
         data["productitem_set"][0]["productshippingitem_set"][0]["subtotal"] += 1
-        response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(),
+        self._act_and_assert_create_validation_test(
+            data,
             {
                 "productitem_set": [
                     {
@@ -606,18 +462,15 @@ class ProductShippingItemValidationTestCase(StaffTestCase):
         )
 
     def test_create__product_item_in_another_organization(self):
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.create_data(
+        data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
             product_item_count=1,
             product_kwargs={"organization": self.organization},
             product_shipping=ProductShippingFactory.create(),
             product_shipping_item_count=1,
-        )
-        response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(),
+        ).get_deserializer_data()
+        self._act_and_assert_create_validation_test(
+            data,
             {
                 "productitem_set": [
                     {
@@ -634,19 +487,16 @@ class ProductShippingItemValidationTestCase(StaffTestCase):
         )
 
     def test_create__total_incorrect(self):
-        path = reverse("order-list", kwargs={"organization_id": self.organization.id})
-        data = OrderWithRelatedFactory.create_data(
+        data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
             product_item_count=1,
             product_kwargs={"organization": self.organization},
             product_shipping_item_count=1,
             product_shipping_kwargs={"organization": self.organization},
-        )
+        ).get_deserializer_data()
         data["productitem_set"][0]["productshippingitem_set"][0]["total"] += 1
-        response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(),
+        self._act_and_assert_create_validation_test(
+            data,
             {
                 "productitem_set": [
                     {
@@ -659,27 +509,19 @@ class ProductShippingItemValidationTestCase(StaffTestCase):
         )
 
     def test_partial_update__product_shipping_item_not_belong_to_order(self):
-        order = OrderWithRelatedFactory.create(
-            order_kwargs={"organization": self.organization},
-            product_kwargs={"organization": self.organization},
-            product_shipping_kwargs={"organization": self.organization},
-        )
-        path = reverse(
-            "order-detail",
-            kwargs={"organization_id": self.organization.id, "pk": order.id},
-        )
-        data = OrderWithRelatedFactory.create_data(
+        data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
             product_item_count=1,
             product_kwargs={"organization": self.organization},
             product_shipping_item_count=1,
             product_shipping_kwargs={"organization": self.organization},
-        )
+        ).get_deserializer_data()
         data["productitem_set"][0]["productshippingitem_set"][0]["id"] = 0
-        response = self.client.patch(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(),
+        order = OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+        ).create()
+        self._act_and_assert_partial_update_validation_test(
+            data,
             {
                 "productitem_set": [
                     {
@@ -689,79 +531,5 @@ class ProductShippingItemValidationTestCase(StaffTestCase):
                     }
                 ]
             },
+            order.id,
         )
-
-
-def _expected_data_list(kwargs):
-    filter_ = {
-        key: value
-        for key, value in kwargs.items()
-        if key not in ["limit", "offset", "ordering"]
-    }
-    order_query_set = Order.objects.filter(**filter_)
-    if "ordering" in kwargs:
-        order_query_set = order_query_set.order_by(kwargs["ordering"])
-    offset = kwargs.get("offset", 0)
-    return [
-        {
-            "code": order.code,
-            "created_at": order.created_at.isoformat(),
-            "id": order.id,
-            "productitem_set": [
-                _product_item_data(product_item)
-                for product_item in order.productitem_set.order_by("id")
-            ],
-            "product_total": str(order.product_total),
-            "total": str(order.total),
-        }
-        for order in order_query_set[
-            offset : (kwargs["limit"] + offset) if "limit" in kwargs else None
-        ]
-    ]
-
-
-def _normalized(order_data_list):
-    for order_data in order_data_list:
-        order_data["productitem_set"] = sorted(
-            order_data["productitem_set"],
-            key=lambda product_item_data: product_item_data["id"],
-        )
-        for product_item_data in order_data["productitem_set"]:
-            product_item_data["productshippingitem_set"] = sorted(
-                product_item_data["productshippingitem_set"],
-                key=lambda product_shipping_item_data: product_shipping_item_data["id"],
-            )
-    return order_data_list
-
-
-def _product_item_data(product_item):
-    return {
-        "id": product_item.id,
-        "item_total": str(product_item.item_total),
-        "name": product_item.name,
-        "product": product_item.product_id,
-        "price": str(product_item.price),
-        "productshippingitem_set": [
-            _product_shipping_item_data(product_shipping_item)
-            for product_shipping_item in (
-                product_item.productshippingitem_set.order_by("id")
-            )
-        ],
-        "quantity": product_item.quantity,
-        "shipping_total": str(product_item.shipping_total),
-        "subtotal": str(product_item.subtotal),
-        "total": str(product_item.total),
-    }
-
-
-def _product_shipping_item_data(product_shipping_item):
-    return {
-        "fixed_fee": str(product_shipping_item.fixed_fee),
-        "id": product_shipping_item.id,
-        "item_total": str(product_shipping_item.item_total),
-        "name": product_shipping_item.name,
-        "product_shipping": product_shipping_item.product_shipping_id,
-        "subtotal": str(product_shipping_item.subtotal),
-        "total": str(product_shipping_item.total),
-        "unit_fee": str(product_shipping_item.unit_fee),
-    }
