@@ -33,10 +33,10 @@ class OrderShippingViewSetTestCase(ViewSetTestCaseMixin, StaffTestCase):
         OrderShippingFactory.create(organization=self.organization)
         OrderShippingFactory.create_batch(
             2,
-            code=Iterator(range(2), getter=lambda n: f"-code-{n}"),
+            code=Iterator(range(2), getter=lambda n: f"-code--{n}"),
             organization=self.organization,
         )
-        self._act_and_assert_list_test({"code__icontains": "code-"})
+        self._act_and_assert_list_test({"code__icontains": "code--"})
 
     def test_list__filter__fixed_fee__gte(self):
         order_shipping_list = OrderShippingFactory.create_batch(
@@ -62,10 +62,10 @@ class OrderShippingViewSetTestCase(ViewSetTestCaseMixin, StaffTestCase):
         OrderShippingFactory.create(organization=self.organization)
         OrderShippingFactory.create_batch(
             2,
-            name=Iterator(range(2), getter=lambda n: f"-name-{n}"),
+            name=Iterator(range(2), getter=lambda n: f"-name--{n}"),
             organization=self.organization,
         )
-        self._act_and_assert_list_test({"name__icontains": "name-"})
+        self._act_and_assert_list_test({"name__icontains": "name--"})
 
     def test_list__filter__unit_fee__gte(self):
         order_shipping_list = OrderShippingFactory.create_batch(

@@ -1,3 +1,6 @@
+from random import choice
+from string import ascii_uppercase
+
 from factory import Faker, LazyAttribute, Sequence, SubFactory
 from factory.django import DjangoModelFactory
 
@@ -15,7 +18,7 @@ class ProductShippingItemFactory(DjangoModelFactory):
         lambda product_shipping_item: product_shipping_item.fixed_fee
         + product_shipping_item.product_item.quantity * product_shipping_item.unit_fee
     )
-    name = Sequence(lambda n: f"name{n}")
+    name = Sequence(lambda n: f"name-{choice(ascii_uppercase)}{n}")
     product_item = SubFactory(ProductItemFactory)
     product_shipping = SubFactory(ProductShippingFactory)
     subtotal = LazyAttribute(

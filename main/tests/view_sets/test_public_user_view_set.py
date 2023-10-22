@@ -1,4 +1,4 @@
-from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.hashers import check_password
 from django.test import override_settings
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
@@ -6,7 +6,6 @@ from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 
 from main.factories.user_factory import UserFactory
 from main.models.user import User
-from main.tests import faker
 from main.tests.public_test_case import PublicTestCase
 from main.tests.view_sets.view_set_mixin import ViewSetTestCaseMixin
 
@@ -16,12 +15,9 @@ class PublicUserViewSetTestCase(ViewSetTestCaseMixin, PublicTestCase):
     model = User
 
     def test_authenticating(self):
-        password = f"password{faker.unique.random_int()}"
-        user = UserFactory.create(
-            hashed_password=make_password(password),
-        )
+        user = UserFactory.create()
         path = reverse("public-user-authenticating")
-        data = {"email": user.email, "password": password}
+        data = {"email": user.email, "password": user.password}
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         authentication_token = (
@@ -41,8 +37,7 @@ class PublicUserViewSetTestCase(ViewSetTestCaseMixin, PublicTestCase):
 
     @override_settings(task_always_eager=True)
     def test_create(self):
-        password = f"password{faker.unique.random_int()}"
-        data = {**self._deserializer_data(), "password": password}
+        data = self._deserializer_data()
         filter_ = {
             **data,
             "authentication_token": None,
@@ -139,4 +134,4 @@ class PublicUserViewSetTestCase(ViewSetTestCaseMixin, PublicTestCase):
     @staticmethod
     def _deserializer_data():
         user = UserFactory.build()
-        return {"email": user.email, "name": user.name}
+        return {"email": user.email, "name": user.name, "password": user.password}

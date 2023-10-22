@@ -13,16 +13,16 @@ class UserOrganizationViewSetTestCase(ViewSetTestCaseMixin, UserTestCase):
     def test_list__filter__code__icontains(self):
         OrganizationFactory.create()
         OrganizationFactory.create_batch(
-            2, code=Iterator(range(2), getter=lambda n: f"-code-{n}")
+            2, code=Iterator(range(2), getter=lambda n: f"-code--{n}")
         )
-        self._act_and_assert_list_test({"code__icontains": "code-"})
+        self._act_and_assert_list_test({"code__icontains": "code--"})
 
     def test_list__filter__name__icontains(self):
         OrganizationFactory.create()
         OrganizationFactory.create_batch(
-            2, name=Iterator(range(2), getter=lambda n: f"-name-{n}")
+            2, name=Iterator(range(2), getter=lambda n: f"-name--{n}")
         )
-        self._act_and_assert_list_test({"name__icontains": "name-"})
+        self._act_and_assert_list_test({"name__icontains": "name--"})
 
     def test_list__paginate(self):
         OrganizationFactory.create_batch(4)
