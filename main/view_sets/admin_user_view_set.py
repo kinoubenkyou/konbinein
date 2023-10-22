@@ -10,7 +10,7 @@ from main.view_sets.filter_mixin import FilterMixin
 
 class AdminUserViewSet(FilterMixin, ListModelMixin, GenericViewSet):
     filter_set_class = UserFilterSet
-    ordering_fields = ("email", "id")
+    ordering_fields = ("email", "id", "name")
     permission_classes = (AdminPermission,)
     queryset = User.objects.all()
     serializer_class = UserSerializer

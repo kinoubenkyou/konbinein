@@ -186,9 +186,9 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         ).create()
         for n in range(2):
             OrderWithRelatedFactory(
-                order_kwargs={"code": f"-code-{n}", "organization": self.organization},
+                order_kwargs={"code": f"-code--{n}", "organization": self.organization},
             ).create()
-        self._act_and_assert_list_test({"code__icontains": "code-"})
+        self._act_and_assert_list_test({"code__icontains": "code--"})
 
     def test_list__filter__created_at__gte(self):
         orders = OrderWithRelatedFactory(

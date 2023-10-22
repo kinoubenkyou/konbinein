@@ -13,16 +13,16 @@ class StaffUserViewSetTestCase(ViewSetTestCaseMixin, StaffTestCase):
     def test_list__filter__email__icontains(self):
         UserFactory.create()
         UserFactory.create_batch(
-            2, email=Iterator(range(2), getter=lambda n: f"-email-{n}")
+            2, email=Iterator(range(2), getter=lambda n: f"-email--{n}@email.com")
         )
-        self._act_and_assert_list_test({"email__icontains": "email-"})
+        self._act_and_assert_list_test({"email__icontains": "email--"})
 
     def test_list__filter__name__icontains(self):
         UserFactory.create()
         UserFactory.create_batch(
-            2, email=Iterator(range(2), getter=lambda n: f"-name-{n}")
+            2, email=Iterator(range(2), getter=lambda n: f"-name--{n}")
         )
-        self._act_and_assert_list_test({"name__icontains": "name-"})
+        self._act_and_assert_list_test({"name__icontains": "name--"})
 
     def test_list__paginate(self):
         UserFactory.create_batch(4)

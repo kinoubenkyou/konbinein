@@ -31,7 +31,7 @@ class UserViewSetTestCase(ViewSetTestCaseMixin, UserTestCase):
     def test_partial_update(self):
         data = {
             **self._deserializer_data(),
-            "current_password": self.user_current_password,
+            "current_password": self.user.password,
             "password": "password",
         }
         filter_ = {**data}

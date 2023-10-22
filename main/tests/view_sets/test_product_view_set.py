@@ -31,19 +31,19 @@ class ProductViewSetTestCase(ViewSetTestCaseMixin, StaffTestCase):
         ProductFactory.create(organization=self.organization)
         ProductFactory.create_batch(
             2,
-            code=Iterator(range(2), getter=lambda n: f"-code-{n}"),
+            code=Iterator(range(2), getter=lambda n: f"-code--{n}"),
             organization=self.organization,
         )
-        self._act_and_assert_list_test({"code__icontains": "code-"})
+        self._act_and_assert_list_test({"code__icontains": "code--"})
 
     def test_list__filter__name__icontains(self):
         ProductFactory.create(organization=self.organization)
         ProductFactory.create_batch(
             2,
-            name=Iterator(range(2), getter=lambda n: f"-name-{n}"),
+            name=Iterator(range(2), getter=lambda n: f"-name--{n}"),
             organization=self.organization,
         )
-        self._act_and_assert_list_test({"name__icontains": "name-"})
+        self._act_and_assert_list_test({"name__icontains": "name--"})
 
     def test_list__filter__price__gte(self):
         products = ProductFactory.create_batch(3, organization=self.organization)

@@ -1,3 +1,6 @@
+from random import choice
+from string import ascii_uppercase
+
 from factory import Faker, LazyAttribute, Sequence, SubFactory
 from factory.django import DjangoModelFactory
 
@@ -9,7 +12,7 @@ class OrderFactory(DjangoModelFactory):
     class Meta:
         model = Order
 
-    code = Sequence(lambda n: f"code{n}")
+    code = Sequence(lambda n: f"code-{choice(ascii_uppercase)}{n}")
     created_at = Faker("past_datetime")
     organization = SubFactory(OrganizationFactory)
     product_total = Faker("pydecimal", left_digits=2, positive=True, right_digits=4)

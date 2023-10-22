@@ -4,7 +4,7 @@ from main.tests.staff_test_case import StaffTestCase
 from main.tests.view_sets.view_set_mixin import ViewSetTestCaseMixin
 
 
-class StaffOrganizationViewSetTestCase(ViewSetTestCaseMixin, StaffTestCase):
+class OrganizationViewSetTestCase(ViewSetTestCaseMixin, StaffTestCase):
     basename = "organization"
     model = Organization
 

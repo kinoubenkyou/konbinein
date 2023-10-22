@@ -61,11 +61,11 @@ class ProductShippingViewSetTestCase(ViewSetTestCaseMixin, StaffTestCase):
         ).create()
         ProductShippingWithRelatedFactory(
             product_shipping_kwargs={
-                "code": Iterator(range(2), getter=lambda n: f"-code-{n}"),
+                "code": Iterator(range(2), getter=lambda n: f"-code--{n}"),
                 "organization_id": self.organization.id,
             },
         ).create_batch(2)
-        self._act_and_assert_list_test({"code__icontains": "code-"})
+        self._act_and_assert_list_test({"code__icontains": "code--"})
 
     def test_list__filter__fixed_fee__gte(self):
         product_shipping_list = ProductShippingWithRelatedFactory(
@@ -95,11 +95,11 @@ class ProductShippingViewSetTestCase(ViewSetTestCaseMixin, StaffTestCase):
         ).create()
         ProductShippingWithRelatedFactory(
             product_shipping_kwargs={
-                "name": Iterator(range(2), getter=lambda n: f"-name-{n}"),
+                "name": Iterator(range(2), getter=lambda n: f"-name--{n}"),
                 "organization_id": self.organization.id,
             },
         ).create_batch(2)
-        self._act_and_assert_list_test({"name__icontains": "name-"})
+        self._act_and_assert_list_test({"name__icontains": "name--"})
 
     def test_list__filter__unit_fee__gte(self):
         product_shipping_list = ProductShippingWithRelatedFactory(
