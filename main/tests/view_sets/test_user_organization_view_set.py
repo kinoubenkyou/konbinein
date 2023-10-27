@@ -3,10 +3,10 @@ from factory import Iterator
 from main.factories.organization_factory import OrganizationFactory
 from main.models.organization import Organization
 from main.tests.user_test_case import UserTestCase
-from main.tests.view_sets.view_set_mixin import ViewSetTestCaseMixin
+from main.tests.view_sets.user_view_set_test_case_mixin import UserViewSetTestCaseMixin
 
 
-class UserOrganizationViewSetTestCase(ViewSetTestCaseMixin, UserTestCase):
+class UserOrganizationViewSetTestCase(UserViewSetTestCaseMixin, UserTestCase):
     basename = "user-organization"
     model = Organization
 

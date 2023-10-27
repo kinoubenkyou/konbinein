@@ -1,3 +1,5 @@
+from random import sample
+
 from factory import Iterator
 
 from main.factories.product_factory import ProductFactory
@@ -7,12 +9,13 @@ from main.factories.product_shipping_with_related_factory import (
 from main.models import ZONE_CHOICES
 from main.models.product import Product
 from main.models.product_shipping import ProductShipping
-from main.tests import faker
 from main.tests.staff_test_case import StaffTestCase
-from main.tests.view_sets.view_set_mixin import ViewSetTestCaseMixin
+from main.tests.view_sets.organization_view_set_test_case_mixin import (
+    OrganizationViewSetTestCaseMixin,
+)
 
 
-class ProductShippingViewSetTestCase(ViewSetTestCaseMixin, StaffTestCase):
+class ProductShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCase):
     basename = "productshipping"
     model = ProductShipping
 
@@ -144,9 +147,7 @@ class ProductShippingViewSetTestCase(ViewSetTestCaseMixin, StaffTestCase):
         )
 
     def test_list__filter__zones__overlap(self):
-        zones = faker.random_choices(
-            elements=[choice[0] for choice in ZONE_CHOICES], length=6
-        )
+        zones = sample([choice[0] for choice in ZONE_CHOICES], 6)
         ProductShippingWithRelatedFactory(
             product_shipping_kwargs={
                 "organization_id": self.organization.id,
@@ -202,9 +203,7 @@ class ProductShippingViewSetTestCase(ViewSetTestCaseMixin, StaffTestCase):
 
     def test_partial_update(self):
         products = ProductFactory.create_batch(3, organization=self.organization)
-        zones = faker.random_choices(
-            elements=[choice[0] for choice in ZONE_CHOICES], length=3
-        )
+        zones = sample([choice[0] for choice in ZONE_CHOICES], 3)
         data = ProductShippingWithRelatedFactory(
             products=products[1:3],
             product_shipping_kwargs={

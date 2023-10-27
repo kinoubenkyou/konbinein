@@ -4,9 +4,6 @@ from main.tests.user_test_case import UserTestCase
 
 
 class StaffTestCase(UserTestCase):
-    is_organization_view_set = True
-    is_user_view_set = False
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

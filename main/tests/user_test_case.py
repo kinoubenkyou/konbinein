@@ -6,9 +6,7 @@ from main.factories.user_factory import UserFactory
 
 
 class UserTestCase(APITestCase):
-    is_organization_view_set = False
     is_user_system_administrator = False
-    is_user_view_set = True
 
     @classmethod
     def setUpClass(cls):

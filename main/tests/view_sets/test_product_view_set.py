@@ -3,10 +3,12 @@ from factory import Iterator
 from main.factories.product_factory import ProductFactory
 from main.models.product import Product
 from main.tests.staff_test_case import StaffTestCase
-from main.tests.view_sets.view_set_mixin import ViewSetTestCaseMixin
+from main.tests.view_sets.organization_view_set_test_case_mixin import (
+    OrganizationViewSetTestCaseMixin,
+)
 
 
-class ProductViewSetTestCase(ViewSetTestCaseMixin, StaffTestCase):
+class ProductViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCase):
     basename = "product"
     model = Product
 

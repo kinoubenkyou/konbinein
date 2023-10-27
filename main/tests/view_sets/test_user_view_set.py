@@ -6,10 +6,10 @@ from rest_framework.status import HTTP_204_NO_CONTENT
 from main.factories.user_factory import UserFactory
 from main.models.user import User
 from main.tests.user_test_case import UserTestCase
-from main.tests.view_sets.view_set_mixin import ViewSetTestCaseMixin
+from main.tests.view_sets.user_view_set_test_case_mixin import UserViewSetTestCaseMixin
 
 
-class UserViewSetTestCase(ViewSetTestCaseMixin, UserTestCase):
+class UserViewSetTestCase(UserViewSetTestCaseMixin, UserTestCase):
     basename = "user"
     model = User
 

@@ -103,8 +103,4 @@ class ViewSetTestCaseMixin:
         return self._path("list", {})
 
     def _path(self, action, kwargs):
-        if self.is_organization_view_set:
-            kwargs["organization_id"] = self.organization.id
-        if self.is_user_view_set:
-            kwargs["user_id"] = self.user.id
         return reverse(f"{self.basename}-{action}", kwargs=kwargs)

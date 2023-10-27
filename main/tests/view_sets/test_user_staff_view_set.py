@@ -5,10 +5,10 @@ from rest_framework.status import HTTP_204_NO_CONTENT
 from main.factories.staff_factory import StaffFactory
 from main.models.staff import Staff
 from main.tests.user_test_case import UserTestCase
-from main.tests.view_sets.view_set_mixin import ViewSetTestCaseMixin
+from main.tests.view_sets.user_view_set_test_case_mixin import UserViewSetTestCaseMixin
 
 
-class UserStaffViewSetTestCase(ViewSetTestCaseMixin, UserTestCase):
+class UserStaffViewSetTestCase(UserViewSetTestCaseMixin, UserTestCase):
     basename = "user-staff"
     model = Staff
 

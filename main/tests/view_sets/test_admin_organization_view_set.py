@@ -1,7 +1,7 @@
 from main.factories.organization_factory import OrganizationFactory
 from main.models.organization import Organization
 from main.tests.admin_test_case import AdminTestCase
-from main.tests.view_sets.view_set_mixin import ViewSetTestCaseMixin
+from main.tests.view_sets.view_set_test_case_mixin import ViewSetTestCaseMixin
 
 
 class AdminOrganizationViewSetTestCase(ViewSetTestCaseMixin, AdminTestCase):
