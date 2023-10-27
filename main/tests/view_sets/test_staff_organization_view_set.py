@@ -1,10 +1,12 @@
 from main.factories.organization_factory import OrganizationFactory
 from main.models.organization import Organization
 from main.tests.staff_test_case import StaffTestCase
-from main.tests.view_sets.view_set_mixin import ViewSetTestCaseMixin
+from main.tests.view_sets.organization_view_set_test_case_mixin import (
+    OrganizationViewSetTestCaseMixin,
+)
 
 
-class OrganizationViewSetTestCase(ViewSetTestCaseMixin, StaffTestCase):
+class OrganizationViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCase):
     basename = "organization"
     model = Organization
 

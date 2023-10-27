@@ -3,14 +3,14 @@ from django.test import override_settings
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
+from rest_framework.test import APITestCase
 
 from main.factories.user_factory import UserFactory
 from main.models.user import User
-from main.tests.public_test_case import PublicTestCase
-from main.tests.view_sets.view_set_mixin import ViewSetTestCaseMixin
+from main.tests.view_sets.view_set_test_case_mixin import ViewSetTestCaseMixin
 
 
-class PublicUserViewSetTestCase(ViewSetTestCaseMixin, PublicTestCase):
+class PublicUserViewSetTestCase(ViewSetTestCaseMixin, APITestCase):
     basename = "public-user"
     model = User
 

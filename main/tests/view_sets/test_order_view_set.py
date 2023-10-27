@@ -5,10 +5,12 @@ from main.models.order import Order
 from main.models.product_item import ProductItem
 from main.models.product_shipping_item import ProductShippingItem
 from main.tests.staff_test_case import StaffTestCase
-from main.tests.view_sets.view_set_mixin import ViewSetTestCaseMixin
+from main.tests.view_sets.organization_view_set_test_case_mixin import (
+    OrganizationViewSetTestCaseMixin,
+)
 
 
-class OrderViewSetTestCaseMixin(ViewSetTestCaseMixin):
+class OrderViewSetTestCaseMixin(OrganizationViewSetTestCaseMixin):
     basename = "order"
     model = Order
 
