@@ -1,10 +1,18 @@
+from secrets import token_urlsafe
+
 from django.contrib.auth.hashers import check_password
 from django.test import override_settings
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
-from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
+from rest_framework.status import HTTP_200_OK
 from rest_framework.test import APITestCase
 
+from main import (
+    get_email_verifying_token,
+    get_password_resetting_token,
+    set_email_verifying_token,
+    set_password_resetting_token,
+)
 from main.factories.user_factory import UserFactory
 from main.models.user import User
 from main.tests.view_sets.view_set_test_case_mixin import ViewSetTestCaseMixin
@@ -47,26 +55,26 @@ class PublicUserViewSetTestCase(ViewSetTestCaseMixin, APITestCase):
         user = User.objects.filter(**filter_).first()
         body = (
             f"http://testserver/public/users/{user.id}/email_verifying"
-            f"?token={user.email_verifying_token}"
+            f"?token={get_email_verifying_token(user.id)}"
         )
         self._assert_email(body, "Konbinein Email Verification", [user.email])
 
     def test_email_verifying(self):
-        email_verifying_token = Token.generate_key()
-        user = UserFactory.create(email_verifying_token=email_verifying_token)
-        path = reverse("public-user-email-verifying", kwargs={"pk": user.id})
-        data = {"token": email_verifying_token}
-        response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
-        self.assertIsNone(User.objects.filter(id=user.id).get().email_verifying_token)
+        user = UserFactory.create()
+        set_email_verifying_token(user.id)
+        data = {"token": get_email_verifying_token(user.id)}
+        self._act_and_assert_action_response_status("email-verifying", data, user.id)
+        self.assertIsNone(get_email_verifying_token(user.id))
 
     def test_email_verifying__token_not_match(self):
-        data = {"token": Token.generate_key()}
+        user = UserFactory.create()
+        set_email_verifying_token(user.id)
+        data = {"token": token_urlsafe()}
         self._act_and_assert_action_validation_test(
             "email-verifying",
             data,
             ["Token doesn't match."],
-            UserFactory.create(email_verifying_token=Token.generate_key()).id,
+            user.id,
         )
 
     def test_email_verifying__email_already_verified(self):
@@ -80,15 +88,16 @@ class PublicUserViewSetTestCase(ViewSetTestCaseMixin, APITestCase):
 
     def test_partial_update(self):
         password = "password"
-        password_resetting_token = Token.generate_key()
-        data = {"password": password, "token": password_resetting_token}
-        user = UserFactory.create(password_resetting_token=password_resetting_token)
-        filter_ = {"password": password, "password_resetting_token": None}
+        user = UserFactory.create()
+        set_password_resetting_token(user.id)
+        data = {"password": password, "token": get_password_resetting_token(user.id)}
+        filter_ = {"password": password}
         self._act_and_assert_partial_update_test(data, filter_, user.id)
+        self.assertIsNone(get_password_resetting_token(user.id))
 
     def test_partial_update__token_not_match(self):
-        data = {"password": "password", "token": Token.generate_key()}
-        user = UserFactory.create(password_resetting_token=Token.generate_key())
+        user = UserFactory.create()
+        data = {"password": "password", "token": token_urlsafe()}
         self._act_and_assert_partial_update_validation_test(
             data,
             {"token": ["Token doesn't match."]},
@@ -98,26 +107,19 @@ class PublicUserViewSetTestCase(ViewSetTestCaseMixin, APITestCase):
     @override_settings(task_always_eager=True)
     def test_password_resetting(self):
         user = UserFactory.create()
-        path = reverse("public-user-password-resetting")
+        set_password_resetting_token(user.id)
         data = {"email": user.email}
-        response = self.client.post(path, data, format="json")
-        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
-        password_resetting_token = (
-            User.objects.filter(id=user.id).get().password_resetting_token
-        )
-        self.assertIsNotNone(password_resetting_token)
+        self._act_and_assert_action_response_status("password-resetting", data, None)
         body = (
             "http://testserver/public/users/password_resetting"
-            f"?token={password_resetting_token}"
+            f"?token={get_password_resetting_token(user.id)}"
         )
         self._assert_email(body, "Konbinein Password Reset", [user.email])
 
     def test_password_resetting__email_not_verified(self):
-        data = {
-            "email": UserFactory.create(
-                email_verifying_token=Token.generate_key()
-            ).email
-        }
+        user = UserFactory.create()
+        set_email_verifying_token(user.id)
+        data = {"email": user.email}
         self._act_and_assert_action_validation_test(
             "password-resetting",
             data,

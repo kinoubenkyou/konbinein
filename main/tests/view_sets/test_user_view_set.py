@@ -3,6 +3,7 @@ from django.test import override_settings
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_204_NO_CONTENT
 
+from main import get_email_verifying_token, set_email_verifying_token
 from main.factories.user_factory import UserFactory
 from main.models.user import User
 from main.tests.user_test_case import UserTestCase
@@ -29,6 +30,7 @@ class UserViewSetTestCase(UserViewSetTestCaseMixin, UserTestCase):
 
     @override_settings(task_always_eager=True)
     def test_partial_update(self):
+        set_email_verifying_token(self.user.id)
         data = {
             **self._deserializer_data(),
             "current_password": self.user.password,
@@ -41,7 +43,7 @@ class UserViewSetTestCase(UserViewSetTestCaseMixin, UserTestCase):
         user = User.objects.filter(**filter_).first()
         body = (
             f"http://testserver/public/users/{user.id}/email_verifying"
-            f"?token={user.email_verifying_token}"
+            f"?token={get_email_verifying_token(user.id)}"
         )
         self._assert_email(body, "Konbinein Email Verification", [user.email])
 
