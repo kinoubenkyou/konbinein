@@ -1,4 +1,5 @@
 from django.contrib.auth.hashers import check_password
+from django.core.cache import cache
 from django.utils.http import urlencode
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
@@ -10,6 +11,11 @@ from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.viewsets import GenericViewSet
 
+from main import (
+    get_email_verifying_token,
+    get_password_resetting_token,
+    set_password_resetting_token,
+)
 from main.models.user import User
 from main.serializers.public_user_create_serializer import PublicUserCreateSerializer
 from main.serializers.public_user_update_serializer import PublicUserUpdateSerializer
@@ -20,7 +26,7 @@ class PublicUserViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
     queryset = User.objects.all()
 
     @action(detail=False, methods=("post",))
-    def authenticating(self, request, *args, **kwargs):
+    def authenticating(self, request, *_args, **_kwargs):
         email = request.data.get("email")
         user = get_object_or_404(self.queryset, email=email)
         password = request.data.get("password")
@@ -32,15 +38,14 @@ class PublicUserViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
         return Response({"token": user.authentication_token})
 
     @action(detail=True, methods=("post",))
-    def email_verifying(self, request, *args, **kwargs):
+    def email_verifying(self, request, *_args, **_kwargs):
         user = self.get_object()
-        token = user.email_verifying_token
+        token = get_email_verifying_token(user.id)
         if token is None:
             raise ValidationError("Email is already verified.")
         if request.data.get("token") != token:
             raise ValidationError("Token doesn't match.")
-        user.email_verifying_token = None
-        user.save()
+        cache.delete(f"email_verifying_token.{user.id}")
         return Response(status=HTTP_204_NO_CONTENT)
 
     def get_serializer_class(self):
@@ -51,18 +56,17 @@ class PublicUserViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
         return serializer_classes.get(self.action)
 
     @action(detail=False, methods=("post",))
-    def password_resetting(self, request, *args, **kwargs):
+    def password_resetting(self, request, *_arg, **_kwargs):
         email = request.data.get("email")
         user = get_object_or_404(self.queryset, email=email)
-        if user.email_verifying_token is not None:
+        if get_email_verifying_token(user.id) is not None:
             raise ValidationError("Email isn't verified.")
-        user.password_resetting_token = Token.generate_key()
-        user.save()
+        set_password_resetting_token(user.id)
         uri_path = reverse(
             "public-user-password-resetting",
             request=request,
         )
-        query = urlencode({"token": user.password_resetting_token})
+        query = urlencode({"token": get_password_resetting_token(user.id)})
         send_email.delay(
             message=f"{uri_path}?{query}",
             recipient_list=[user.email],

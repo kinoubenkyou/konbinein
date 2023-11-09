@@ -25,7 +25,7 @@ class UserViewSet(
         return super().get_queryset().filter(id=self.kwargs["user_id"])
 
     @action(detail=True, methods=("post",))
-    def de_authenticating(self, request, *args, **kwargs):
+    def de_authenticating(self, _request, *_args, **_kwargs):
         user = self.get_object()
         user.authentication_token = None
         user.save()

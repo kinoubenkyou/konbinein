@@ -128,11 +128,11 @@ class OrderShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCa
 
     def test_partial_update(self):
         zones = sample([choice[0] for choice in ZONE_CHOICES], 3)
-        data = {**self._deserializer_data(), "zones": zones[0:2]}
         order_shipping = OrderShippingFactory.create(
             organization=self.organization,
             zones=zones[1:3],
         )
+        data = {**self._deserializer_data(), "zones": zones[0:2]}
         filter_ = {
             **data,
             "organization_id": self.organization.id,

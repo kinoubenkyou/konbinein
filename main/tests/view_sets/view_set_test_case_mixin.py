@@ -9,6 +9,10 @@ from rest_framework.status import (
 
 
 class ViewSetTestCaseMixin:
+    def _act_and_assert_action_response_status(self, action, data, pk):
+        response = self.client.post(self._action_path(action, pk), data, format="json")
+        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
+
     def _act_and_assert_action_validation_test(self, action, data, expected, pk):
         response = self.client.post(self._action_path(action, pk), data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)

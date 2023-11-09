@@ -204,13 +204,6 @@ class ProductShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTest
     def test_partial_update(self):
         products = ProductFactory.create_batch(3, organization=self.organization)
         zones = sample([choice[0] for choice in ZONE_CHOICES], 3)
-        data = ProductShippingWithRelatedFactory(
-            products=products[1:3],
-            product_shipping_kwargs={
-                "organization_id": self.organization.id,
-                "zones": zones[1:3],
-            },
-        ).get_deserializer_data()
         product_shipping = ProductShippingWithRelatedFactory(
             products=products[0:2],
             product_shipping_kwargs={
@@ -218,6 +211,13 @@ class ProductShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTest
                 "zones": zones[0:2],
             },
         ).create()
+        data = ProductShippingWithRelatedFactory(
+            products=products[1:3],
+            product_shipping_kwargs={
+                "organization_id": self.organization.id,
+                "zones": zones[1:3],
+            },
+        ).get_deserializer_data()
         filter_ = {**data, "organization_id": self.organization.id}
         self._act_and_assert_partial_update_test(data, filter_, product_shipping.id)
 

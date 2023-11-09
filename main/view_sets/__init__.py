@@ -3,6 +3,8 @@ from django.core.mail import send_mail
 from django.utils.http import urlencode
 from rest_framework.reverse import reverse
 
+from main import get_email_verifying_token
+
 
 @shared_task
 def send_email(message, recipient_list, subject):
@@ -17,7 +19,7 @@ def send_email_verification(request, user):
         kwargs={"pk": user.id},
         request=request,
     )
-    query = urlencode({"token": user.email_verifying_token})
+    query = urlencode({"token": get_email_verifying_token(user.id)})
     send_email.delay(
         message=f"{uri_path}?{query}",
         recipient_list=[user.email],

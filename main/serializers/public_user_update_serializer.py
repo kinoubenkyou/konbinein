@@ -1,8 +1,10 @@
 from django.contrib.auth.hashers import make_password
+from django.core.cache import cache
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import CharField
 from rest_framework.serializers import ModelSerializer
 
+from main import get_password_resetting_token
 from main.models.user import User
 
 
@@ -18,15 +20,16 @@ class PublicUserUpdateSerializer(ModelSerializer):
         user_attributes = {
             **validated_data,
             "hashed_password": make_password(validated_data["password"]),
-            "password_resetting_token": None,
         }
         del user_attributes["password"]
-        return super().update(instance, user_attributes)
+        instance = super().update(instance, user_attributes)
+        cache.delete(f"password_resetting_token.{instance.id}")
+        return instance
 
     def validate_token(self, value):
         if (
             self.instance is not None
-            and self.instance.password_resetting_token != value
+            and get_password_resetting_token(self.instance.id) != value
         ):
             raise ValidationError(detail="Token doesn't match.")
         return value
