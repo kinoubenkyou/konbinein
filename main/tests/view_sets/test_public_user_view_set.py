@@ -2,7 +2,6 @@ from secrets import token_urlsafe
 
 from django.contrib.auth.hashers import check_password
 from django.test import override_settings
-from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_200_OK
 from rest_framework.test import APITestCase
@@ -78,7 +77,7 @@ class PublicUserViewSetTestCase(ViewSetTestCaseMixin, APITestCase):
         )
 
     def test_email_verifying__email_already_verified(self):
-        data = {"token": Token.generate_key()}
+        data = {"token": token_urlsafe()}
         self._act_and_assert_action_validation_test(
             "email-verifying",
             data,
