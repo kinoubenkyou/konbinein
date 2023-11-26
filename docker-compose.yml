@@ -1,4 +1,12 @@
 services:
+  app:
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+    build: .
+    entrypoint: ["poetry", "run"]
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
   postgres:
     image: postgres
     environment:

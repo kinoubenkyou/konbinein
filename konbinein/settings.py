@@ -77,7 +77,7 @@ WSGI_APPLICATION = "konbinein.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "HOST": "127.0.0.1",
+        "HOST": "postgres",
         "NAME": "postgres",
         "PASSWORD": "example",
         "USER": "postgres",
@@ -176,6 +176,6 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379",
+        "LOCATION": "redis://redis:6379",
     }
 }
