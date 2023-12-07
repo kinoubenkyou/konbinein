@@ -31,3 +31,16 @@ docker compose down
 docker exec -it konbinein-app-1 bash
 poetry shell
 ```
+
+### add package
+```shell
+docker exec -it konbinein-app-1 bash
+poetry run add package
+# must also remove image and clear build cache
+```
+
+### remove image and clear build cache
+```shell
+docker image rm konbinein-app
+docker builder prune -f
+```

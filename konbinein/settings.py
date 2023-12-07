@@ -38,6 +38,7 @@ INSTALLED_APPS = (
     # "django.contrib.messages",
     # "django.contrib.staticfiles",
     "main",
+    "drf_spectacular",
 )
 
 # MIDDLEWARE = [
@@ -52,21 +53,21 @@ INSTALLED_APPS = (
 
 ROOT_URLCONF = "konbinein.urls"
 
-# TEMPLATES = [
-#     {
-#         "BACKEND": "django.template.backends.django.DjangoTemplates",
-#         "DIRS": [],
-#         "APP_DIRS": True,
-#         "OPTIONS": {
-#             "context_processors": [
-#                 "django.template.context_processors.debug",
-#                 "django.template.context_processors.request",
-#                 "django.contrib.auth.context_processors.auth",
-#                 "django.contrib.messages.context_processors.messages",
-#             ],
-#         },
-#     },
-# ]
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        #         "OPTIONS": {
+        #             "context_processors": [
+        #                 "django.template.context_processors.debug",
+        #                 "django.template.context_processors.request",
+        #                 "django.contrib.auth.context_processors.auth",
+        #                 "django.contrib.messages.context_processors.messages",
+        #             ],
+        #         },
+    },
+]
 
 WSGI_APPLICATION = "konbinein.wsgi.application"
 
@@ -158,11 +159,12 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "main.authentications.token_authentication.TokenAuthentication",
     ),
-    "DEFAULT_PAGINATION_CLASS": "main.paginations.default_pagination.DefaultPagination",
     "DEFAULT_FILTER_BACKENDS": (
         "rest_framework.filters.OrderingFilter",
         "rest_framework.filters.SearchFilter",
     ),
+    "DEFAULT_PAGINATION_CLASS": "main.paginations.default_pagination.DefaultPagination",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "UNAUTHENTICATED_USER": None,
 }
 
