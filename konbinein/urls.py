@@ -1,3 +1,5 @@
+from django.urls import path
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
 from rest_framework import routers
 
 from main.view_sets.admin_organization_view_set import AdminOrganizationViewSet
@@ -52,4 +54,9 @@ router.register(
 )
 router.register(r"users/(?P<user_id>[^/.]+)/users", UserViewSet)
 router.register(r"public/users", PublicUserViewSet, basename="public-user")
-urlpatterns = router.urls
+urlpatterns = router.urls + [
+    path("schema/", SpectacularAPIView.as_view(), name="schema"),
+    path(
+        "schema/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"
+    ),
+]
