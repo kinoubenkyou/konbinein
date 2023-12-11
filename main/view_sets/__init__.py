@@ -3,7 +3,7 @@ from django.core.mail import send_mail
 from django.utils.http import urlencode
 from rest_framework.reverse import reverse
 
-from main import get_email_verifying_token
+from main.shortcuts import get_email_verifying_token
 
 
 @shared_task

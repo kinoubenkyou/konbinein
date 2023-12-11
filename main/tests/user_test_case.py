@@ -1,8 +1,8 @@
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
 from main.authentications.token_authentication import TokenAuthentication
 from main.factories.user_factory import UserFactory
+from main.shortcuts import get_authentication_token, set_authentication_token
 
 
 class UserTestCase(APITestCase):
@@ -11,15 +11,16 @@ class UserTestCase(APITestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = UserFactory.create(
-            authentication_token=Token.generate_key(),
+        user = UserFactory.create(
             is_system_administrator=cls.is_user_system_administrator,
         )
+        set_authentication_token(user.id)
+        cls.user = user
 
     def setUp(self):
         super().setUp()
         self.client.credentials(
             HTTP_AUTHORIZATION=(
-                f"{TokenAuthentication.SCHEME} {self.user.authentication_token}"
+                f"{TokenAuthentication.SCHEME} {get_authentication_token(self.user.id)}"
             )
         )

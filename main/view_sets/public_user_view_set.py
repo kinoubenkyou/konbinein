@@ -1,7 +1,5 @@
 from django.contrib.auth.hashers import check_password
-from django.core.cache import cache
 from django.utils.http import urlencode
-from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
@@ -11,14 +9,17 @@ from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.viewsets import GenericViewSet
 
-from main import (
-    get_email_verifying_token,
-    get_password_resetting_token,
-    set_password_resetting_token,
-)
 from main.models.user import User
 from main.serializers.public_user_create_serializer import PublicUserCreateSerializer
 from main.serializers.public_user_update_serializer import PublicUserUpdateSerializer
+from main.shortcuts import (
+    delete_email_verifying_token,
+    get_authentication_token,
+    get_email_verifying_token,
+    get_password_resetting_token,
+    set_authentication_token,
+    set_password_resetting_token,
+)
 from main.view_sets import send_email, send_email_verification
 
 
@@ -32,10 +33,9 @@ class PublicUserViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
         password = request.data.get("password")
         if not check_password(password, user.hashed_password):
             raise ValidationError("Password is incorrect.")
-        if user.authentication_token is None:
-            user.authentication_token = Token.generate_key()
-            user.save()
-        return Response({"token": user.authentication_token})
+        if get_authentication_token(user.id) is None:
+            set_authentication_token(user.id)
+        return Response({"token": get_authentication_token(user.id)})
 
     @action(detail=True, methods=("post",))
     def email_verifying(self, request, *_args, **_kwargs):
@@ -45,7 +45,7 @@ class PublicUserViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
             raise ValidationError("Email is already verified.")
         if request.data.get("token") != token:
             raise ValidationError("Token doesn't match.")
-        cache.delete(f"email_verifying_token.{user.id}")
+        delete_email_verifying_token(user.id)
         return Response(status=HTTP_204_NO_CONTENT)
 
     def get_serializer_class(self):

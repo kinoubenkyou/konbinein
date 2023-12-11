@@ -2,8 +2,8 @@ from django.contrib.auth.hashers import make_password
 from rest_framework.fields import CharField
 from rest_framework.serializers import ModelSerializer
 
-from main import set_email_verifying_token
 from main.models.user import User
+from main.shortcuts import set_email_verifying_token
 
 
 class PublicUserCreateSerializer(ModelSerializer):

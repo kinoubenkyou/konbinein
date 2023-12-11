@@ -6,14 +6,15 @@ from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_200_OK
 from rest_framework.test import APITestCase
 
-from main import (
+from main.factories.user_factory import UserFactory
+from main.models.user import User
+from main.shortcuts import (
+    get_authentication_token,
     get_email_verifying_token,
     get_password_resetting_token,
     set_email_verifying_token,
     set_password_resetting_token,
 )
-from main.factories.user_factory import UserFactory
-from main.models.user import User
 from main.tests.view_sets.view_set_test_case_mixin import ViewSetTestCaseMixin
 
 
@@ -27,9 +28,7 @@ class PublicUserViewSetTestCase(ViewSetTestCaseMixin, APITestCase):
         data = {"email": user.email, "password": user.password}
         response = self.client.post(path, data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        authentication_token = (
-            User.objects.filter(id=user.id).get().authentication_token
-        )
+        authentication_token = get_authentication_token(user.id)
         self.assertEqual(
             response.json(),
             {"token": authentication_token},
@@ -45,11 +44,7 @@ class PublicUserViewSetTestCase(ViewSetTestCaseMixin, APITestCase):
     @override_settings(task_always_eager=True)
     def test_create(self):
         data = self._deserializer_data()
-        filter_ = {
-            **data,
-            "authentication_token": None,
-            "is_system_administrator": False,
-        }
+        filter_ = {**data, "is_system_administrator": False}
         self._act_and_assert_create_test(data, filter_)
         user = User.objects.filter(**filter_).first()
         body = (
