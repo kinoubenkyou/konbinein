@@ -3,9 +3,13 @@ from django.test import override_settings
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_204_NO_CONTENT
 
-from main import get_email_verifying_token, set_email_verifying_token
 from main.factories.user_factory import UserFactory
 from main.models.user import User
+from main.shortcuts import (
+    get_authentication_token,
+    get_email_verifying_token,
+    set_email_verifying_token,
+)
 from main.tests.user_test_case import UserTestCase
 from main.tests.view_sets.user_view_set_test_case_mixin import UserViewSetTestCaseMixin
 
@@ -21,9 +25,7 @@ class UserViewSetTestCase(UserViewSetTestCaseMixin, UserTestCase):
         )
         response = self.client.post(path, format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
-        self.assertIsNone(
-            User.objects.filter(id=self.user.id).get().authentication_token
-        )
+        self.assertIsNone(get_authentication_token(self.user.id))
 
     def test_destroy(self):
         self._act_and_assert_destroy_test(self.user.id)

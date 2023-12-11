@@ -1,11 +1,10 @@
 from django.contrib.auth.hashers import make_password
-from django.core.cache import cache
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import CharField
 from rest_framework.serializers import ModelSerializer
 
-from main import get_password_resetting_token
 from main.models.user import User
+from main.shortcuts import delete_password_resetting_token, get_password_resetting_token
 
 
 class PublicUserUpdateSerializer(ModelSerializer):
@@ -23,7 +22,7 @@ class PublicUserUpdateSerializer(ModelSerializer):
         }
         del user_attributes["password"]
         instance = super().update(instance, user_attributes)
-        cache.delete(f"password_resetting_token.{instance.id}")
+        delete_password_resetting_token(instance.id)
         return instance
 
     def validate_token(self, value):
