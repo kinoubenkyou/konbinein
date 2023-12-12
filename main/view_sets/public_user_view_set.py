@@ -35,7 +35,9 @@ class PublicUserViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
             raise ValidationError("Password is incorrect.")
         if get_authentication_token(user.id) is None:
             set_authentication_token(user.id)
-        return Response({"token": get_authentication_token(user.id)})
+        return Response({
+            "user_id": user.id, "token": get_authentication_token(user.id)
+        })
 
     @action(detail=True, methods=("post",))
     def email_verifying(self, request, *_args, **_kwargs):
