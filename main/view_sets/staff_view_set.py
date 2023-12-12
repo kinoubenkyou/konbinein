@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import action
 from rest_framework.mixins import (
     CreateModelMixin,
@@ -16,6 +17,7 @@ from main.serializers.staff_serializer import StaffSerializer
 from main.view_sets.filter_mixin import FilterMixin
 
 
+@extend_schema(tags=["organizations_staffs"])
 class StaffViewSet(
     FilterMixin,
     CreateModelMixin,
@@ -40,6 +42,7 @@ class StaffViewSet(
             super().get_queryset().filter(organization=self.kwargs["organization_id"])
         )
 
+    @extend_schema(request=None, responses={204: None})
     @action(detail=True, methods=("post",))
     def agreeing(self, request, *args, **kwargs):
         staff = self.get_object()

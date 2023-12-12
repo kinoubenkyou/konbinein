@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework.viewsets import ModelViewSet
 
 from main.filter_sets.order_shipping_filter_set import OrderShippingFilterSet
@@ -7,6 +8,7 @@ from main.serializers.order_shipping_serializer import OrderShippingSerializer
 from main.view_sets.filter_mixin import FilterMixin
 
 
+@extend_schema(tags=["organizations_order_shippings"])
 class OrderShippingViewSet(FilterMixin, ModelViewSet):
     filter_set_class = OrderShippingFilterSet
     ordering_fields = ("code", "fixed_fee", "id", "name", "unit_fee")
