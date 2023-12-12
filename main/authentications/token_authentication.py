@@ -2,9 +2,10 @@ from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
 from main.models.user import User
+from main.shortcuts import get_authentication_token
 
 
-class TokenAuthentication(BaseAuthentication):
+class BearerAuthentication(BaseAuthentication):
     SCHEME = "Bearer"
 
     def authenticate(self, request):
@@ -15,11 +16,11 @@ class TokenAuthentication(BaseAuthentication):
         except IndexError:
             return None
         try:
-            authorization_token = header[1]
+            user_id = header[1]
+            token = header[2]
+            if get_authentication_token(user_id) != token:
+                raise AuthenticationFailed()
+            user = User.objects.get(id=user_id)
         except IndexError:
-            raise AuthenticationFailed()
-        try:
-            user = User.objects.get(authentication_token=authorization_token)
-        except User.DoesNotExist:
             raise AuthenticationFailed()
         return user, None

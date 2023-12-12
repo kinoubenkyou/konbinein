@@ -31,7 +31,7 @@ class PublicUserViewSetTestCase(ViewSetTestCaseMixin, APITestCase):
         authentication_token = get_authentication_token(user.id)
         self.assertEqual(
             response.json(),
-            {"token": authentication_token},
+            {"user_id": user.id, "token": authentication_token},
         )
         self.assertIsNotNone(authentication_token)
 

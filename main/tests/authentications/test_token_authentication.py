@@ -1,25 +1,34 @@
 from django.test import TransactionTestCase
 from django.test.client import RequestFactory
+from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import AuthenticationFailed
 
-from main.authentications.token_authentication import TokenAuthentication
+from main.authentications.token_authentication import BearerAuthentication
 
 
-class TokenAuthenticationTestCase(TransactionTestCase):
+class BearerAuthenticationTestCase(TransactionTestCase):
     def test_authenticate__scheme_not_match(self):
-        request = RequestFactory(HTTP_AUTHORIZATION="scheme").get("/")
-        actual = TokenAuthentication().authenticate(request)
-        self.assertIsNone(actual)
+        request = RequestFactory(
+            HTTP_AUTHORIZATION=f"{BearerAuthentication.SCHEME}_"
+        ).get(None)
+        self.assertIsNone(BearerAuthentication().authenticate(request))
 
-    def test_authenticate__token_not_provided(self):
-        request = RequestFactory(HTTP_AUTHORIZATION=TokenAuthentication.SCHEME).get("/")
+    def test_authenticate__no_user_id(self):
+        request = RequestFactory(HTTP_AUTHORIZATION=BearerAuthentication.SCHEME).get(
+            None
+        )
         with self.assertRaises(AuthenticationFailed):
-            TokenAuthentication().authenticate(request)
+            BearerAuthentication().authenticate(request)
 
-    def test_authenticate__user_not_exist(self):
-        from rest_framework.authtoken.models import Token
-
-        http_authorization = f"{TokenAuthentication.SCHEME} {Token.generate_key()}"
-        request = RequestFactory(HTTP_AUTHORIZATION=http_authorization).get("/")
+    def test_authenticate__no_token(self):
+        request = RequestFactory(
+            HTTP_AUTHORIZATION=f"{BearerAuthentication.SCHEME} 0"
+        ).get(None)
         with self.assertRaises(AuthenticationFailed):
-            TokenAuthentication().authenticate(request)
+            BearerAuthentication().authenticate(request)
+
+    def test_authenticate__token_not_match(self):
+        http_authorization = f"{BearerAuthentication.SCHEME} 0 {Token.generate_key()}"
+        request = RequestFactory(HTTP_AUTHORIZATION=http_authorization).get(None)
+        with self.assertRaises(AuthenticationFailed):
+            BearerAuthentication().authenticate(request)

@@ -157,7 +157,7 @@ LOGGING = {
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "main.authentications.token_authentication.TokenAuthentication",
+        "main.authentications.token_authentication.BearerAuthentication",
     ),
     "DEFAULT_FILTER_BACKENDS": (
         "rest_framework.filters.OrderingFilter",
