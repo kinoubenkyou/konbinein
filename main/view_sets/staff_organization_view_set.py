@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework.mixins import (
     DestroyModelMixin,
     RetrieveModelMixin,
@@ -10,6 +11,7 @@ from main.permissions.staff_permission import StaffPermission
 from main.serializers.organization_serializer import OrganizationSerializer
 
 
+@extend_schema(tags=["organizations_organizations"])
 class OrganizationViewSet(
     DestroyModelMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet
 ):

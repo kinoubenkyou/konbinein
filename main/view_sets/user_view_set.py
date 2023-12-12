@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import action
 from rest_framework.mixins import (
     DestroyModelMixin,
@@ -15,6 +16,7 @@ from main.shortcuts import delete_authentication_token
 from main.view_sets import send_email_verification
 
 
+@extend_schema(tags=["users_users"])
 class UserViewSet(
     DestroyModelMixin, UpdateModelMixin, RetrieveModelMixin, GenericViewSet
 ):
@@ -25,6 +27,7 @@ class UserViewSet(
     def get_queryset(self):
         return super().get_queryset().filter(id=self.kwargs["user_id"])
 
+    @extend_schema(request=None, responses={204: None})
     @action(detail=True, methods=("post",))
     def de_authenticating(self, _request, *_args, **_kwargs):
         user = self.get_object()

@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework.viewsets import ModelViewSet
 
 from main.filter_sets.product_filter_set import ProductFilterSet
@@ -7,6 +8,7 @@ from main.serializers.product_serializer import ProductSerializer
 from main.view_sets.filter_mixin import FilterMixin
 
 
+@extend_schema(tags=["organizations_products"])
 class ProductViewSet(FilterMixin, ModelViewSet):
     filter_set_class = ProductFilterSet
     ordering_fields = ("code", "id", "name", "price")
