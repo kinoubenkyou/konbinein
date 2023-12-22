@@ -32,21 +32,14 @@ docker exec -it konbinein-app-1 bash
 poetry shell
 ```
 
-### make migration
+### run command
+
 ```shell
-docker exec -it konbinein-app-1 bash
-poetry run python manage.py makemigrations
-# must also rebuild image
+docker exec -it konbinein-app-1 bash -c "poetry run <command>"
 ```
 
-### add package
-```shell
-docker exec -it konbinein-app-1 bash
-poetry add package
-# must also rebuild image
-```
+### rebuild image (to migrate, add/update/remove packages, etc.)
 
-### rebuild image
 ```shell
 docker image rm konbinein-app
 docker builder prune -f
