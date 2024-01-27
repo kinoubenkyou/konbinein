@@ -11,7 +11,14 @@ from main.view_sets.filter_mixin import FilterMixin
 @extend_schema(tags=["organizations_orders"])
 class OrderViewSet(FilterMixin, ModelViewSet):
     filter_set_class = OrderFilterSet
-    ordering_fields = ("code", "created_at", "id", "product_total", "total")
+    ordering_fields = (
+        "code",
+        "created_at",
+        "id",
+        "product_shipping_total",
+        "product_total",
+        "total",
+    )
     permission_classes = (StaffPermission,)
     queryset = Order.objects.prefetch_related(
         "productitem_set__productshippingitem_set"

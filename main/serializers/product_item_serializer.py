@@ -20,13 +20,10 @@ class ProductItemSerializer(ModelSerializer):
             "id",
             "item_total",
             "name",
-            "product",
             "price",
+            "product",
             "productshippingitem_set",
             "quantity",
-            "shipping_total",
-            "subtotal",
-            "total",
         )
         model = ProductItem
 
@@ -83,14 +80,10 @@ class ProductItemSerializer(ModelSerializer):
         return product_item
 
     def validate(self, data):
-        item_total = Decimal(data["item_total"])
-        if item_total != Decimal(data["price"]) * int(data["quantity"]):
+        if Decimal(data["item_total"]) != Decimal(data["price"]) * int(
+            data["quantity"]
+        ):
             raise ValidationError(detail="Item total is incorrect.")
-        subtotal = Decimal(data["subtotal"])
-        if subtotal != item_total:
-            raise ValidationError(detail="Subtotal is incorrect.")
-        if Decimal(data["total"]) != subtotal + Decimal(data["shipping_total"]):
-            raise ValidationError(detail="Total is incorrect.")
         return data
 
     def validate_id(self, value):

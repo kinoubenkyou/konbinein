@@ -15,8 +15,9 @@ class OrderSerializer(ModelSerializer):
             "code",
             "created_at",
             "id",
-            "productitem_set",
+            "product_shipping_total",
             "product_total",
+            "productitem_set",
             "total",
         )
         model = Order
@@ -67,11 +68,20 @@ class OrderSerializer(ModelSerializer):
     def validate(self, data):
         product_total = Decimal(data["product_total"])
         if product_total != sum(
-            Decimal(product_item_data["total"])
+            Decimal(product_item_data["item_total"])
             for product_item_data in data["productitem_set"]
         ):
             raise ValidationError(detail="Product total is incorrect.")
-        if Decimal(data["total"]) != product_total:
+        product_shipping_total = Decimal(data["product_shipping_total"])
+        if product_shipping_total != sum(
+            Decimal(product_shipping_item_data["item_total"])
+            for product_item_data in data["productitem_set"]
+            for product_shipping_item_data in product_item_data[
+                "productshippingitem_set"
+            ]
+        ):
+            raise ValidationError(detail="Product shipping total is incorrect.")
+        if Decimal(data["total"]) != product_total + product_shipping_total:
             raise ValidationError(detail="Total is incorrect.")
         return data
 
