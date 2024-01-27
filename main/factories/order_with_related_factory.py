@@ -38,11 +38,12 @@ class OrderWithRelatedFactory:
         return {
             "code": order.code,
             "created_at": order.created_at,
+            "product_shipping_total": order.product_shipping_total,
+            "product_total": order.product_total,
             "productitem_set": [
                 self._get_deserializer_product_item_data(product_item)
                 for product_item in order.cached_product_items
             ],
-            "product_total": order.product_total,
             "total": order.total,
         }
 
@@ -50,9 +51,14 @@ class OrderWithRelatedFactory:
         order = OrderFactory.build(**self.order_kwargs or {})
         self._build_product_item(order)
         order.product_total = sum(
-            product_item.total for product_item in order.cached_product_items
+            product_item.item_total for product_item in order.cached_product_items
         )
-        order.total = order.product_total
+        order.product_shipping_total = sum(
+            product_shipping_item.item_total
+            for product_item in order.cached_product_items
+            for product_shipping_item in product_item.cached_product_shipping_items
+        )
+        order.total = order.product_total + order.product_shipping_total
         return order
 
     def _build_product_item(self, order):
@@ -63,12 +69,6 @@ class OrderWithRelatedFactory:
         )
         for product_item in order.cached_product_items:
             self._build_product_shipping_item(product_item)
-            product_item.shipping_total = sum(
-                product_shipping_item.total
-                for product_shipping_item in product_item.cached_product_shipping_items
-            )
-            product_item.subtotal = product_item.item_total
-            product_item.total = product_item.subtotal + product_item.shipping_total
 
     def _build_product_shipping_item(self, product_item):
         product_item.cached_product_shipping_items = (
@@ -105,9 +105,6 @@ class OrderWithRelatedFactory:
                 for product_shipping_item in product_item.cached_product_shipping_items
             ],
             "quantity": product_item.quantity,
-            "shipping_total": product_item.shipping_total,
-            "subtotal": product_item.subtotal,
-            "total": product_item.total,
         }
 
     @staticmethod
@@ -118,7 +115,5 @@ class OrderWithRelatedFactory:
             "item_total": product_shipping_item.item_total,
             "name": product_shipping_item.name,
             "product_shipping": product_shipping_item.product_shipping.id,
-            "subtotal": product_shipping_item.subtotal,
-            "total": product_shipping_item.total,
             "unit_fee": product_shipping_item.unit_fee,
         }

@@ -17,6 +17,4 @@ class ProductShippingItem(Model):
     name = CharField(max_length=255)
     product_item = ForeignKey(ProductItem, on_delete=CASCADE)
     product_shipping = ForeignKey(ProductShipping, null=True, on_delete=SET_NULL)
-    subtotal = DecimalField(decimal_places=4, max_digits=19)
-    total = DecimalField(decimal_places=4, max_digits=19)
     unit_fee = DecimalField(decimal_places=4, max_digits=19)

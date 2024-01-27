@@ -90,16 +90,18 @@ class ViewSetTestCaseMixin:
             for key, value in request_query.items()
             if key not in ["limit", "offset", "ordering"]
         }
-        query_set = cls.model.objects.filter(**filter_)
+        query_set = cls.model.objects.filter(**filter_).distinct()
         if "ordering" in request_query:
             query_set = query_set.order_by(request_query["ordering"])
         offset = request_query.get("offset", 0)
         return [
             cls._serializer_data(object_)
             for object_ in query_set[
-                offset : (request_query["limit"] + offset)
-                if "limit" in request_query
-                else None
+                offset : (
+                    (request_query["limit"] + offset)
+                    if "limit" in request_query
+                    else None
+                )
             ]
         ]
 

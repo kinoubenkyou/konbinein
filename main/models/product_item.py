@@ -19,6 +19,3 @@ class ProductItem(Model):
     price = DecimalField(decimal_places=4, max_digits=19)
     product = ForeignKey(Product, null=True, on_delete=SET_NULL)
     quantity = IntegerField()
-    shipping_total = DecimalField(decimal_places=4, max_digits=19)
-    subtotal = DecimalField(decimal_places=4, max_digits=19)
-    total = DecimalField(decimal_places=4, max_digits=19)

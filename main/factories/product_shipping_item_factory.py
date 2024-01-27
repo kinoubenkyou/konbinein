@@ -21,8 +21,4 @@ class ProductShippingItemFactory(DjangoModelFactory):
     name = Sequence(lambda n: f"name-{choice(ascii_uppercase)}{n}")
     product_item = SubFactory(ProductItemFactory)
     product_shipping = SubFactory(ProductShippingFactory)
-    subtotal = LazyAttribute(
-        lambda product_shipping_item: product_shipping_item.item_total
-    )
-    total = LazyAttribute(lambda product_shipping_item: product_shipping_item.subtotal)
     unit_fee = Faker("pydecimal", left_digits=2, positive=True, right_digits=4)
