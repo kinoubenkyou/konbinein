@@ -370,7 +370,20 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         ).create_batch(2)
         self._act_and_assert_list_test({"ordering": "total"})
 
-    def test_partial_update(self):
+    def test_retrieve(self):
+        self._act_and_assert_retrieve_test(
+            OrderWithRelatedFactory(
+                order_kwargs={"organization": self.organization},
+                product_item_count=2,
+                product_kwargs={"organization": self.organization},
+                product_shipping_item_count=2,
+                product_shipping_kwargs={"organization": self.organization},
+            )
+            .create()
+            .id
+        )
+
+    def test_update(self):
         order = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
             product_item_count=2,
@@ -391,20 +404,7 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
             product_item.cached_product_shipping_items[0].id
         )
         filter_ = {**data, "organization_id": self.organization.id}
-        self._act_and_assert_partial_update_test(data, filter_, order.id)
-
-    def test_retrieve(self):
-        self._act_and_assert_retrieve_test(
-            OrderWithRelatedFactory(
-                order_kwargs={"organization": self.organization},
-                product_item_count=2,
-                product_kwargs={"organization": self.organization},
-                product_shipping_item_count=2,
-                product_shipping_kwargs={"organization": self.organization},
-            )
-            .create()
-            .id
-        )
+        self._act_and_assert_update_test(data, filter_, order.id)
 
 
 class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
@@ -436,7 +436,7 @@ class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
             },
         )
 
-    def test_partial_update__product_item_not_belong_to_order(self):
+    def test_update__product_item_not_belong_to_order(self):
         order = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
         ).create()
@@ -446,7 +446,7 @@ class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
             product_kwargs={"organization": self.organization},
         ).get_deserializer_data()
         data["productitem_set"][0]["id"] = 0
-        self._act_and_assert_partial_update_validation_test(
+        self._act_and_assert_update_validation_test(
             data,
             {"productitem_set": [{"id": ["Product item can't be found."]}]},
             order.id,
@@ -501,7 +501,7 @@ class ProductShippingItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTest
             },
         )
 
-    def test_partial_update__product_shipping_item_not_belong_to_order(self):
+    def test_update__product_shipping_item_not_belong_to_order(self):
         order = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
         ).create()
@@ -513,7 +513,7 @@ class ProductShippingItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTest
             product_shipping_kwargs={"organization": self.organization},
         ).get_deserializer_data()
         data["productitem_set"][0]["productshippingitem_set"][0]["id"] = 0
-        self._act_and_assert_partial_update_validation_test(
+        self._act_and_assert_update_validation_test(
             data,
             {
                 "productitem_set": [

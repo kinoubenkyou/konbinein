@@ -46,16 +46,16 @@ class ViewSetTestCaseMixin:
             response.json()["results"], self._expected_data_list(data)
         )
 
-    def _act_and_assert_partial_update_test(self, data, filter_, pk):
-        self._act_and_assert_partial_update_test_response_status(data, pk)
+    def _act_and_assert_update_test(self, data, filter_, pk):
+        self._act_and_assert_update_test_response_status(data, pk)
         self._assert_saved_object({**filter_, "id": pk})
 
-    def _act_and_assert_partial_update_test_response_status(self, data, pk):
-        response = self.client.patch(self._detail_path(pk), data, format="json")
+    def _act_and_assert_update_test_response_status(self, data, pk):
+        response = self.client.put(self._detail_path(pk), data, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
 
-    def _act_and_assert_partial_update_validation_test(self, data, expected, pk):
-        response = self.client.patch(self._detail_path(pk), data, format="json")
+    def _act_and_assert_update_validation_test(self, data, expected, pk):
+        response = self.client.put(self._detail_path(pk), data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), expected)
 

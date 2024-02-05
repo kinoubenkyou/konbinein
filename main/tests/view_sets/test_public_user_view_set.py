@@ -80,24 +80,6 @@ class PublicUserViewSetTestCase(ViewSetTestCaseMixin, APITestCase):
             UserFactory.create().id,
         )
 
-    def test_partial_update(self):
-        password = "password"
-        user = UserFactory.create()
-        set_password_resetting_token(user.id)
-        data = {"password": password, "token": get_password_resetting_token(user.id)}
-        filter_ = {"password": password}
-        self._act_and_assert_partial_update_test(data, filter_, user.id)
-        self.assertIsNone(get_password_resetting_token(user.id))
-
-    def test_partial_update__token_not_match(self):
-        user = UserFactory.create()
-        data = {"password": "password", "token": token_urlsafe()}
-        self._act_and_assert_partial_update_validation_test(
-            data,
-            {"token": ["Token doesn't match."]},
-            user.id,
-        )
-
     @override_settings(task_always_eager=True)
     def test_password_resetting(self):
         user = UserFactory.create()
@@ -119,6 +101,24 @@ class PublicUserViewSetTestCase(ViewSetTestCaseMixin, APITestCase):
             data,
             ["Email isn't verified."],
             None,
+        )
+
+    def test_update(self):
+        password = "password"
+        user = UserFactory.create()
+        set_password_resetting_token(user.id)
+        data = {"password": password, "token": get_password_resetting_token(user.id)}
+        filter_ = {"password": password}
+        self._act_and_assert_update_test(data, filter_, user.id)
+        self.assertIsNone(get_password_resetting_token(user.id))
+
+    def test_update__token_not_match(self):
+        user = UserFactory.create()
+        data = {"password": "password", "token": token_urlsafe()}
+        self._act_and_assert_update_validation_test(
+            data,
+            {"token": ["Token doesn't match."]},
+            user.id,
         )
 
     def _assert_saved_object(self, filter_):

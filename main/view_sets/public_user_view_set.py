@@ -73,7 +73,6 @@ class PublicUserViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
             "authenticating": PublicUserAuthenticatingSerializer,
             "create": PublicUserCreateSerializer,
             "email_verifying": PublicUserEmailVerifyingSerializer,
-            "partial_update": PublicUserUpdateSerializer,
             "password_resetting": PublicUserPasswordResettingSerializer,
             "update": PublicUserUpdateSerializer,
         }

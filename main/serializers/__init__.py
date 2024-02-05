@@ -1,5 +1,8 @@
-def _write_nested_objects(data_list, dict_, parent_key, parent_object, serializer):
+def _write_nested_objects(
+    data_list, dict_, parent_key, parent_object, serializer_class
+):
     for data in data_list:
+        serializer = serializer_class()
         id_ = data.get("id")
         if id_ is None:
             serializer.create({**data, parent_key: parent_object})

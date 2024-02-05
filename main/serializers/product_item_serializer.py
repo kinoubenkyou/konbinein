@@ -43,7 +43,7 @@ class ProductItemSerializer(ModelSerializer):
             {},
             "product_item",
             product_item,
-            ProductShippingItemSerializer(),
+            ProductShippingItemSerializer,
         )
         return product_item
 
@@ -75,7 +75,7 @@ class ProductItemSerializer(ModelSerializer):
             product_shipping_item_dict,
             "product_item",
             product_item,
-            ProductShippingItemSerializer(),
+            ProductShippingItemSerializer,
         )
         return product_item
 

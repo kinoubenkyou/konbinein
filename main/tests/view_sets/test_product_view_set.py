@@ -73,22 +73,22 @@ class ProductViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCase):
         ProductFactory.create_batch(2, organization_id=self.organization.id)
         self._act_and_assert_list_test({"ordering": "price"})
 
-    def test_partial_update(self):
+    def test_retrieve(self):
+        self._act_and_assert_retrieve_test(
+            ProductFactory.create(organization=self.organization).id
+        )
+
+    def test_update(self):
         product = ProductFactory.create(organization_id=self.organization.id)
         data = self._deserializer_data()
         filter_ = {
             **data,
             "organization_id": self.organization.id,
         }
-        self._act_and_assert_partial_update_test(
+        self._act_and_assert_update_test(
             data,
             filter_,
             product.id,
-        )
-
-    def test_retrieve(self):
-        self._act_and_assert_retrieve_test(
-            ProductFactory.create(organization=self.organization).id
         )
 
     @staticmethod

@@ -48,18 +48,18 @@ class OrderShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCa
         order_shipping_list.sort(
             key=lambda order_shipping: order_shipping.fixed_fee, reverse=True
         )
-        self._act_and_assert_list_test(
-            {"fixed_fee__gte": order_shipping_list[1].fixed_fee}
-        )
+        self._act_and_assert_list_test({
+            "fixed_fee__gte": order_shipping_list[1].fixed_fee
+        })
 
     def test_list__filter__fixed_fee__lte(self):
         order_shipping_list = OrderShippingFactory.create_batch(
             3, organization=self.organization
         )
         order_shipping_list.sort(key=lambda order_shipping: order_shipping.fixed_fee)
-        self._act_and_assert_list_test(
-            {"fixed_fee__lte": order_shipping_list[1].fixed_fee}
-        )
+        self._act_and_assert_list_test({
+            "fixed_fee__lte": order_shipping_list[1].fixed_fee
+        })
 
     def test_list__filter__name__icontains(self):
         OrderShippingFactory.create(organization=self.organization)
@@ -77,18 +77,18 @@ class OrderShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCa
         order_shipping_list.sort(
             key=lambda product_shipping: product_shipping.unit_fee, reverse=True
         )
-        self._act_and_assert_list_test(
-            {"unit_fee__gte": order_shipping_list[1].unit_fee}
-        )
+        self._act_and_assert_list_test({
+            "unit_fee__gte": order_shipping_list[1].unit_fee
+        })
 
     def test_list__filter__unit_fee__lte(self):
         order_shipping_list = OrderShippingFactory.create_batch(
             3, organization=self.organization
         )
         order_shipping_list.sort(key=lambda product_shipping: product_shipping.unit_fee)
-        self._act_and_assert_list_test(
-            {"unit_fee__lte": order_shipping_list[1].unit_fee}
-        )
+        self._act_and_assert_list_test({
+            "unit_fee__lte": order_shipping_list[1].unit_fee
+        })
 
     def test_list__filter__zones__overlap(self):
         zones = sample([choice[0] for choice in ZONE_CHOICES], 6)
@@ -98,13 +98,11 @@ class OrderShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCa
             organization=self.organization,
             zones=Iterator([zones[2:4], zones[4:6]]),
         )
-        self._act_and_assert_list_test(
-            {
-                "zones__overlap": [
-                    order_shipping.zones[0] for order_shipping in order_shipping_list
-                ]
-            }
-        )
+        self._act_and_assert_list_test({
+            "zones__overlap": [
+                order_shipping.zones[0] for order_shipping in order_shipping_list
+            ]
+        })
 
     def test_list__paginate(self):
         OrderShippingFactory.create_batch(4, organization=self.organization)
@@ -126,7 +124,12 @@ class OrderShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCa
         OrderShippingFactory.create_batch(2, organization_id=self.organization.id)
         self._act_and_assert_list_test({"ordering": "unit_fee"})
 
-    def test_partial_update(self):
+    def test_retrieve(self):
+        self._act_and_assert_retrieve_test(
+            OrderShippingFactory.create(organization=self.organization).id
+        )
+
+    def test_update(self):
         zones = sample([choice[0] for choice in ZONE_CHOICES], 3)
         order_shipping = OrderShippingFactory.create(
             organization=self.organization,
@@ -137,15 +140,10 @@ class OrderShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCa
             **data,
             "organization_id": self.organization.id,
         }
-        self._act_and_assert_partial_update_test(
+        self._act_and_assert_update_test(
             data,
             filter_,
             order_shipping.id,
-        )
-
-    def test_retrieve(self):
-        self._act_and_assert_retrieve_test(
-            OrderShippingFactory.create(organization=self.organization).id
         )
 
     @staticmethod
