@@ -33,7 +33,7 @@ class OrderSerializer(ModelSerializer):
         product_item_data_list = order_attributes.pop("productitem_set", ())
         order = super().create(order_attributes)
         _write_nested_objects(
-            product_item_data_list, {}, "order", order, ProductItemSerializer()
+            product_item_data_list, {}, "order", order, ProductItemSerializer
         )
         return order
 
@@ -61,7 +61,7 @@ class OrderSerializer(ModelSerializer):
             product_item_dict,
             "order",
             order,
-            ProductItemSerializer(),
+            ProductItemSerializer,
         )
         return order
 

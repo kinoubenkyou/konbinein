@@ -77,9 +77,9 @@ class ProductShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTest
         product_shipping_list.sort(
             key=lambda product_shipping: product_shipping.fixed_fee, reverse=True
         )
-        self._act_and_assert_list_test(
-            {"fixed_fee__gte": product_shipping_list[1].fixed_fee}
-        )
+        self._act_and_assert_list_test({
+            "fixed_fee__gte": product_shipping_list[1].fixed_fee
+        })
 
     def test_list__filter__fixed_fee__lte(self):
         product_shipping_list = ProductShippingWithRelatedFactory(
@@ -88,9 +88,9 @@ class ProductShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTest
         product_shipping_list.sort(
             key=lambda product_shipping: product_shipping.fixed_fee
         )
-        self._act_and_assert_list_test(
-            {"fixed_fee__lte": product_shipping_list[1].fixed_fee}
-        )
+        self._act_and_assert_list_test({
+            "fixed_fee__lte": product_shipping_list[1].fixed_fee
+        })
 
     def test_list__filter__name__icontains(self):
         ProductShippingWithRelatedFactory(
@@ -111,9 +111,9 @@ class ProductShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTest
         product_shipping_list.sort(
             key=lambda product_shipping: product_shipping.unit_fee, reverse=True
         )
-        self._act_and_assert_list_test(
-            {"unit_fee__gte": product_shipping_list[1].unit_fee}
-        )
+        self._act_and_assert_list_test({
+            "unit_fee__gte": product_shipping_list[1].unit_fee
+        })
 
     def test_list__filter__unit_fee__lte(self):
         product_shipping_list = ProductShippingWithRelatedFactory(
@@ -122,9 +122,9 @@ class ProductShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTest
         product_shipping_list.sort(
             key=lambda product_shipping: product_shipping.unit_fee
         )
-        self._act_and_assert_list_test(
-            {"unit_fee__lte": product_shipping_list[1].unit_fee}
-        )
+        self._act_and_assert_list_test({
+            "unit_fee__lte": product_shipping_list[1].unit_fee
+        })
 
     def test_list__filter__products__in(self):
         ProductShippingWithRelatedFactory(
@@ -137,14 +137,12 @@ class ProductShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTest
             product_kwargs={"organization_id": self.organization.id},
             product_shipping_kwargs={"organization_id": self.organization.id},
         ).create_batch(2)
-        self._act_and_assert_list_test(
-            {
-                "products__in": [
-                    product_shipping.products.all()[0].id
-                    for product_shipping in product_shipping_list
-                ]
-            }
-        )
+        self._act_and_assert_list_test({
+            "products__in": [
+                product_shipping.products.all()[0].id
+                for product_shipping in product_shipping_list
+            ]
+        })
 
     def test_list__filter__zones__overlap(self):
         zones = sample([choice[0] for choice in ZONE_CHOICES], 6)
@@ -160,14 +158,11 @@ class ProductShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTest
                 "zones": Iterator([zones[2:4], zones[4:6]]),
             },
         ).create_batch(2)
-        self._act_and_assert_list_test(
-            {
-                "zones__overlap": [
-                    product_shipping.zones[0]
-                    for product_shipping in product_shipping_list
-                ]
-            }
-        )
+        self._act_and_assert_list_test({
+            "zones__overlap": [
+                product_shipping.zones[0] for product_shipping in product_shipping_list
+            ]
+        })
 
     def test_list__paginate(self):
         ProductShippingWithRelatedFactory(
@@ -201,7 +196,18 @@ class ProductShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTest
         ).create_batch(2)
         self._act_and_assert_list_test({"ordering": "unit_fee"})
 
-    def test_partial_update(self):
+    def test_retrieve(self):
+        self._act_and_assert_retrieve_test(
+            ProductShippingWithRelatedFactory(
+                product_count=2,
+                product_kwargs={"organization_id": self.organization.id},
+                product_shipping_kwargs={"organization_id": self.organization.id},
+            )
+            .create()
+            .id
+        )
+
+    def test_update(self):
         products = ProductFactory.create_batch(3, organization=self.organization)
         zones = sample([choice[0] for choice in ZONE_CHOICES], 3)
         product_shipping = ProductShippingWithRelatedFactory(
@@ -219,18 +225,7 @@ class ProductShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTest
             },
         ).get_deserializer_data()
         filter_ = {**data, "organization_id": self.organization.id}
-        self._act_and_assert_partial_update_test(data, filter_, product_shipping.id)
-
-    def test_retrieve(self):
-        self._act_and_assert_retrieve_test(
-            ProductShippingWithRelatedFactory(
-                product_count=2,
-                product_kwargs={"organization_id": self.organization.id},
-                product_shipping_kwargs={"organization_id": self.organization.id},
-            )
-            .create()
-            .id
-        )
+        self._act_and_assert_update_test(data, filter_, product_shipping.id)
 
     def _assert_saved_object(self, filter_):
         product_ids = filter_.pop("products")

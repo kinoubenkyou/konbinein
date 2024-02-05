@@ -30,8 +30,11 @@ class UserViewSetTestCase(UserViewSetTestCaseMixin, UserTestCase):
     def test_destroy(self):
         self._act_and_assert_destroy_test(self.user.id)
 
+    def test_retrieve(self):
+        self._act_and_assert_retrieve_test(self.user.id)
+
     @override_settings(task_always_eager=True)
-    def test_partial_update(self):
+    def test_update(self):
         set_email_verifying_token(self.user.id)
         data = {
             **self._deserializer_data(),
@@ -40,7 +43,7 @@ class UserViewSetTestCase(UserViewSetTestCaseMixin, UserTestCase):
         }
         filter_ = {**data}
         del filter_["current_password"]
-        self._act_and_assert_partial_update_test(data, filter_, self.user.id)
+        self._act_and_assert_update_test(data, filter_, self.user.id)
         del filter_["password"]
         user = User.objects.filter(**filter_).first()
         body = (
@@ -49,9 +52,9 @@ class UserViewSetTestCase(UserViewSetTestCaseMixin, UserTestCase):
         )
         self._assert_email(body, "Konbinein Email Verification", [user.email])
 
-    def test_partial_update__current_password_required(self):
+    def test_update__current_password_required(self):
         data = {**self._deserializer_data(), "password": "password"}
-        self._act_and_assert_partial_update_validation_test(
+        self._act_and_assert_update_validation_test(
             data,
             {
                 "email": ["Current password is required."],
@@ -60,18 +63,15 @@ class UserViewSetTestCase(UserViewSetTestCaseMixin, UserTestCase):
             self.user.id,
         )
 
-    def test_partial_update__current_password_incorrect(self):
+    def test_update__current_password_incorrect(self):
         data = {
             **self._deserializer_data(),
             "current_password": "password",
             "password": "password",
         }
-        self._act_and_assert_partial_update_validation_test(
+        self._act_and_assert_update_validation_test(
             data, {"current_password": ["Current password is incorrect."]}, self.user.id
         )
-
-    def test_retrieve(self):
-        self._act_and_assert_retrieve_test(self.user.id)
 
     def _assert_saved_object(self, filter_):
         password = filter_.pop("password")
