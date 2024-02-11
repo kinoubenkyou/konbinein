@@ -40,10 +40,14 @@ class ProductShippingItemSerializer(ModelSerializer):
 
     def validate_id(self, value):
         if self.instance is None:
-            raise ValidationError(detail="Product shipping item can't be found.")
+            raise ValidationError(
+                detail="Product shipping item doesn't belong to the order."
+            )
         return value
 
     def validate_product_shipping(self, value):
         if value.organization_id != int(self.context["view"].kwargs["organization_id"]):
-            raise ValidationError(detail="Product shipping is in another organization.")
+            raise ValidationError(
+                detail="Product shipping doesn't belong to the organization."
+            )
         return value
