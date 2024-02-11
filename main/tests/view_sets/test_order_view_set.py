@@ -480,31 +480,6 @@ class ProductShippingItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTest
             },
         )
 
-    def test_create__product_item_in_another_organization(self):
-        data = OrderWithRelatedFactory(
-            order_kwargs={"organization": self.organization},
-            product_item_count=1,
-            product_kwargs={"organization": self.organization},
-            product_shipping=ProductShippingFactory.create(),
-            product_shipping_item_count=1,
-        ).get_deserializer_data()
-        self._act_and_assert_create_validation_test(
-            data,
-            {
-                "productitem_set": [
-                    {
-                        "productshippingitem_set": [
-                            {
-                                "product_shipping": [
-                                    "Product shipping is in another organization."
-                                ]
-                            }
-                        ]
-                    },
-                ]
-            },
-        )
-
     def test_update__product_shipping_item_not_belong_to_order(self):
         order = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
@@ -523,10 +498,40 @@ class ProductShippingItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTest
                 "productitem_set": [
                     {
                         "productshippingitem_set": [
-                            {"id": ["Product shipping item can't be found."]}
+                            {
+                                "id": [
+                                    "Product shipping item doesn't belong to the order."
+                                ]
+                            }
                         ]
                     }
                 ]
             },
             order.id,
+        )
+
+    def test_create__product_shipping_not_belong_to_organization(self):
+        data = OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+            product_shipping=ProductShippingFactory.create(),
+            product_shipping_item_count=1,
+        ).get_deserializer_data()
+        self._act_and_assert_create_validation_test(
+            data,
+            {
+                "productitem_set": [
+                    {
+                        "productshippingitem_set": [
+                            {
+                                "product_shipping": [
+                                    "Product shipping doesn't belong to the"
+                                    " organization."
+                                ]
+                            }
+                        ]
+                    },
+                ]
+            },
         )
