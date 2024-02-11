@@ -33,12 +33,21 @@ class OrderSerializer(ModelSerializer):
         product_item_data_list = order_attributes.pop("productitem_set", ())
         order = super().create(order_attributes)
         _write_nested_objects(
-            product_item_data_list, {}, "order", order, ProductItemSerializer
+            product_item_data_list, {}, "order", order, False, ProductItemSerializer
         )
         return order
 
     def to_internal_value(self, data):
+        product_items = (
+            [] if self.instance is None else self.instance.productitem_set.all()
+        )
+        product_item_dict = {
+            product_item.id: product_item for product_item in product_items
+        }
         for product_item_data in data["productitem_set"]:
+            product_item_data["instance"] = product_item_dict.get(
+                product_item_data.get("id")
+            )
             product_item_data["order_id"] = (
                 self.instance.id if self.instance is not None else None
             )
@@ -61,6 +70,7 @@ class OrderSerializer(ModelSerializer):
             product_item_dict,
             "order",
             order,
+            self.partial,
             ProductItemSerializer,
         )
         return order

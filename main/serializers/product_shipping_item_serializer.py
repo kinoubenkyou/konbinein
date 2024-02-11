@@ -27,9 +27,7 @@ class ProductShippingItemSerializer(ModelSerializer):
     )
 
     def to_internal_value(self, data):
-        self.context["instance"] = ProductShippingItem.objects.filter(
-            id=data.get("id"), product_item_id=data["product_item_id"]
-        ).first()
+        self.instance = data.pop("instance")
         self.context["quantity"] = data.pop("quantity")
         return super().to_internal_value(data)
 
@@ -41,7 +39,7 @@ class ProductShippingItemSerializer(ModelSerializer):
         return data
 
     def validate_id(self, value):
-        if self.context["instance"] is None:
+        if self.instance is None:
             raise ValidationError(detail="Product shipping item can't be found.")
         return value
 

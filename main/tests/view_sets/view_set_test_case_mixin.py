@@ -46,6 +46,11 @@ class ViewSetTestCaseMixin:
             response.json()["results"], self._expected_data_list(data)
         )
 
+    def _act_and_assert_retrieve_test(self, pk):
+        response = self.client.get(self._detail_path(pk), format="json")
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertCountEqual(response.json(), self._expected_data_list({"id": pk})[0])
+
     def _act_and_assert_update_test(self, data, filter_, pk):
         self._act_and_assert_update_test_response_status(data, pk)
         self._assert_saved_object({**filter_, "id": pk})
@@ -58,11 +63,6 @@ class ViewSetTestCaseMixin:
         response = self.client.put(self._detail_path(pk), data, format="json")
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), expected)
-
-    def _act_and_assert_retrieve_test(self, pk):
-        response = self.client.get(self._detail_path(pk), format="json")
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertCountEqual(response.json(), self._expected_data_list({"id": pk})[0])
 
     def _action_path(self, action, pk):
         kwargs = {}
