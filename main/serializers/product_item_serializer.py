@@ -61,9 +61,6 @@ class ProductItemSerializer(ModelSerializer):
             product_shipping_item_data["instance"] = product_shipping_item_dict.get(
                 product_shipping_item_data.get("id")
             )
-            product_shipping_item_data["product_item_id"] = (
-                self.instance.id if self.instance is not None else None
-            )
             product_shipping_item_data["quantity"] = data["quantity"]
         return super().to_internal_value(data)
 

@@ -48,9 +48,6 @@ class OrderSerializer(ModelSerializer):
             product_item_data["instance"] = product_item_dict.get(
                 product_item_data.get("id")
             )
-            product_item_data["order_id"] = (
-                self.instance.id if self.instance is not None else None
-            )
         return super().to_internal_value(data)
 
     @atomic
