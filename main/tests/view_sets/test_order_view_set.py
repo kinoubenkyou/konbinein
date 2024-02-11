@@ -420,22 +420,6 @@ class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
             {"productitem_set": [{"non_field_errors": ["Item total is incorrect."]}]},
         )
 
-    def test_create__product_in_another_organization(self):
-        data = OrderWithRelatedFactory(
-            order_kwargs={"organization": self.organization},
-            product=ProductFactory.create(),
-            product_item_count=1,
-            product_kwargs={"organization": self.organization},
-        ).get_deserializer_data()
-        self._act_and_assert_create_validation_test(
-            data,
-            {
-                "productitem_set": [
-                    {"product": ["Product is in another organization."]},
-                ]
-            },
-        )
-
     def test_update__product_item_not_belong_to_order(self):
         order = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
@@ -448,8 +432,28 @@ class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         data["productitem_set"][0]["id"] = 0
         self._act_and_assert_update_validation_test(
             data,
-            {"productitem_set": [{"id": ["Product item can't be found."]}]},
+            {
+                "productitem_set": [
+                    {"id": ["Product item doesn't belong to the order."]}
+                ]
+            },
             order.id,
+        )
+
+    def test_create__product_not_belong_to_organization(self):
+        data = OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+            product=ProductFactory.create(),
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+        ).get_deserializer_data()
+        self._act_and_assert_create_validation_test(
+            data,
+            {
+                "productitem_set": [
+                    {"product": ["Product doesn't belong to the organization."]},
+                ]
+            },
         )
 
 
