@@ -6,7 +6,7 @@ from main.tests.view_sets.view_set_test_case_mixin import ViewSetTestCaseMixin
 
 class AdminOrganizationViewSetTestCase(ViewSetTestCaseMixin, AdminTestCase):
     basename = "admin-organization"
-    model = Organization
+    query_set = Organization.objects.all()
 
     def test_create(self):
         data = self._deserializer_data()

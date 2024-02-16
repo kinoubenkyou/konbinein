@@ -33,7 +33,7 @@ class ViewSetTestCaseMixin:
 
     def _act_and_assert_destroy_test(self, pk):
         self._act_and_assert_destroy_test_response_status(pk)
-        self.assertIsNone(self.model.objects.filter(id=pk).first())
+        self.assertIsNone(self.query_set.filter(id=pk).first())
 
     def _act_and_assert_destroy_test_response_status(self, pk):
         response = self.client.delete(self._detail_path(pk), format="json")
@@ -78,7 +78,7 @@ class ViewSetTestCaseMixin:
         self.assertCountEqual(dict_["to"], to)
 
     def _assert_saved_object(self, filter_):
-        self.assertIsNotNone(self.model.objects.filter(**filter_).first())
+        self.assertIsNotNone(self.query_set.filter(**filter_).first())
 
     def _detail_path(self, pk):
         return self._path("detail", {"pk": pk})
@@ -90,7 +90,7 @@ class ViewSetTestCaseMixin:
             for key, value in request_query.items()
             if key not in ["limit", "offset", "ordering"]
         }
-        query_set = cls.model.objects.filter(**filter_).distinct()
+        query_set = cls.query_set.filter(**filter_).distinct()
         if "ordering" in request_query:
             query_set = query_set.order_by(request_query["ordering"])
         offset = request_query.get("offset", 0)

@@ -8,7 +8,7 @@ from main.tests.view_sets.view_set_test_case_mixin import ViewSetTestCaseMixin
 
 class AdminUserViewSetTestCase(ViewSetTestCaseMixin, AdminTestCase):
     basename = "admin-user"
-    model = User
+    query_set = User.objects.all()
 
     def test_list__filter__email__icontains(self):
         UserFactory.create()

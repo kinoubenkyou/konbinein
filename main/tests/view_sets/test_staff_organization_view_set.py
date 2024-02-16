@@ -8,7 +8,7 @@ from main.tests.view_sets.organization_view_set_test_case_mixin import (
 
 class OrganizationViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCase):
     basename = "organization"
-    model = Organization
+    query_set = Organization.objects.all()
 
     def test_destroy(self):
         self._act_and_assert_destroy_test_response_status(self.organization.id)

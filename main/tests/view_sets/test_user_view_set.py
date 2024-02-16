@@ -16,7 +16,7 @@ from main.tests.view_sets.user_view_set_test_case_mixin import UserViewSetTestCa
 
 class UserViewSetTestCase(UserViewSetTestCaseMixin, UserTestCase):
     basename = "user"
-    model = User
+    query_set = User.objects.all()
 
     def test_de_authenticating(self):
         path = reverse(
