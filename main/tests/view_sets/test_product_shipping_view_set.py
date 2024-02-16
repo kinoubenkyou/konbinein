@@ -17,7 +17,7 @@ from main.tests.view_sets.organization_view_set_test_case_mixin import (
 
 class ProductShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCase):
     basename = "productshipping"
-    model = ProductShipping
+    query_set = ProductShipping.objects.all()
 
     def test_create(self):
         data = ProductShippingWithRelatedFactory(

@@ -20,7 +20,7 @@ from main.tests.view_sets.view_set_test_case_mixin import ViewSetTestCaseMixin
 
 class PublicUserViewSetTestCase(ViewSetTestCaseMixin, APITestCase):
     basename = "public-user"
-    model = User
+    query_set = User.objects.all()
 
     def test_authenticating(self):
         user = UserFactory.create()

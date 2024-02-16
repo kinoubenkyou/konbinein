@@ -10,7 +10,7 @@ from main.tests.view_sets.user_view_set_test_case_mixin import UserViewSetTestCa
 
 class UserStaffViewSetTestCase(UserViewSetTestCaseMixin, UserTestCase):
     basename = "user-staff"
-    model = Staff
+    query_set = Staff.objects.all()
 
     def test_agreeing(self):
         staff = StaffFactory.create(user=self.user)
@@ -56,9 +56,9 @@ class UserStaffViewSetTestCase(UserViewSetTestCaseMixin, UserTestCase):
     def test_list__filter__organization__in(self):
         StaffFactory.create(user=self.user)
         staffs = StaffFactory.create_batch(2, user=self.user)
-        self._act_and_assert_list_test(
-            {"organization__in": [staff.organization.id for staff in staffs]}
-        )
+        self._act_and_assert_list_test({
+            "organization__in": [staff.organization.id for staff in staffs]
+        })
 
     def test_list__paginate(self):
         StaffFactory.create_batch(4, user=self.user)

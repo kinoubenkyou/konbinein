@@ -13,7 +13,7 @@ from main.tests.view_sets.organization_view_set_test_case_mixin import (
 
 class OrderShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCase):
     basename = "ordershipping"
-    model = OrderShipping
+    query_set = OrderShipping.objects.all()
 
     def test_create(self):
         data = self._deserializer_data()

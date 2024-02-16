@@ -10,7 +10,7 @@ from main.tests.view_sets.organization_view_set_test_case_mixin import (
 
 class ProductViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCase):
     basename = "product"
-    model = Product
+    query_set = Product.objects.all()
 
     def test_create(self):
         data = self._deserializer_data()

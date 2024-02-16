@@ -8,7 +8,7 @@ from main.tests.view_sets.user_view_set_test_case_mixin import UserViewSetTestCa
 
 class UserOrganizationViewSetTestCase(UserViewSetTestCaseMixin, UserTestCase):
     basename = "user-organization"
-    model = Organization
+    query_set = Organization.objects.all()
 
     def test_list__filter__code__icontains(self):
         OrganizationFactory.create()

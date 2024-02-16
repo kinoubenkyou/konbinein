@@ -14,7 +14,9 @@ from main.tests.view_sets.organization_view_set_test_case_mixin import (
 
 class OrderViewSetTestCaseMixin(OrganizationViewSetTestCaseMixin):
     basename = "order"
-    model = Order
+    query_set = Order.objects.prefetch_related(
+        "productitem_set__productshippingitem_set"
+    ).all()
 
     def _assert_destroyed_order(self, order):
         self.assertIsNone(Order.objects.filter(id=order.id).first())
@@ -78,12 +80,18 @@ class OrderViewSetTestCaseMixin(OrganizationViewSetTestCaseMixin):
     def _serializer_data(cls, order):
         order_shipping_item_data_list = [
             cls._order_shipping_item_data(order_shipping_item)
-            for order_shipping_item in order.ordershippingitem_set.order_by("id")
+            for order_shipping_item in order.ordershippingitem_set.all()
         ]
+        order_shipping_item_data_list.sort(
+            key=lambda order_shipping_item_data: order_shipping_item_data["id"]
+        )
         product_item_data_list = [
             cls._product_item_data(product_item)
-            for product_item in order.productitem_set.order_by("id")
+            for product_item in order.productitem_set.all()
         ]
+        product_item_data_list.sort(
+            key=lambda product_item_data: product_item_data["id"]
+        )
         return {
             "code": order.code,
             "created_at": order.created_at.isoformat(),
@@ -111,10 +119,11 @@ class OrderViewSetTestCaseMixin(OrganizationViewSetTestCaseMixin):
     def _product_item_data(cls, product_item):
         product_shipping_item_data_list = [
             cls._product_shipping_item_data(product_shipping_item)
-            for product_shipping_item in (
-                product_item.productshippingitem_set.order_by("id")
-            )
+            for product_shipping_item in (product_item.productshippingitem_set.all())
         ]
+        product_shipping_item_data_list.sort(
+            key=lambda product_shipping_item_data: product_shipping_item_data["id"]
+        )
         return {
             "id": product_item.id,
             "item_total": str(product_item.item_total),
