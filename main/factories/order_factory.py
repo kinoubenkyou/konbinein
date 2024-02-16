@@ -14,9 +14,16 @@ class OrderFactory(DjangoModelFactory):
 
     code = Sequence(lambda n: f"code-{choice(ascii_uppercase)}{n}")
     created_at = Faker("past_datetime")
+    order_shipping_total = Faker(
+        "pydecimal", left_digits=2, positive=True, right_digits=4
+    )
     organization = SubFactory(OrganizationFactory)
     product_shipping_total = Faker(
         "pydecimal", left_digits=2, positive=True, right_digits=4
     )
     product_total = Faker("pydecimal", left_digits=2, positive=True, right_digits=4)
-    total = LazyAttribute(lambda order: order.product_total)
+    total = LazyAttribute(
+        lambda order: order.order_shipping_total
+        + order.product_total
+        + order.product_shipping_total
+    )

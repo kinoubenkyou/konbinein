@@ -2,6 +2,7 @@ from rest_framework.fields import CharField, DateTimeField, DecimalField, ListFi
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import Serializer
 
+from main.models.order_shipping import OrderShipping
 from main.models.product import Product
 from main.models.product_shipping import ProductShipping
 
@@ -10,6 +11,11 @@ class OrderFilterSet(Serializer):
     code__icontains = CharField(max_length=255)
     created_at__gte = DateTimeField()
     created_at__lte = DateTimeField()
+    order_shipping_total__gte = DecimalField(decimal_places=4, max_digits=19)
+    order_shipping_total__lte = DecimalField(decimal_places=4, max_digits=19)
+    ordershippingitem__order_shipping__in = ListField(
+        child=PrimaryKeyRelatedField(queryset=OrderShipping.objects.all())
+    )
     product_total__gte = DecimalField(decimal_places=4, max_digits=19)
     product_total__lte = DecimalField(decimal_places=4, max_digits=19)
     productitem__product__in = ListField(

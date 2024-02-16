@@ -15,7 +15,7 @@ class OrderViewSet(FilterMixin, ModelViewSet):
         "code",
         "created_at",
         "id",
-        "product_shipping_total",
+        "order_shipping_totalproduct_shipping_total",
         "product_total",
         "total",
     )

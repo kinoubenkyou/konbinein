@@ -23,6 +23,7 @@ class Order(Model):
 
     code = CharField(max_length=255)
     created_at = DateTimeField()
+    order_shipping_total = DecimalField(decimal_places=4, max_digits=19)
     organization = ForeignKey(Organization, on_delete=CASCADE)
     product_shipping_total = DecimalField(decimal_places=4, max_digits=19)
     product_total = DecimalField(decimal_places=4, max_digits=19)
