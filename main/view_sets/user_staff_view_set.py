@@ -1,31 +1,30 @@
 from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import action
-from rest_framework.mixins import (
-    CreateModelMixin,
-    DestroyModelMixin,
-    ListModelMixin,
-    RetrieveModelMixin,
-)
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.viewsets import GenericViewSet
 
+from main.documents.activity import UserStaffActivity
 from main.filter_sets.staff_filter_set import StaffFilterSet
 from main.models.staff import Staff
 from main.permissions.user_permission import UserPermission
 from main.serializers.user_staff_serializer import UserStaffSerializer
 from main.view_sets.filter_mixin import FilterMixin
+from main.view_sets.user_create_mixin import UserCreateMixin
+from main.view_sets.user_destroy_mixin import UserDestroyMixin
 
 
 @extend_schema(tags=["users_staffs"])
 class UserStaffViewSet(
     FilterMixin,
-    CreateModelMixin,
-    DestroyModelMixin,
+    UserCreateMixin,
+    UserDestroyMixin,
     ListModelMixin,
     RetrieveModelMixin,
     GenericViewSet,
 ):
+    activity_class = UserStaffActivity
     filter_set_class = StaffFilterSet
     ordering_fields = (
         "does_organization_agree",

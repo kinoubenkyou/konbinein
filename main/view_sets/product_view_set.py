@@ -1,15 +1,17 @@
 from drf_spectacular.utils import extend_schema
-from rest_framework.viewsets import ModelViewSet
 
+from main.documents.activity import ProductActivity
 from main.filter_sets.product_filter_set import ProductFilterSet
 from main.models.product import Product
 from main.permissions.staff_permission import StaffPermission
 from main.serializers.product_serializer import ProductSerializer
 from main.view_sets.filter_mixin import FilterMixin
+from main.view_sets.view_set import ViewSet
 
 
 @extend_schema(tags=["organizations_products"])
-class ProductViewSet(FilterMixin, ModelViewSet):
+class ProductViewSet(FilterMixin, ViewSet):
+    activity_class = ProductActivity
     filter_set_class = ProductFilterSet
     ordering_fields = ("code", "id", "name", "price")
     permission_classes = (StaffPermission,)

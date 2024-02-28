@@ -3,14 +3,21 @@ from factory import Iterator
 from main.factories.product_factory import ProductFactory
 from main.models.product import Product
 from main.tests.staff_test_case import StaffTestCase
+from main.tests.view_sets.activity_view_set_test_case_mixin import (
+    ActivityViewSetTestCaseMixin,
+)
 from main.tests.view_sets.organization_view_set_test_case_mixin import (
     OrganizationViewSetTestCaseMixin,
 )
+from main.view_sets.product_view_set import ProductViewSet
 
 
-class ProductViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCase):
+class ProductViewSetTestCase(
+    ActivityViewSetTestCaseMixin, OrganizationViewSetTestCaseMixin, StaffTestCase
+):
     basename = "product"
     query_set = Product.objects.all()
+    view_set = ProductViewSet
 
     def test_create(self):
         data = self._deserializer_data()
@@ -97,7 +104,7 @@ class ProductViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCase):
         return {
             "code": product.code,
             "name": product.name,
-            "price": product.price,
+            "price": str(product.price),
         }
 
     @staticmethod

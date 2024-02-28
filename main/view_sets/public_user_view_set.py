@@ -76,7 +76,7 @@ class PublicUserViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
             "password_resetting": PublicUserPasswordResettingSerializer,
             "update": PublicUserUpdateSerializer,
         }
-        return serializer_classes.get(self.action)
+        return serializer_classes[self.action]
 
     @extend_schema(responses={204: None})
     @action(detail=False, methods=("post",))

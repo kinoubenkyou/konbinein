@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from main.factories.order_shipping_factory import OrderShippingFactory
 from main.factories.order_with_related_factory import OrderWithRelatedFactory
 from main.factories.product_factory import ProductFactory
@@ -7,16 +9,23 @@ from main.models.order_shipping_item import OrderShippingItem
 from main.models.product_item import ProductItem
 from main.models.product_shipping_item import ProductShippingItem
 from main.tests.staff_test_case import StaffTestCase
+from main.tests.view_sets.activity_view_set_test_case_mixin import (
+    ActivityViewSetTestCaseMixin,
+)
 from main.tests.view_sets.organization_view_set_test_case_mixin import (
     OrganizationViewSetTestCaseMixin,
 )
+from main.view_sets.order_view_set import OrderViewSet
 
 
-class OrderViewSetTestCaseMixin(OrganizationViewSetTestCaseMixin):
+class OrderViewSetTestCaseMixin(
+    ActivityViewSetTestCaseMixin, OrganizationViewSetTestCaseMixin
+):
     basename = "order"
     query_set = Order.objects.prefetch_related(
         "productitem_set__productshippingitem_set"
     ).all()
+    view_set = OrderViewSet
 
     def _assert_destroyed_order(self, order):
         self.assertIsNone(Order.objects.filter(id=order.id).first())
@@ -47,34 +56,82 @@ class OrderViewSetTestCaseMixin(OrganizationViewSetTestCaseMixin):
     def _assert_saved_object(self, filter_):
         order_shipping_item_filters = filter_.pop("ordershippingitem_set")
         product_item_filters = filter_.pop("productitem_set")
-        order = Order.objects.filter(**filter_).first()
-        self.assertIsNotNone(order)
+        orders = list(Order.objects.filter(**filter_))
+        self.assertEqual(len(orders), 1)
         for order_shipping_item_filter in order_shipping_item_filters:
-            order_shipping_item_filter["order_id"] = order.id
-            self._assert_saved_order_shipping_item(order_shipping_item_filter)
+            self._assert_saved_order_shipping_item({
+                **order_shipping_item_filter, "order_id": orders[0].id
+            })
         for product_item_filter in product_item_filters:
-            product_item_filter["order_id"] = order.id
-            self._assert_saved_product_item(product_item_filter)
+            self._assert_saved_product_item({
+                **product_item_filter, "order_id": orders[0].id
+            })
 
     def _assert_saved_order_shipping_item(self, order_shipping_item_filter):
-        self.assertIsNotNone(
-            OrderShippingItem.objects.filter(**order_shipping_item_filter).first()
+        self.assertEqual(
+            len(OrderShippingItem.objects.filter(**order_shipping_item_filter)), 1
         )
 
     def _assert_saved_product_item(self, product_item_filter):
         product_shipping_item_filters = product_item_filter.pop(
             "productshippingitem_set"
         )
-        product_item = ProductItem.objects.filter(**product_item_filter).first()
-        self.assertIsNotNone(product_item)
+        product_items = list(ProductItem.objects.filter(**product_item_filter))
+        self.assertEqual(len(product_items), 1)
         for product_shipping_item_filter in product_shipping_item_filters:
-            product_shipping_item_filter["product_item_id"] = product_item.id
-            self._assert_saved_product_shipping_item(product_shipping_item_filter)
+            self._assert_saved_product_shipping_item({
+                **product_shipping_item_filter, "product_item_id": product_items[0].id
+            })
 
     def _assert_saved_product_shipping_item(self, product_item_shipping_filter):
-        self.assertIsNotNone(
-            ProductShippingItem.objects.filter(**product_item_shipping_filter).first()
+        self.assertEqual(
+            len(ProductShippingItem.objects.filter(**product_item_shipping_filter)), 1
         )
+
+    @staticmethod
+    def _increment_string(data, field, increment):
+        data[field] = str(Decimal(data[field]) + increment)
+
+    @classmethod
+    def _order_shipping_item_data(cls, order_shipping_item):
+        return {
+            "fixed_fee": str(order_shipping_item.fixed_fee),
+            "id": order_shipping_item.id,
+            "item_total": str(order_shipping_item.item_total),
+            "name": order_shipping_item.name,
+            "order_shipping": order_shipping_item.order_shipping_id,
+            "unit_fee": str(order_shipping_item.unit_fee),
+        }
+
+    @classmethod
+    def _product_item_data(cls, product_item):
+        product_shipping_item_data_list = [
+            cls._product_shipping_item_data(product_shipping_item)
+            for product_shipping_item in (product_item.productshippingitem_set.all())
+        ]
+        product_shipping_item_data_list.sort(
+            key=lambda product_shipping_item_data: product_shipping_item_data["id"]
+        )
+        return {
+            "id": product_item.id,
+            "item_total": str(product_item.item_total),
+            "name": product_item.name,
+            "price": str(product_item.price),
+            "product": product_item.product_id,
+            "productshippingitem_set": product_shipping_item_data_list,
+            "quantity": product_item.quantity,
+        }
+
+    @staticmethod
+    def _product_shipping_item_data(product_shipping_item):
+        return {
+            "fixed_fee": str(product_shipping_item.fixed_fee),
+            "id": product_shipping_item.id,
+            "item_total": str(product_shipping_item.item_total),
+            "name": product_shipping_item.name,
+            "product_shipping": product_shipping_item.product_shipping_id,
+            "unit_fee": str(product_shipping_item.unit_fee),
+        }
 
     @classmethod
     def _serializer_data(cls, order):
@@ -104,47 +161,6 @@ class OrderViewSetTestCaseMixin(OrganizationViewSetTestCaseMixin):
             "total": str(order.total),
         }
 
-    @classmethod
-    def _order_shipping_item_data(cls, order_shipping_item):
-        return {
-            "fixed_fee": str(order_shipping_item.fixed_fee),
-            "id": order_shipping_item.id,
-            "item_total": str(order_shipping_item.item_total),
-            "name": order_shipping_item.name,
-            "order_shipping": order_shipping_item.order_shipping_id,
-            "unit_fee": str(order_shipping_item.unit_fee),
-        }
-
-    @classmethod
-    def _product_item_data(cls, product_item):
-        product_shipping_item_data_list = [
-            cls._product_shipping_item_data(product_shipping_item)
-            for product_shipping_item in (product_item.productshippingitem_set.all())
-        ]
-        product_shipping_item_data_list.sort(
-            key=lambda product_shipping_item_data: product_shipping_item_data["id"]
-        )
-        return {
-            "id": product_item.id,
-            "item_total": str(product_item.item_total),
-            "name": product_item.name,
-            "product": product_item.product_id,
-            "price": str(product_item.price),
-            "productshippingitem_set": product_shipping_item_data_list,
-            "quantity": product_item.quantity,
-        }
-
-    @staticmethod
-    def _product_shipping_item_data(product_shipping_item):
-        return {
-            "fixed_fee": str(product_shipping_item.fixed_fee),
-            "id": product_shipping_item.id,
-            "item_total": str(product_shipping_item.item_total),
-            "name": product_shipping_item.name,
-            "product_shipping": product_shipping_item.product_shipping_id,
-            "unit_fee": str(product_shipping_item.unit_fee),
-        }
-
 
 class OrderValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
     def test_create__code_already_in_another_order(self):
@@ -169,7 +185,7 @@ class OrderValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
             product_item_count=1,
             product_kwargs={"organization": self.organization},
         ).get_deserializer_data()
-        data["order_shipping_total"] += 1
+        self._increment_string(data, "order_shipping_total", 1)
         self._act_and_assert_create_validation_test(
             data, {"non_field_errors": ["Order shipping total is incorrect."]}
         )
@@ -180,7 +196,7 @@ class OrderValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
             product_item_count=1,
             product_kwargs={"organization": self.organization},
         ).get_deserializer_data()
-        data["product_total"] += 1
+        self._increment_string(data, "product_total", 1)
         self._act_and_assert_create_validation_test(
             data, {"non_field_errors": ["Product total is incorrect."]}
         )
@@ -193,7 +209,7 @@ class OrderValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
             product_shipping_item_count=1,
             product_shipping_kwargs={"organization": self.organization},
         ).get_deserializer_data()
-        data["product_shipping_total"] += 1
+        self._increment_string(data, "product_shipping_total", 1)
         self._act_and_assert_create_validation_test(
             data, {"non_field_errors": ["Product shipping total is incorrect."]}
         )
@@ -206,7 +222,7 @@ class OrderValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
             product_shipping_item_count=1,
             product_shipping_kwargs={"organization": self.organization},
         ).get_deserializer_data()
-        data["total"] += 1
+        self._increment_string(data, "total", 1)
         self._act_and_assert_create_validation_test(
             data, {"non_field_errors": ["Total is incorrect."]}
         )
@@ -537,7 +553,7 @@ class OrderShippingItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCa
             product_item_count=1,
             product_kwargs={"organization": self.organization},
         ).get_deserializer_data()
-        data["ordershippingitem_set"][0]["item_total"] += 1
+        self._increment_string(data["ordershippingitem_set"][0], "item_total", 1)
         self._act_and_assert_create_validation_test(
             data,
             {
@@ -598,7 +614,7 @@ class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
             product_item_count=1,
             product_kwargs={"organization": self.organization},
         ).get_deserializer_data()
-        data["productitem_set"][0]["item_total"] += 1
+        self._increment_string(data["productitem_set"][0], "item_total", 1)
         self._act_and_assert_create_validation_test(
             data,
             {"productitem_set": [{"non_field_errors": ["Item total is incorrect."]}]},
@@ -650,7 +666,9 @@ class ProductShippingItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTest
             product_shipping_item_count=1,
             product_shipping_kwargs={"organization": self.organization},
         ).get_deserializer_data()
-        data["productitem_set"][0]["productshippingitem_set"][0]["item_total"] += 1
+        self._increment_string(
+            data["productitem_set"][0]["productshippingitem_set"][0], "item_total", 1
+        )
         self._act_and_assert_create_validation_test(
             data,
             {
