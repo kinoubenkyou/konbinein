@@ -7,10 +7,18 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+  mongo:
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_ROOT_USERNAME: admin
+    ports:
+      - "27017:27017"
+    restart: always
   postgres:
     image: postgres
     environment:
-      POSTGRES_PASSWORD: example
+      POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
     restart: always

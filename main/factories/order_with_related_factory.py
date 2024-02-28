@@ -47,19 +47,19 @@ class OrderWithRelatedFactory:
         order = self._build()
         return {
             "code": order.code,
-            "created_at": order.created_at,
-            "order_shipping_total": order.order_shipping_total,
+            "created_at": str(order.created_at),
+            "order_shipping_total": str(order.order_shipping_total),
             "ordershippingitem_set": [
                 self._get_deserializer_order_shipping_item_data(order_shipping_item)
                 for order_shipping_item in order.cached_order_shipping_items
             ],
-            "product_shipping_total": order.product_shipping_total,
-            "product_total": order.product_total,
+            "product_shipping_total": str(order.product_shipping_total),
+            "product_total": str(order.product_total),
             "productitem_set": [
                 self._get_deserializer_product_item_data(product_item)
                 for product_item in order.cached_product_items
             ],
-            "total": order.total,
+            "total": str(order.total),
         }
 
     def _build(self):
@@ -138,20 +138,20 @@ class OrderWithRelatedFactory:
     def _get_deserializer_order_shipping_item_data(order_shipping_item):
         order_shipping_item.order_shipping.save()
         return {
-            "fixed_fee": order_shipping_item.fixed_fee,
-            "item_total": order_shipping_item.item_total,
+            "fixed_fee": str(order_shipping_item.fixed_fee),
+            "item_total": str(order_shipping_item.item_total),
             "name": order_shipping_item.name,
             "order_shipping": order_shipping_item.order_shipping.id,
-            "unit_fee": order_shipping_item.unit_fee,
+            "unit_fee": str(order_shipping_item.unit_fee),
         }
 
     @classmethod
     def _get_deserializer_product_item_data(cls, product_item):
         product_item.product.save()
         return {
+            "item_total": str(product_item.item_total),
             "name": product_item.name,
-            "item_total": product_item.item_total,
-            "price": product_item.price,
+            "price": str(product_item.price),
             "product": product_item.product.id,
             "productshippingitem_set": [
                 cls._get_deserializer_product_shipping_item_data(product_shipping_item)
@@ -164,9 +164,9 @@ class OrderWithRelatedFactory:
     def _get_deserializer_product_shipping_item_data(product_shipping_item):
         product_shipping_item.product_shipping.save()
         return {
-            "fixed_fee": product_shipping_item.fixed_fee,
-            "item_total": product_shipping_item.item_total,
+            "fixed_fee": str(product_shipping_item.fixed_fee),
+            "item_total": str(product_shipping_item.item_total),
             "name": product_shipping_item.name,
             "product_shipping": product_shipping_item.product_shipping.id,
-            "unit_fee": product_shipping_item.unit_fee,
+            "unit_fee": str(product_shipping_item.unit_fee),
         }

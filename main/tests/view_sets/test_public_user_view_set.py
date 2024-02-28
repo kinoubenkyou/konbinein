@@ -123,9 +123,9 @@ class PublicUserViewSetTestCase(ViewSetTestCaseMixin, APITestCase):
 
     def _assert_saved_object(self, filter_):
         password = filter_.pop("password")
-        user = User.objects.filter(**filter_).first()
-        self.assertIsNotNone(user)
-        self.assertTrue(check_password(password, user.hashed_password))
+        users = list(User.objects.filter(**filter_))
+        self.assertEqual(len(users), 1)
+        self.assertTrue(check_password(password, users[0].hashed_password))
 
     @staticmethod
     def _deserializer_data():

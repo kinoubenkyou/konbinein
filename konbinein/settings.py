@@ -41,15 +41,16 @@ INSTALLED_APPS = (
     "drf_spectacular",
 )
 
-# MIDDLEWARE = [
-#     "django.middleware.security.SecurityMiddleware",
-#     "django.contrib.sessions.middleware.SessionMiddleware",
-#     "django.middleware.common.CommonMiddleware",
-#     "django.middleware.csrf.CsrfViewMiddleware",
-#     "django.contrib.auth.middleware.AuthenticationMiddleware",
-#     "django.contrib.messages.middleware.MessageMiddleware",
-#     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-# ]
+MIDDLEWARE = [
+    # "django.middleware.security.SecurityMiddleware",
+    # "django.contrib.sessions.middleware.SessionMiddleware",
+    # "django.middleware.common.CommonMiddleware",
+    # "django.middleware.csrf.CsrfViewMiddleware",
+    # "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # "django.contrib.messages.middleware.MessageMiddleware",
+    # "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "main.middlewares.mongo_connection_middleware.MongoConnectionMiddleware",
+]
 
 ROOT_URLCONF = "konbinein.urls"
 
@@ -80,7 +81,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "HOST": "postgres",
         "NAME": "postgres",
-        "PASSWORD": "example",
+        "PASSWORD": "password",
         "USER": "postgres",
     }
 }
@@ -177,4 +178,22 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": "redis://redis:6379",
     }
+}
+
+
+MONGO = {
+    "default": {
+        "authentication_source": "admin",
+        "db": "mongo",
+        "host": "mongo",
+        "password": "password",
+        "username": "admin",
+    },
+    "test": {
+        "authentication_source": "admin",
+        "db": "test",
+        "host": "mongo",
+        "password": "password",
+        "username": "admin",
+    },
 }

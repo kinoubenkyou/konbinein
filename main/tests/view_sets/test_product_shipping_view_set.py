@@ -10,14 +10,21 @@ from main.models import ZONE_CHOICES
 from main.models.product import Product
 from main.models.product_shipping import ProductShipping
 from main.tests.staff_test_case import StaffTestCase
+from main.tests.view_sets.activity_view_set_test_case_mixin import (
+    ActivityViewSetTestCaseMixin,
+)
 from main.tests.view_sets.organization_view_set_test_case_mixin import (
     OrganizationViewSetTestCaseMixin,
 )
+from main.view_sets.product_shipping_view_set import ProductShippingViewSet
 
 
-class ProductShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCase):
+class ProductShippingViewSetTestCase(
+    ActivityViewSetTestCaseMixin, OrganizationViewSetTestCaseMixin, StaffTestCase
+):
     basename = "productshipping"
     query_set = ProductShipping.objects.all()
+    view_set = ProductShippingViewSet
 
     def test_create(self):
         data = ProductShippingWithRelatedFactory(
@@ -229,10 +236,10 @@ class ProductShippingViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTest
 
     def _assert_saved_object(self, filter_):
         product_ids = filter_.pop("products")
-        product_shipping = ProductShipping.objects.filter(**filter_).first()
-        self.assertIsNotNone(product_shipping)
+        product_shippings = list(ProductShipping.objects.filter(**filter_))
+        self.assertEqual(len(product_shippings), 1)
         self.assertCountEqual(
-            Product.objects.filter(productshipping=product_shipping.id).values_list(
+            Product.objects.filter(productshipping=product_shippings[0].id).values_list(
                 "id", flat=True
             ),
             product_ids,

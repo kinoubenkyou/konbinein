@@ -78,7 +78,7 @@ class ViewSetTestCaseMixin:
         self.assertCountEqual(dict_["to"], to)
 
     def _assert_saved_object(self, filter_):
-        self.assertIsNotNone(self.query_set.filter(**filter_).first())
+        self.assertEqual(self.query_set.filter(**filter_).count(), 1)
 
     def _detail_path(self, pk):
         return self._path("detail", {"pk": pk})

@@ -1,12 +1,10 @@
-from django.core.cache import cache
-from rest_framework.test import APITestCase
-
 from main.authentications.token_authentication import BearerAuthentication
 from main.factories.user_factory import UserFactory
 from main.shortcuts import get_authentication_token, set_authentication_token
+from main.tests.test_case import TestCase
 
 
-class UserTestCase(APITestCase):
+class UserTestCase(TestCase):
     is_user_system_administrator = False
 
     @classmethod
@@ -25,6 +23,3 @@ class UserTestCase(APITestCase):
                 f" {get_authentication_token(self.user.id)}"
             )
         )
-
-    def tearDown(self):
-        cache.clear()

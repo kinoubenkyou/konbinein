@@ -11,12 +11,19 @@ from main.shortcuts import (
     set_email_verifying_token,
 )
 from main.tests.user_test_case import UserTestCase
+from main.tests.view_sets.activity_view_set_test_case_mixin import (
+    ActivityViewSetTestCaseMixin,
+)
 from main.tests.view_sets.user_view_set_test_case_mixin import UserViewSetTestCaseMixin
+from main.view_sets.user_view_set import UserViewSet
 
 
-class UserViewSetTestCase(UserViewSetTestCaseMixin, UserTestCase):
+class UserViewSetTestCase(
+    ActivityViewSetTestCaseMixin, UserViewSetTestCaseMixin, UserTestCase
+):
     basename = "user"
     query_set = User.objects.all()
+    view_set = UserViewSet
 
     def test_de_authenticating(self):
         path = reverse(
@@ -75,9 +82,9 @@ class UserViewSetTestCase(UserViewSetTestCaseMixin, UserTestCase):
 
     def _assert_saved_object(self, filter_):
         password = filter_.pop("password")
-        user = User.objects.filter(**filter_).first()
-        self.assertIsNotNone(user)
-        self.assertTrue(check_password(password, user.hashed_password))
+        users = list(User.objects.filter(**filter_))
+        self.assertEqual(len(users), 1)
+        self.assertTrue(check_password(password, users[0].hashed_password))
 
     @staticmethod
     def _deserializer_data():

@@ -32,10 +32,10 @@ class ProductShippingWithRelatedFactory:
             product.save()
         return {
             "code": product_shipping.code,
-            "fixed_fee": product_shipping.fixed_fee,
+            "fixed_fee": str(product_shipping.fixed_fee),
             "name": product_shipping.name,
             "products": [product.id for product in product_shipping.cached_products],
-            "unit_fee": product_shipping.unit_fee,
+            "unit_fee": str(product_shipping.unit_fee),
             "zones": product_shipping.zones,
         }
 
