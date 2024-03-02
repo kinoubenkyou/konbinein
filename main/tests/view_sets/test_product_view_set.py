@@ -1,7 +1,6 @@
 from factory import Iterator
 
 from main.factories.product_factory import ProductFactory
-from main.models.product import Product
 from main.tests.staff_test_case import StaffTestCase
 from main.tests.view_sets.activity_view_set_test_case_mixin import (
     ActivityViewSetTestCaseMixin,
@@ -16,7 +15,6 @@ class ProductViewSetTestCase(
     ActivityViewSetTestCaseMixin, OrganizationViewSetTestCaseMixin, StaffTestCase
 ):
     basename = "product"
-    query_set = Product.objects.all()
     view_set = ProductViewSet
 
     def test_create(self):

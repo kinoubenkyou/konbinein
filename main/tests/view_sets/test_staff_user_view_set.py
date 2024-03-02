@@ -1,16 +1,16 @@
 from factory import Iterator
 
 from main.factories.user_factory import UserFactory
-from main.models.user import User
 from main.tests.staff_test_case import StaffTestCase
 from main.tests.view_sets.organization_view_set_test_case_mixin import (
     OrganizationViewSetTestCaseMixin,
 )
+from main.view_sets.staff_user_view_set import StaffUserViewSet
 
 
 class StaffUserViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCase):
     basename = "organization-user"
-    query_set = User.objects.all()
+    view_set = StaffUserViewSet
 
     def test_list__filter__email__icontains(self):
         UserFactory.create()

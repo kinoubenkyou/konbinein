@@ -4,7 +4,7 @@ from main.tests.view_sets.view_set_test_case_mixin import ViewSetTestCaseMixin
 class ActivityViewSetTestCaseMixin(ViewSetTestCaseMixin):
     def _act_and_assert_create_test(self, data, filter_):
         super()._act_and_assert_create_test(data, filter_)
-        instance_id = self.query_set.filter(**filter_).first().id
+        instance_id = self.view_set.queryset.filter(**filter_).first().id
         self._assert_saved_activity("create", data, instance_id)
 
     def _act_and_assert_destroy_test(self, pk):

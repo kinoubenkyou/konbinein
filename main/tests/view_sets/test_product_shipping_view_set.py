@@ -23,7 +23,6 @@ class ProductShippingViewSetTestCase(
     ActivityViewSetTestCaseMixin, OrganizationViewSetTestCaseMixin, StaffTestCase
 ):
     basename = "productshipping"
-    query_set = ProductShipping.objects.all()
     view_set = ProductShippingViewSet
 
     def test_create(self):

@@ -1,5 +1,4 @@
 from main.factories.organization_factory import OrganizationFactory
-from main.models.organization import Organization
 from main.tests.staff_test_case import StaffTestCase
 from main.tests.view_sets.activity_view_set_test_case_mixin import (
     ActivityViewSetTestCaseMixin,
@@ -14,7 +13,6 @@ class OrganizationViewSetTestCase(
     ActivityViewSetTestCaseMixin, OrganizationViewSetTestCaseMixin, StaffTestCase
 ):
     basename = "organization"
-    query_set = Organization.objects.all()
     view_set = OrganizationViewSet
 
     def test_destroy(self):

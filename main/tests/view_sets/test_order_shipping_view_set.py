@@ -4,7 +4,6 @@ from factory import Iterator
 
 from main.factories.order_shipping_factory import OrderShippingFactory
 from main.models import ZONE_CHOICES
-from main.models.order_shipping import OrderShipping
 from main.tests.staff_test_case import StaffTestCase
 from main.tests.view_sets.activity_view_set_test_case_mixin import (
     ActivityViewSetTestCaseMixin,
@@ -19,7 +18,6 @@ class OrderShippingViewSetTestCase(
     ActivityViewSetTestCaseMixin, OrganizationViewSetTestCaseMixin, StaffTestCase
 ):
     basename = "ordershipping"
-    query_set = OrderShipping.objects.all()
     view_set = OrderShippingViewSet
 
     def test_create(self):
