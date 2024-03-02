@@ -1,5 +1,4 @@
 from main.factories.organization_factory import OrganizationFactory
-from main.models.organization import Organization
 from main.tests.admin_test_case import AdminTestCase
 from main.tests.view_sets.activity_view_set_test_case_mixin import (
     ActivityViewSetTestCaseMixin,
@@ -12,7 +11,6 @@ class AdminOrganizationViewSetTestCase(
     ActivityViewSetTestCaseMixin, ViewSetTestCaseMixin, AdminTestCase
 ):
     basename = "admin-organization"
-    query_set = Organization.objects.all()
     view_set = AdminOrganizationViewSet
 
     def test_create(self):

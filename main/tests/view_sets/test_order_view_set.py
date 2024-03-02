@@ -22,9 +22,6 @@ class OrderViewSetTestCaseMixin(
     ActivityViewSetTestCaseMixin, OrganizationViewSetTestCaseMixin
 ):
     basename = "order"
-    query_set = Order.objects.prefetch_related(
-        "productitem_set__productshippingitem_set"
-    ).all()
     view_set = OrderViewSet
 
     def _assert_destroyed_order(self, order):

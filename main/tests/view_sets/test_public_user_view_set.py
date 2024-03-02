@@ -16,11 +16,12 @@ from main.shortcuts import (
     set_password_resetting_token,
 )
 from main.tests.view_sets.view_set_test_case_mixin import ViewSetTestCaseMixin
+from main.view_sets.public_user_view_set import PublicUserViewSet
 
 
 class PublicUserViewSetTestCase(ViewSetTestCaseMixin, APITestCase):
     basename = "public-user"
-    query_set = User.objects.all()
+    view_set = PublicUserViewSet
 
     def test_authenticating(self):
         user = UserFactory.create()

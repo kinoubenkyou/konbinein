@@ -1,14 +1,14 @@
 from factory import Iterator
 
 from main.factories.organization_factory import OrganizationFactory
-from main.models.organization import Organization
 from main.tests.user_test_case import UserTestCase
 from main.tests.view_sets.user_view_set_test_case_mixin import UserViewSetTestCaseMixin
+from main.view_sets.user_organization_view_set import UserOrganizationViewSet
 
 
 class UserOrganizationViewSetTestCase(UserViewSetTestCaseMixin, UserTestCase):
     basename = "user-organization"
-    query_set = Organization.objects.all()
+    view_set = UserOrganizationViewSet
 
     def test_list__filter__code__icontains(self):
         OrganizationFactory.create()

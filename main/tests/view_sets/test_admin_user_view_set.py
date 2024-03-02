@@ -1,14 +1,14 @@
 from factory import Iterator
 
 from main.factories.user_factory import UserFactory
-from main.models.user import User
 from main.tests.admin_test_case import AdminTestCase
 from main.tests.view_sets.view_set_test_case_mixin import ViewSetTestCaseMixin
+from main.view_sets.admin_user_view_set import AdminUserViewSet
 
 
 class AdminUserViewSetTestCase(ViewSetTestCaseMixin, AdminTestCase):
     basename = "admin-user"
-    query_set = User.objects.all()
+    view_set = AdminUserViewSet
 
     def test_list__filter__email__icontains(self):
         UserFactory.create()

@@ -18,7 +18,6 @@ class StaffViewSetTestCase(
     ActivityViewSetTestCaseMixin, OrganizationViewSetTestCaseMixin, StaffTestCase
 ):
     basename = "organization-staff"
-    query_set = Staff.objects.all()
     view_set = StaffViewSet
 
     def test_agreeing(self):
