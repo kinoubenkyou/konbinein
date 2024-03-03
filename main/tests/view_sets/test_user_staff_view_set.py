@@ -5,15 +5,15 @@ from rest_framework.status import HTTP_204_NO_CONTENT
 from main.factories.staff_factory import StaffFactory
 from main.models.staff import Staff
 from main.tests.user_test_case import UserTestCase
-from main.tests.view_sets.activity_view_set_test_case_mixin import (
-    ActivityViewSetTestCaseMixin,
+from main.tests.view_sets.authenticated_view_set_test_case_mixin import (
+    AuthenticatedViewSetTestCaseMixin,
 )
 from main.tests.view_sets.user_view_set_test_case_mixin import UserViewSetTestCaseMixin
 from main.view_sets.user_staff_view_set import UserStaffViewSet
 
 
 class UserStaffViewSetTestCase(
-    ActivityViewSetTestCaseMixin, UserViewSetTestCaseMixin, UserTestCase
+    AuthenticatedViewSetTestCaseMixin, UserViewSetTestCaseMixin, UserTestCase
 ):
     basename = "user-staff"
     query_set = Staff.objects.all()

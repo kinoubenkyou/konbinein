@@ -1,7 +1,7 @@
 from rest_framework.mixins import CreateModelMixin
 
 
-class UserCreateMixin(CreateModelMixin):
+class AuthenticatedCreateMixin(CreateModelMixin):
     def perform_create(self, serializer):
         super().perform_create(serializer)
         request = self.request

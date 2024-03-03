@@ -10,7 +10,7 @@ from main.view_sets.filter_mixin import FilterMixin
 
 
 @extend_schema(tags=["organizations_users"])
-class StaffUserViewSet(FilterMixin, ListModelMixin, GenericViewSet):
+class OrganizationUserViewSet(FilterMixin, ListModelMixin, GenericViewSet):
     filter_set_class = UserFilterSet
     ordering_fields = ("email", "id", "name")
     permission_classes = (StaffPermission,)

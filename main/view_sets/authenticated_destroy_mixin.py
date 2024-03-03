@@ -1,7 +1,7 @@
 from rest_framework.mixins import DestroyModelMixin
 
 
-class UserDestroyMixin(DestroyModelMixin):
+class AuthenticatedDestroyMixin(DestroyModelMixin):
     def perform_destroy(self, instance):
         instance_id = instance.id
         super().perform_destroy(instance)

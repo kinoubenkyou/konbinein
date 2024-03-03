@@ -11,13 +11,16 @@ from main.permissions.user_permission import UserPermission
 from main.serializers.user_serializer import UserSerializer
 from main.shortcuts import delete_authentication_token
 from main.view_sets import send_email_verification
-from main.view_sets.user_destroy_mixin import UserDestroyMixin
-from main.view_sets.user_update_mixin import UserUpdateMixin
+from main.view_sets.authenticated_destroy_mixin import AuthenticatedDestroyMixin
+from main.view_sets.authenticated_update_mixin import AuthenticatedUpdateMixin
 
 
 @extend_schema(tags=["users_users"])
 class UserViewSet(
-    UserDestroyMixin, UserUpdateMixin, RetrieveModelMixin, GenericViewSet
+    AuthenticatedDestroyMixin,
+    AuthenticatedUpdateMixin,
+    RetrieveModelMixin,
+    GenericViewSet,
 ):
     activity_class = UserActivity
     permission_classes = (UserPermission,)
