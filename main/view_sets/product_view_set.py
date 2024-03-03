@@ -6,11 +6,10 @@ from main.models.product import Product
 from main.permissions.staff_permission import StaffPermission
 from main.serializers.product_serializer import ProductSerializer
 from main.view_sets.authenticated_view_set import AuthenticatedViewSet
-from main.view_sets.filter_mixin import FilterMixin
 
 
 @extend_schema(tags=["organizations_products"])
-class ProductViewSet(FilterMixin, AuthenticatedViewSet):
+class ProductViewSet(AuthenticatedViewSet):
     activity_class = ProductActivity
     filter_set_class = ProductFilterSet
     ordering_fields = ("code", "id", "name", "price")

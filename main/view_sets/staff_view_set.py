@@ -12,12 +12,10 @@ from main.permissions.staff_permission import StaffPermission
 from main.serializers.staff_serializer import StaffSerializer
 from main.view_sets.authenticated_create_mixin import AuthenticatedCreateMixin
 from main.view_sets.authenticated_destroy_mixin import AuthenticatedDestroyMixin
-from main.view_sets.filter_mixin import FilterMixin
 
 
 @extend_schema(tags=["organizations_staffs"])
 class StaffViewSet(
-    FilterMixin,
     AuthenticatedCreateMixin,
     AuthenticatedDestroyMixin,
     ListModelMixin,

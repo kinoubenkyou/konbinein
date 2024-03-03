@@ -12,12 +12,10 @@ from main.permissions.user_permission import UserPermission
 from main.serializers.user_staff_serializer import UserStaffSerializer
 from main.view_sets.authenticated_create_mixin import AuthenticatedCreateMixin
 from main.view_sets.authenticated_destroy_mixin import AuthenticatedDestroyMixin
-from main.view_sets.filter_mixin import FilterMixin
 
 
 @extend_schema(tags=["users_staffs"])
 class UserStaffViewSet(
-    FilterMixin,
     AuthenticatedCreateMixin,
     AuthenticatedDestroyMixin,
     ListModelMixin,
