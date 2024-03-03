@@ -1,19 +1,11 @@
 from factory import Iterator
 
 from main.factories.product_factory import ProductFactory
-from main.tests.staff_test_case import StaffTestCase
-from main.tests.view_sets.authenticated_view_set_test_case_mixin import (
-    AuthenticatedViewSetTestCaseMixin,
-)
-from main.tests.view_sets.organization_view_set_test_case_mixin import (
-    OrganizationViewSetTestCaseMixin,
-)
+from main.tests.view_sets.staff_test_case import StaffTestCase
 from main.view_sets.product_view_set import ProductViewSet
 
 
-class ProductViewSetTestCase(
-    AuthenticatedViewSetTestCaseMixin, OrganizationViewSetTestCaseMixin, StaffTestCase
-):
+class ProductViewSetTestCase(StaffTestCase):
     basename = "product"
     view_set = ProductViewSet
 
@@ -31,7 +23,7 @@ class ProductViewSetTestCase(
 
     def test_destroy(self):
         self._act_and_assert_destroy_test(
-            ProductFactory.create(organization=self.organization).id
+            ProductFactory.create(organization=self.organization)
         )
 
     def test_list__filter__code__icontains(self):

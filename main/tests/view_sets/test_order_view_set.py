@@ -8,25 +8,28 @@ from main.models.order import Order
 from main.models.order_shipping_item import OrderShippingItem
 from main.models.product_item import ProductItem
 from main.models.product_shipping_item import ProductShippingItem
-from main.tests.staff_test_case import StaffTestCase
-from main.tests.view_sets.authenticated_view_set_test_case_mixin import (
-    AuthenticatedViewSetTestCaseMixin,
-)
-from main.tests.view_sets.organization_view_set_test_case_mixin import (
-    OrganizationViewSetTestCaseMixin,
-)
+from main.tests.view_sets.staff_test_case import StaffTestCase
 from main.view_sets.order_view_set import OrderViewSet
 
 
-class OrderViewSetTestCaseMixin(
-    AuthenticatedViewSetTestCaseMixin, OrganizationViewSetTestCaseMixin
-):
+class OrderViewSetTestCaseMixin:
     basename = "order"
     view_set = OrderViewSet
 
-    def _assert_destroyed_order(self, order):
+    def _assert_destroyed_object(self, order):
         self.assertIsNone(Order.objects.filter(id=order.id).first())
+        self._assert_destroyed_order_shipping_item(order.cached_product_items)
         self._assert_destroyed_product_item(order.cached_product_items)
+
+    def _assert_destroyed_order_shipping_item(self, order_shipping_items):
+        self.assertIsNone(
+            OrderShippingItem.objects.filter(
+                id__in=[
+                    order_shipping_item.id
+                    for order_shipping_item in order_shipping_items
+                ]
+            ).first()
+        )
 
     def _assert_destroyed_product_item(self, product_items):
         self.assertIsNone(
@@ -249,8 +252,7 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
             product_shipping_item_count=2,
             product_shipping_kwargs={"organization": self.organization},
         ).create()
-        self._act_and_assert_destroy_test_response_status(order.id)
-        self._assert_destroyed_order(order)
+        self._act_and_assert_destroy_test(order)
 
     def test_list__filter__code__icontains(self):
         OrderWithRelatedFactory(

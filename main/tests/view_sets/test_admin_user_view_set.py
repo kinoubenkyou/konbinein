@@ -1,12 +1,11 @@
 from factory import Iterator
 
 from main.factories.user_factory import UserFactory
-from main.tests.admin_test_case import AdminTestCase
-from main.tests.view_sets.view_set_test_case_mixin import ViewSetTestCaseMixin
+from main.tests.view_sets.admin_test_case import AdminTestCase
 from main.view_sets.admin_user_view_set import AdminUserViewSet
 
 
-class AdminUserViewSetTestCase(ViewSetTestCaseMixin, AdminTestCase):
+class AdminUserViewSetTestCase(AdminTestCase):
     basename = "admin-user"
     view_set = AdminUserViewSet
 

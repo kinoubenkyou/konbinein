@@ -4,7 +4,6 @@ from django.contrib.auth.hashers import check_password
 from django.test import override_settings
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_200_OK
-from rest_framework.test import APITestCase
 
 from main.factories.user_factory import UserFactory
 from main.models.user import User
@@ -15,11 +14,11 @@ from main.shortcuts import (
     set_email_verifying_token,
     set_password_resetting_token,
 )
-from main.tests.view_sets.view_set_test_case_mixin import ViewSetTestCaseMixin
+from main.tests.view_sets.view_set_test_case import ViewSetTestCase
 from main.view_sets.public_user_view_set import PublicUserViewSet
 
 
-class PublicUserViewSetTestCase(ViewSetTestCaseMixin, APITestCase):
+class PublicUserViewSetTestCase(ViewSetTestCase):
     basename = "public-user"
     view_set = PublicUserViewSet
 

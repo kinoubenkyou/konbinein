@@ -4,19 +4,11 @@ from factory import Iterator
 
 from main.factories.order_shipping_factory import OrderShippingFactory
 from main.models import ZONE_CHOICES
-from main.tests.staff_test_case import StaffTestCase
-from main.tests.view_sets.authenticated_view_set_test_case_mixin import (
-    AuthenticatedViewSetTestCaseMixin,
-)
-from main.tests.view_sets.organization_view_set_test_case_mixin import (
-    OrganizationViewSetTestCaseMixin,
-)
+from main.tests.view_sets.staff_test_case import StaffTestCase
 from main.view_sets.order_shipping_view_set import OrderShippingViewSet
 
 
-class OrderShippingViewSetTestCase(
-    AuthenticatedViewSetTestCaseMixin, OrganizationViewSetTestCaseMixin, StaffTestCase
-):
+class OrderShippingViewSetTestCase(StaffTestCase):
     basename = "ordershipping"
     view_set = OrderShippingViewSet
 
@@ -34,7 +26,7 @@ class OrderShippingViewSetTestCase(
 
     def test_destroy(self):
         self._act_and_assert_destroy_test(
-            OrderShippingFactory.create(organization=self.organization).id
+            OrderShippingFactory.create(organization=self.organization)
         )
 
     def test_list__filter__code__icontains(self):
