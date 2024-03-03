@@ -6,11 +6,10 @@ from main.filter_sets.user_filter_set import UserFilterSet
 from main.models.user import User
 from main.permissions.staff_permission import StaffPermission
 from main.serializers.user_serializer import UserSerializer
-from main.view_sets.filter_mixin import FilterMixin
 
 
 @extend_schema(tags=["organizations_users"])
-class OrganizationUserViewSet(FilterMixin, ListModelMixin, GenericViewSet):
+class OrganizationUserViewSet(ListModelMixin, GenericViewSet):
     filter_set_class = UserFilterSet
     ordering_fields = ("email", "id", "name")
     permission_classes = (StaffPermission,)
