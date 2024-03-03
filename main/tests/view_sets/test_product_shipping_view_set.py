@@ -9,19 +9,11 @@ from main.factories.product_shipping_with_related_factory import (
 from main.models import ZONE_CHOICES
 from main.models.product import Product
 from main.models.product_shipping import ProductShipping
-from main.tests.staff_test_case import StaffTestCase
-from main.tests.view_sets.authenticated_view_set_test_case_mixin import (
-    AuthenticatedViewSetTestCaseMixin,
-)
-from main.tests.view_sets.organization_view_set_test_case_mixin import (
-    OrganizationViewSetTestCaseMixin,
-)
+from main.tests.view_sets.staff_test_case import StaffTestCase
 from main.view_sets.product_shipping_view_set import ProductShippingViewSet
 
 
-class ProductShippingViewSetTestCase(
-    AuthenticatedViewSetTestCaseMixin, OrganizationViewSetTestCaseMixin, StaffTestCase
-):
+class ProductShippingViewSetTestCase(StaffTestCase):
     basename = "productshipping"
     view_set = ProductShippingViewSet
 
@@ -56,13 +48,10 @@ class ProductShippingViewSetTestCase(
         )
 
     def test_destroy(self):
-        self._act_and_assert_destroy_test(
-            ProductShippingWithRelatedFactory(
-                product_shipping_kwargs={"organization": self.organization}
-            )
-            .create()
-            .id
-        )
+        product_shipping = ProductShippingWithRelatedFactory(
+            product_shipping_kwargs={"organization": self.organization}
+        ).create()
+        self._act_and_assert_destroy_test(product_shipping)
 
     def test_list__filter__code__icontains(self):
         ProductShippingWithRelatedFactory(

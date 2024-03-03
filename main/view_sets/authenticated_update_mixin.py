@@ -14,7 +14,7 @@ class AuthenticatedUpdateMixin(UpdateModelMixin):
         user = request.user
         self.activity_class(
             action=self.action,
-            instance_id=serializer.instance.id,
+            object_id=serializer.instance.id,
             user_id=user.id,
             user_name=user.name,
             **data,

@@ -1,4 +1,6 @@
 from django.core import mail
+from django.core.cache import cache
+from mongoengine import connect, disconnect, get_connection
 from rest_framework.reverse import reverse
 from rest_framework.status import (
     HTTP_200_OK,
@@ -6,9 +8,22 @@ from rest_framework.status import (
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
 )
+from rest_framework.test import APITestCase
+
+from konbinein.settings import MONGO
 
 
-class ViewSetTestCaseMixin:
+class ViewSetTestCase(APITestCase):
+    def setUp(self):
+        super().setUp()
+        connect(**MONGO["test"])
+
+    def tearDown(self):
+        super().tearDown()
+        cache.clear()
+        get_connection().drop_database("test")
+        disconnect()
+
     def _act_and_assert_action_response_status(self, action, data, pk):
         response = self.client.post(self._action_path(action, pk), data, format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
@@ -31,9 +46,9 @@ class ViewSetTestCaseMixin:
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), expected)
 
-    def _act_and_assert_destroy_test(self, pk):
-        self._act_and_assert_destroy_test_response_status(pk)
-        self.assertIsNone(self.view_set.queryset.filter(id=pk).first())
+    def _act_and_assert_destroy_test(self, object_):
+        self._act_and_assert_destroy_test_response_status(object_.id)
+        self._assert_destroyed_object(object_)
 
     def _act_and_assert_destroy_test_response_status(self, pk):
         response = self.client.delete(self._detail_path(pk), format="json")
@@ -69,6 +84,9 @@ class ViewSetTestCaseMixin:
         if pk is not None:
             kwargs["pk"] = pk
         return self._path(action, kwargs)
+
+    def _assert_destroyed_object(self, object_):
+        self.assertIsNone(self.view_set.queryset.filter(id=object_.id).first())
 
     def _assert_email(self, body, subject, to):
         dict_ = mail.outbox[0].__dict__

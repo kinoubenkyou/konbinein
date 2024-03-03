@@ -1,14 +1,11 @@
 from factory import Iterator
 
 from main.factories.user_factory import UserFactory
-from main.tests.staff_test_case import StaffTestCase
-from main.tests.view_sets.organization_view_set_test_case_mixin import (
-    OrganizationViewSetTestCaseMixin,
-)
+from main.tests.view_sets.staff_test_case import StaffTestCase
 from main.view_sets.organization_user_view_set import OrganizationUserViewSet
 
 
-class OrganizationUserViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCase):
+class OrganizationUserViewSetTestCase(StaffTestCase):
     basename = "organization-user"
     view_set = OrganizationUserViewSet
 

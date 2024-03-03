@@ -10,17 +10,11 @@ from main.shortcuts import (
     get_email_verifying_token,
     set_email_verifying_token,
 )
-from main.tests.user_test_case import UserTestCase
-from main.tests.view_sets.authenticated_view_set_test_case_mixin import (
-    AuthenticatedViewSetTestCaseMixin,
-)
-from main.tests.view_sets.user_view_set_test_case_mixin import UserViewSetTestCaseMixin
+from main.tests.view_sets.user_test_case import UserTestCase
 from main.view_sets.user_view_set import UserViewSet
 
 
-class UserViewSetTestCase(
-    AuthenticatedViewSetTestCaseMixin, UserViewSetTestCaseMixin, UserTestCase
-):
+class UserViewSetTestCase(UserTestCase):
     basename = "user"
     query_set = User.objects.all()
     view_set = UserViewSet
@@ -35,7 +29,7 @@ class UserViewSetTestCase(
         self.assertIsNone(get_authentication_token(self.user.id))
 
     def test_destroy(self):
-        self._act_and_assert_destroy_test(self.user.id)
+        self._act_and_assert_destroy_test(self.user)
 
     def test_retrieve(self):
         self._act_and_assert_retrieve_test(self.user.id)

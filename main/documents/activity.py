@@ -3,8 +3,8 @@ from mongoengine import DynamicDocument, IntField, StringField
 
 class Activity:
     action = StringField()
-    instance_id = IntField()
-    meta = {"indexes": [("instance_id", "_id")]}
+    object_id = IntField()
+    meta = {"indexes": [("object_id", "_id")]}
     user_id = IntField()
     user_name = StringField()
 
