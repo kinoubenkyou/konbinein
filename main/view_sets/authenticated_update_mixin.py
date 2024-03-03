@@ -1,7 +1,7 @@
 from rest_framework.mixins import UpdateModelMixin
 
 
-class UserUpdateMixin(UpdateModelMixin):
+class AuthenticatedUpdateMixin(UpdateModelMixin):
     def perform_update(self, serializer):
         request = self.request
         initial_instance_data = self.serializer_class(serializer.instance).data

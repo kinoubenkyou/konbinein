@@ -5,12 +5,12 @@ from main.filter_sets.product_filter_set import ProductFilterSet
 from main.models.product import Product
 from main.permissions.staff_permission import StaffPermission
 from main.serializers.product_serializer import ProductSerializer
+from main.view_sets.authenticated_view_set import AuthenticatedViewSet
 from main.view_sets.filter_mixin import FilterMixin
-from main.view_sets.view_set import ViewSet
 
 
 @extend_schema(tags=["organizations_products"])
-class ProductViewSet(FilterMixin, ViewSet):
+class ProductViewSet(FilterMixin, AuthenticatedViewSet):
     activity_class = ProductActivity
     filter_set_class = ProductFilterSet
     ordering_fields = ("code", "id", "name", "price")

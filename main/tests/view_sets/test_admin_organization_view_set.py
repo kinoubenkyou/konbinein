@@ -1,14 +1,14 @@
 from main.factories.organization_factory import OrganizationFactory
 from main.tests.admin_test_case import AdminTestCase
-from main.tests.view_sets.activity_view_set_test_case_mixin import (
-    ActivityViewSetTestCaseMixin,
+from main.tests.view_sets.authenticated_view_set_test_case_mixin import (
+    AuthenticatedViewSetTestCaseMixin,
 )
 from main.tests.view_sets.view_set_test_case_mixin import ViewSetTestCaseMixin
 from main.view_sets.admin_organization_view_set import AdminOrganizationViewSet
 
 
 class AdminOrganizationViewSetTestCase(
-    ActivityViewSetTestCaseMixin, ViewSetTestCaseMixin, AdminTestCase
+    AuthenticatedViewSetTestCaseMixin, ViewSetTestCaseMixin, AdminTestCase
 ):
     basename = "admin-organization"
     view_set = AdminOrganizationViewSet

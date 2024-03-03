@@ -5,12 +5,12 @@ from main.filter_sets.order_filter_set import OrderFilterSet
 from main.models.order import Order
 from main.permissions.staff_permission import StaffPermission
 from main.serializers.order_serializer import OrderSerializer
+from main.view_sets.authenticated_view_set import AuthenticatedViewSet
 from main.view_sets.filter_mixin import FilterMixin
-from main.view_sets.view_set import ViewSet
 
 
 @extend_schema(tags=["organizations_orders"])
-class OrderViewSet(FilterMixin, ViewSet):
+class OrderViewSet(FilterMixin, AuthenticatedViewSet):
     activity_class = OrderActivity
     filter_set_class = OrderFilterSet
     ordering_fields = (

@@ -1,7 +1,7 @@
 from main.factories.organization_factory import OrganizationFactory
 from main.tests.staff_test_case import StaffTestCase
-from main.tests.view_sets.activity_view_set_test_case_mixin import (
-    ActivityViewSetTestCaseMixin,
+from main.tests.view_sets.authenticated_view_set_test_case_mixin import (
+    AuthenticatedViewSetTestCaseMixin,
 )
 from main.tests.view_sets.organization_view_set_test_case_mixin import (
     OrganizationViewSetTestCaseMixin,
@@ -10,7 +10,7 @@ from main.view_sets.staff_organization_view_set import OrganizationViewSet
 
 
 class OrganizationViewSetTestCase(
-    ActivityViewSetTestCaseMixin, OrganizationViewSetTestCaseMixin, StaffTestCase
+    AuthenticatedViewSetTestCaseMixin, OrganizationViewSetTestCaseMixin, StaffTestCase
 ):
     basename = "organization"
     view_set = OrganizationViewSet

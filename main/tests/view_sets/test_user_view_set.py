@@ -11,15 +11,15 @@ from main.shortcuts import (
     set_email_verifying_token,
 )
 from main.tests.user_test_case import UserTestCase
-from main.tests.view_sets.activity_view_set_test_case_mixin import (
-    ActivityViewSetTestCaseMixin,
+from main.tests.view_sets.authenticated_view_set_test_case_mixin import (
+    AuthenticatedViewSetTestCaseMixin,
 )
 from main.tests.view_sets.user_view_set_test_case_mixin import UserViewSetTestCaseMixin
 from main.view_sets.user_view_set import UserViewSet
 
 
 class UserViewSetTestCase(
-    ActivityViewSetTestCaseMixin, UserViewSetTestCaseMixin, UserTestCase
+    AuthenticatedViewSetTestCaseMixin, UserViewSetTestCaseMixin, UserTestCase
 ):
     basename = "user"
     query_set = User.objects.all()

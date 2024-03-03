@@ -5,12 +5,12 @@ from main.tests.staff_test_case import StaffTestCase
 from main.tests.view_sets.organization_view_set_test_case_mixin import (
     OrganizationViewSetTestCaseMixin,
 )
-from main.view_sets.staff_user_view_set import StaffUserViewSet
+from main.view_sets.organization_user_view_set import OrganizationUserViewSet
 
 
-class StaffUserViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCase):
+class OrganizationUserViewSetTestCase(OrganizationViewSetTestCaseMixin, StaffTestCase):
     basename = "organization-user"
-    view_set = StaffUserViewSet
+    view_set = OrganizationUserViewSet
 
     def test_list__filter__email__icontains(self):
         UserFactory.create()

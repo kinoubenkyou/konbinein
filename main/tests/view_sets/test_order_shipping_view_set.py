@@ -5,8 +5,8 @@ from factory import Iterator
 from main.factories.order_shipping_factory import OrderShippingFactory
 from main.models import ZONE_CHOICES
 from main.tests.staff_test_case import StaffTestCase
-from main.tests.view_sets.activity_view_set_test_case_mixin import (
-    ActivityViewSetTestCaseMixin,
+from main.tests.view_sets.authenticated_view_set_test_case_mixin import (
+    AuthenticatedViewSetTestCaseMixin,
 )
 from main.tests.view_sets.organization_view_set_test_case_mixin import (
     OrganizationViewSetTestCaseMixin,
@@ -15,7 +15,7 @@ from main.view_sets.order_shipping_view_set import OrderShippingViewSet
 
 
 class OrderShippingViewSetTestCase(
-    ActivityViewSetTestCaseMixin, OrganizationViewSetTestCaseMixin, StaffTestCase
+    AuthenticatedViewSetTestCaseMixin, OrganizationViewSetTestCaseMixin, StaffTestCase
 ):
     basename = "ordershipping"
     view_set = OrderShippingViewSet
