@@ -1,6 +1,7 @@
 from django.core import mail
 from django.core.cache import cache
-from mongoengine import connect, disconnect, get_connection
+from django.db.models import QuerySet
+from mongoengine import get_connection
 from rest_framework.reverse import reverse
 from rest_framework.status import (
     HTTP_200_OK,
@@ -10,19 +11,12 @@ from rest_framework.status import (
 )
 from rest_framework.test import APITestCase
 
-from konbinein.settings import MONGO
-
 
 class ViewSetTestCase(APITestCase):
-    def setUp(self):
-        super().setUp()
-        connect(**MONGO["test"])
-
     def tearDown(self):
         super().tearDown()
         cache.clear()
         get_connection().drop_database("test")
-        disconnect()
 
     def _act_and_assert_action_response_status(self, action, data, pk):
         response = self.client.post(self._action_path(action, pk), data, format="json")
@@ -36,6 +30,8 @@ class ViewSetTestCase(APITestCase):
     def _act_and_assert_create_test(self, data, filter_):
         self._act_and_assert_create_test_response_status(data)
         self._assert_saved_object(filter_)
+        object_id = self.view_set.queryset.filter(**filter_).first().id
+        self._assert_saved_activity(data, object_id)
 
     def _act_and_assert_create_test_response_status(self, data):
         response = self.client.post(self._list_path(), data, format="json")
@@ -69,6 +65,7 @@ class ViewSetTestCase(APITestCase):
     def _act_and_assert_update_test(self, data, filter_, pk):
         self._act_and_assert_update_test_response_status(data, pk)
         self._assert_saved_object({**filter_, "id": pk})
+        self._assert_saved_activity(data, pk)
 
     def _act_and_assert_update_test_response_status(self, data, pk):
         response = self.client.put(self._detail_path(pk), data, format="json")
@@ -95,6 +92,15 @@ class ViewSetTestCase(APITestCase):
         self.assertEqual(dict_["subject"], subject)
         self.assertCountEqual(dict_["to"], to)
 
+    def _assert_saved_activity(self, request_data, object_id):
+        data = {key: value for key, value in request_data.items()}
+        activity_kwargs = {
+            "data": data,
+            "object_id": object_id,
+        }
+        activities = self.view_set.activity_class.objects.filter(**activity_kwargs)
+        self.assertEqual(len(activities), 1)
+
     def _assert_saved_object(self, filter_):
         self.assertEqual(self.view_set.queryset.filter(**filter_).count(), 1)
 
@@ -108,7 +114,9 @@ class ViewSetTestCase(APITestCase):
             for key, value in request_query.items()
             if key not in ["limit", "offset", "ordering"]
         }
-        query_set = cls.view_set.queryset.filter(**filter_).distinct()
+        query_set = cls.view_set.queryset.filter(**filter_)
+        if isinstance(query_set, QuerySet):
+            query_set = query_set.distinct()
         if "ordering" in request_query:
             query_set = query_set.order_by(request_query["ordering"])
         offset = request_query.get("offset", 0)

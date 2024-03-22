@@ -41,16 +41,15 @@ INSTALLED_APPS = (
     "drf_spectacular",
 )
 
-MIDDLEWARE = [
-    # "django.middleware.security.SecurityMiddleware",
-    # "django.contrib.sessions.middleware.SessionMiddleware",
-    # "django.middleware.common.CommonMiddleware",
-    # "django.middleware.csrf.CsrfViewMiddleware",
-    # "django.contrib.auth.middleware.AuthenticationMiddleware",
-    # "django.contrib.messages.middleware.MessageMiddleware",
-    # "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "main.middlewares.mongo_connection_middleware.MongoConnectionMiddleware",
-]
+# MIDDLEWARE = [
+#     "django.middleware.security.SecurityMiddleware",
+#     "django.contrib.sessions.middleware.SessionMiddleware",
+#     "django.middleware.common.CommonMiddleware",
+#     "django.middleware.csrf.CsrfViewMiddleware",
+#     "django.contrib.auth.middleware.AuthenticationMiddleware",
+#     "django.contrib.messages.middleware.MessageMiddleware",
+#     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+# ]
 
 ROOT_URLCONF = "konbinein.urls"
 
@@ -182,18 +181,9 @@ CACHES = {
 
 
 MONGO = {
-    "default": {
-        "authentication_source": "admin",
-        "db": "mongo",
-        "host": "mongo",
-        "password": "password",
-        "username": "admin",
-    },
-    "test": {
-        "authentication_source": "admin",
-        "db": "test",
-        "host": "mongo",
-        "password": "password",
-        "username": "admin",
-    },
+    "authentication_source": "admin",
+    "db": "mongo",
+    "host": "mongo",
+    "password": "password",
+    "username": "admin",
 }

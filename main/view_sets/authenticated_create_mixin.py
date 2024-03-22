@@ -8,8 +8,8 @@ class AuthenticatedCreateMixin(CreateModelMixin):
         user = request.user
         self.activity_class(
             action=self.action,
+            data=request.data,
             object_id=serializer.instance.id,
-            user_id=user.id,
-            user_name=user.name,
-            **request.data,
+            user_id=getattr(user, "id", None),
+            user_name=getattr(user, "name", None),
         ).save()
