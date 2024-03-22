@@ -4,7 +4,7 @@ from rest_framework.mixins import UpdateModelMixin
 class AuthenticatedUpdateMixin(UpdateModelMixin):
     def perform_update(self, serializer):
         request = self.request
-        initial_instance_data = self.serializer_class(serializer.instance).data
+        initial_instance_data = self.get_serializer_class()(serializer.instance).data
         data = {
             key: value
             for key, value in request.data.items()
@@ -14,8 +14,8 @@ class AuthenticatedUpdateMixin(UpdateModelMixin):
         user = request.user
         self.activity_class(
             action=self.action,
+            data=data,
             object_id=serializer.instance.id,
-            user_id=user.id,
-            user_name=user.name,
-            **data,
+            user_id=getattr(user, "id", None),
+            user_name=getattr(user, "name", None),
         ).save()

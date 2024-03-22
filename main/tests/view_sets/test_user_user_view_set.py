@@ -11,17 +11,17 @@ from main.shortcuts import (
     set_email_verifying_token,
 )
 from main.tests.view_sets.user_test_case import UserTestCase
-from main.view_sets.user_view_set import UserViewSet
+from main.view_sets.user_user_view_set import UserUserViewSet
 
 
-class UserViewSetTestCase(UserTestCase):
-    basename = "user"
+class UserUserViewSetTestCase(UserTestCase):
+    basename = "user-user"
     query_set = User.objects.all()
-    view_set = UserViewSet
+    view_set = UserUserViewSet
 
     def test_de_authenticating(self):
         path = reverse(
-            "user-de-authenticating",
+            "user-user-de-authenticating",
             kwargs={"pk": self.user.id, "user_id": self.user.id},
         )
         response = self.client.post(path, format="json")

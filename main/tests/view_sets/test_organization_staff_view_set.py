@@ -5,12 +5,12 @@ from rest_framework.status import HTTP_204_NO_CONTENT
 from main.factories.staff_factory import StaffFactory
 from main.models.staff import Staff
 from main.tests.view_sets.staff_test_case import StaffTestCase
-from main.view_sets.staff_view_set import StaffViewSet
+from main.view_sets.organization_staff_view_set import OrganizationStaffViewSet
 
 
-class StaffViewSetTestCase(StaffTestCase):
+class OrganizationStaffViewSetTestCase(StaffTestCase):
     basename = "organization-staff"
-    view_set = StaffViewSet
+    view_set = OrganizationStaffViewSet
 
     def test_agreeing(self):
         staff = StaffFactory.create(organization=self.organization)

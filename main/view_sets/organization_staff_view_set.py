@@ -1,6 +1,6 @@
 from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import action
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
+from rest_framework.mixins import DestroyModelMixin, ListModelMixin, RetrieveModelMixin
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.viewsets import GenericViewSet
@@ -11,13 +11,12 @@ from main.models.staff import Staff
 from main.permissions.staff_permission import StaffPermission
 from main.serializers.staff_serializer import StaffSerializer
 from main.view_sets.authenticated_create_mixin import AuthenticatedCreateMixin
-from main.view_sets.authenticated_destroy_mixin import AuthenticatedDestroyMixin
 
 
 @extend_schema(tags=["organizations_staffs"])
-class StaffViewSet(
+class OrganizationStaffViewSet(
     AuthenticatedCreateMixin,
-    AuthenticatedDestroyMixin,
+    DestroyModelMixin,
     ListModelMixin,
     RetrieveModelMixin,
     GenericViewSet,

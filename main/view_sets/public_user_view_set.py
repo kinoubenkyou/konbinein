@@ -4,12 +4,12 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
-from rest_framework.mixins import CreateModelMixin, UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.viewsets import GenericViewSet
 
+from main.documents.activity import UserActivity
 from main.models.user import User
 from main.serializers.public_user_authenticating_serializer import (
     PublicUserAuthenticatingSerializer,
@@ -31,10 +31,15 @@ from main.shortcuts import (
     set_password_resetting_token,
 )
 from main.view_sets import send_email, send_email_verification
+from main.view_sets.authenticated_create_mixin import AuthenticatedCreateMixin
+from main.view_sets.authenticated_update_mixin import AuthenticatedUpdateMixin
 
 
 @extend_schema(tags=["public_user"])
-class PublicUserViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
+class PublicUserViewSet(
+    AuthenticatedCreateMixin, AuthenticatedUpdateMixin, GenericViewSet
+):
+    activity_class = UserActivity
     queryset = User.objects.all()
 
     @action(detail=False, methods=("post",))
@@ -102,5 +107,5 @@ class PublicUserViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
         return Response(status=HTTP_204_NO_CONTENT)
 
     def perform_create(self, serializer):
-        user = serializer.save()
-        send_email_verification(self.request, user)
+        super().perform_create(serializer)
+        send_email_verification(self.request, serializer.instance)
