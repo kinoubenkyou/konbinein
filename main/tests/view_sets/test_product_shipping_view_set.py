@@ -9,11 +9,11 @@ from main.factories.product_shipping_with_related_factory import (
 from main.models import ZONE_CHOICES
 from main.models.product import Product
 from main.models.product_shipping import ProductShipping
-from main.tests.view_sets.staff_test_case import StaffTestCase
+from main.tests.view_sets.organization_test_case import OrganizationTestCase
 from main.view_sets.product_shipping_view_set import ProductShippingViewSet
 
 
-class ProductShippingViewSetTestCase(StaffTestCase):
+class ProductShippingViewSetTestCase(OrganizationTestCase):
     basename = "productshipping"
     view_set = ProductShippingViewSet
 

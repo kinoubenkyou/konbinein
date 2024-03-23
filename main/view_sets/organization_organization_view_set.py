@@ -2,22 +2,24 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.mixins import DestroyModelMixin, RetrieveModelMixin
 from rest_framework.viewsets import GenericViewSet
 
-from main.documents.activity import OrganizationActivity
+from main.documents.organization_activity import OrganizationActivity
 from main.models.organization import Organization
-from main.permissions.staff_permission import StaffPermission
+from main.permissions.organization_permission import OrganizationPermission
 from main.serializers.organization_serializer import OrganizationSerializer
-from main.view_sets.authenticated_update_mixin import AuthenticatedUpdateMixin
+from main.shortcuts import ActivityType
+from main.view_sets.update_mixin import UpdateMixin
 
 
 @extend_schema(tags=["organizations_organizations"])
 class OrganizationOrganizationViewSet(
-    AuthenticatedUpdateMixin,
+    UpdateMixin,
     DestroyModelMixin,
     RetrieveModelMixin,
     GenericViewSet,
 ):
     activity_class = OrganizationActivity
-    permission_classes = (StaffPermission,)
+    activity_type = ActivityType.ORGANIZATION
+    permission_classes = (OrganizationPermission,)
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
 

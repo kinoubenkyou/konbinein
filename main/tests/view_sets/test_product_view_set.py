@@ -1,11 +1,11 @@
 from factory import Iterator
 
 from main.factories.product_factory import ProductFactory
-from main.tests.view_sets.staff_test_case import StaffTestCase
+from main.tests.view_sets.organization_test_case import OrganizationTestCase
 from main.view_sets.product_view_set import ProductViewSet
 
 
-class ProductViewSetTestCase(StaffTestCase):
+class ProductViewSetTestCase(OrganizationTestCase):
     basename = "product"
     view_set = ProductViewSet
 

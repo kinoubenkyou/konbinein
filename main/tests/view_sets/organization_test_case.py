@@ -3,7 +3,7 @@ from main.factories.staff_factory import StaffFactory
 from main.tests.view_sets.authenticated_test_case import AuthenticatedTestCase
 
 
-class StaffTestCase(AuthenticatedTestCase):
+class OrganizationTestCase(AuthenticatedTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

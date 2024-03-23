@@ -13,6 +13,8 @@ from rest_framework.test import APITestCase
 
 
 class ViewSetTestCase(APITestCase):
+    maxDiff = None
+
     def tearDown(self):
         super().tearDown()
         cache.clear()
@@ -30,8 +32,7 @@ class ViewSetTestCase(APITestCase):
     def _act_and_assert_create_test(self, data, filter_):
         self._act_and_assert_create_test_response_status(data)
         self._assert_saved_object(filter_)
-        object_id = self.view_set.queryset.filter(**filter_).first().id
-        self._assert_saved_activity(data, object_id)
+        self._assert_saved_activity(data, filter_)
 
     def _act_and_assert_create_test_response_status(self, data):
         response = self.client.post(self._list_path(), data, format="json")
@@ -64,8 +65,9 @@ class ViewSetTestCase(APITestCase):
 
     def _act_and_assert_update_test(self, data, filter_, pk):
         self._act_and_assert_update_test_response_status(data, pk)
-        self._assert_saved_object({**filter_, "id": pk})
-        self._assert_saved_activity(data, pk)
+        filter_ = {**filter_, "id": pk}
+        self._assert_saved_object(filter_)
+        self._assert_saved_activity(data, filter_)
 
     def _act_and_assert_update_test_response_status(self, data, pk):
         response = self.client.put(self._detail_path(pk), data, format="json")
@@ -83,7 +85,7 @@ class ViewSetTestCase(APITestCase):
         return self._path(action, kwargs)
 
     def _assert_destroyed_object(self, object_):
-        self.assertIsNone(self.view_set.queryset.filter(id=object_.id).first())
+        self.assertFalse(self.view_set.queryset.filter(id=object_.id).exists())
 
     def _assert_email(self, body, subject, to):
         dict_ = mail.outbox[0].__dict__
@@ -92,14 +94,19 @@ class ViewSetTestCase(APITestCase):
         self.assertEqual(dict_["subject"], subject)
         self.assertCountEqual(dict_["to"], to)
 
-    def _assert_saved_activity(self, request_data, object_id):
-        data = {key: value for key, value in request_data.items()}
-        activity_kwargs = {
-            "data": data,
-            "object_id": object_id,
-        }
-        activities = self.view_set.activity_class.objects.filter(**activity_kwargs)
-        self.assertEqual(len(activities), 1)
+    def _assert_saved_activity(self, data, filter_):
+        object_ = self.view_set.queryset.filter(**filter_).get()
+        query_set = self.view_set.activity_class.objects.filter(
+            creator_id=getattr(self, "user", None) and self.user.id,
+            creator_organization_id=getattr(self, "organization", None)
+            and self.organization.id,
+            creator_type=self.view_set.activity_type,
+            data=data,
+            object_id=object_.id,
+            organization_id=getattr(object_, "organization_id", None),
+            user_id=getattr(object_, "user_id", None),
+        )
+        self.assertEqual(query_set.count(), 1)
 
     def _assert_saved_object(self, filter_):
         self.assertEqual(self.view_set.queryset.filter(**filter_).count(), 1)

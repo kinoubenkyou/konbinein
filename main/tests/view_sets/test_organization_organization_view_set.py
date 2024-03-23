@@ -1,11 +1,11 @@
 from main.factories.organization_factory import OrganizationFactory
-from main.tests.view_sets.staff_test_case import StaffTestCase
+from main.tests.view_sets.organization_test_case import OrganizationTestCase
 from main.view_sets.organization_organization_view_set import (
     OrganizationOrganizationViewSet,
 )
 
 
-class OrganizationOrganizationViewSetTestCase(StaffTestCase):
+class OrganizationOrganizationViewSetTestCase(OrganizationTestCase):
     basename = "organization-organization"
     view_set = OrganizationOrganizationViewSet
 

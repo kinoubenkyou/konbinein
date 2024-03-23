@@ -3,7 +3,7 @@ from rest_framework.permissions import BasePermission
 from main.models.staff import Staff
 
 
-class StaffPermission(BasePermission):
+class OrganizationPermission(BasePermission):
     def has_permission(self, request, view):
         return (
             request.user is not None
