@@ -3,6 +3,16 @@ from secrets import token_urlsafe
 from django.core.cache import cache
 from rest_framework.authtoken.models import Token
 
+OBSCURE_ACTIVITY_DATA_KEYS = ("current_password", "password", "token")
+
+
+class ActivityType:
+    ADMIN = "admin"
+    ORGANIZATION = "organization"
+    PUBLIC = "public"
+    USER = "user"
+    ALL = (ADMIN, ORGANIZATION, PUBLIC, USER)
+
 
 def delete_authentication_token(user_id):
     cache.delete(f"authentication_token.{user_id}")

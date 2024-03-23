@@ -1,45 +1,11 @@
-from mongoengine import DynamicDocument, IntField, StringField
+from mongoengine import DictField, IntField, StringField
+
+from main.shortcuts import ActivityType
 
 
 class Activity:
-    action = StringField()
-    object_id = IntField()
-    meta = {"indexes": [("object_id", "_id")]}
-    user_id = IntField()
-    user_name = StringField()
-
-
-class AdminOrganizationActivity(Activity, DynamicDocument):
-    pass
-
-
-class OrderActivity(Activity, DynamicDocument):
-    pass
-
-
-class OrderShippingActivity(Activity, DynamicDocument):
-    pass
-
-
-class OrganizationActivity(Activity, DynamicDocument):
-    pass
-
-
-class ProductActivity(Activity, DynamicDocument):
-    pass
-
-
-class ProductShippingActivity(Activity, DynamicDocument):
-    pass
-
-
-class StaffActivity(Activity, DynamicDocument):
-    pass
-
-
-class UserActivity(Activity, DynamicDocument):
-    pass
-
-
-class UserStaffActivity(Activity, DynamicDocument):
-    pass
+    creator_id = IntField()
+    creator_organization_id = IntField()
+    creator_type = StringField(choices=ActivityType.ALL, required=True)
+    data = DictField(required=True)
+    object_id = IntField(required=True)

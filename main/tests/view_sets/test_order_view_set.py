@@ -8,7 +8,7 @@ from main.models.order import Order
 from main.models.order_shipping_item import OrderShippingItem
 from main.models.product_item import ProductItem
 from main.models.product_shipping_item import ProductShippingItem
-from main.tests.view_sets.staff_test_case import StaffTestCase
+from main.tests.view_sets.organization_test_case import OrganizationTestCase
 from main.view_sets.order_view_set import OrderViewSet
 
 
@@ -162,7 +162,7 @@ class OrderViewSetTestCaseMixin:
         }
 
 
-class OrderValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
+class OrderValidationTestCase(OrderViewSetTestCaseMixin, OrganizationTestCase):
     def test_create__code_already_in_another_order(self):
         order = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
@@ -228,7 +228,7 @@ class OrderValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         )
 
 
-class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
+class OrderViewSetTestCase(OrderViewSetTestCaseMixin, OrganizationTestCase):
     def test_create(self):
         data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
@@ -543,7 +543,9 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         self._act_and_assert_update_test(data, filter_, order.id)
 
 
-class OrderShippingItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
+class OrderShippingItemValidationTestCase(
+    OrderViewSetTestCaseMixin, OrganizationTestCase
+):
     def test_create__item_total_incorrect(self):
         data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
@@ -606,7 +608,7 @@ class OrderShippingItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCa
         )
 
 
-class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
+class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, OrganizationTestCase):
     def test_create__item_total_incorrect(self):
         data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
@@ -656,7 +658,9 @@ class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
         )
 
 
-class ProductShippingItemValidationTestCase(OrderViewSetTestCaseMixin, StaffTestCase):
+class ProductShippingItemValidationTestCase(
+    OrderViewSetTestCaseMixin, OrganizationTestCase
+):
     def test_create__item_total_incorrect(self):
         data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},

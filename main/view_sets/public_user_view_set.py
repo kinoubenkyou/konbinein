@@ -9,7 +9,7 @@ from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.viewsets import GenericViewSet
 
-from main.documents.activity import UserActivity
+from main.documents.user_activity import UserActivity
 from main.models.user import User
 from main.serializers.public_user_authenticating_serializer import (
     PublicUserAuthenticatingSerializer,
@@ -23,6 +23,7 @@ from main.serializers.public_user_password_resetting_serializer import (
 )
 from main.serializers.public_user_update_serializer import PublicUserUpdateSerializer
 from main.shortcuts import (
+    ActivityType,
     delete_email_verifying_token,
     get_authentication_token,
     get_email_verifying_token,
@@ -31,15 +32,14 @@ from main.shortcuts import (
     set_password_resetting_token,
 )
 from main.view_sets import send_email, send_email_verification
-from main.view_sets.authenticated_create_mixin import AuthenticatedCreateMixin
-from main.view_sets.authenticated_update_mixin import AuthenticatedUpdateMixin
+from main.view_sets.create_mixin import CreateMixin
+from main.view_sets.update_mixin import UpdateMixin
 
 
 @extend_schema(tags=["public_user"])
-class PublicUserViewSet(
-    AuthenticatedCreateMixin, AuthenticatedUpdateMixin, GenericViewSet
-):
+class PublicUserViewSet(CreateMixin, UpdateMixin, GenericViewSet):
     activity_class = UserActivity
+    activity_type = ActivityType.PUBLIC
     queryset = User.objects.all()
 
     @action(detail=False, methods=("post",))

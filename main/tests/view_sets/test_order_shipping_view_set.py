@@ -4,11 +4,11 @@ from factory import Iterator
 
 from main.factories.order_shipping_factory import OrderShippingFactory
 from main.models import ZONE_CHOICES
-from main.tests.view_sets.staff_test_case import StaffTestCase
+from main.tests.view_sets.organization_test_case import OrganizationTestCase
 from main.view_sets.order_shipping_view_set import OrderShippingViewSet
 
 
-class OrderShippingViewSetTestCase(StaffTestCase):
+class OrderShippingViewSetTestCase(OrganizationTestCase):
     basename = "ordershipping"
     view_set = OrderShippingViewSet
 

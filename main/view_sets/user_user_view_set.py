@@ -5,23 +5,24 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.viewsets import GenericViewSet
 
-from main.documents.activity import UserActivity
+from main.documents.user_activity import UserActivity
 from main.models.user import User
 from main.permissions.user_permission import UserPermission
 from main.serializers.user_serializer import UserSerializer
-from main.shortcuts import delete_authentication_token
+from main.shortcuts import ActivityType, delete_authentication_token
 from main.view_sets import send_email_verification
-from main.view_sets.authenticated_update_mixin import AuthenticatedUpdateMixin
+from main.view_sets.update_mixin import UpdateMixin
 
 
 @extend_schema(tags=["users_users"])
 class UserUserViewSet(
-    AuthenticatedUpdateMixin,
+    UpdateMixin,
     DestroyModelMixin,
     RetrieveModelMixin,
     GenericViewSet,
 ):
     activity_class = UserActivity
+    activity_type = ActivityType.USER
     permission_classes = (UserPermission,)
     queryset = User.objects.all()
     serializer_class = UserSerializer
