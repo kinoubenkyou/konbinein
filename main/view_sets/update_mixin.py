@@ -1,17 +1,28 @@
 from rest_framework.mixins import UpdateModelMixin
 
+from main.shortcuts import OBSCURE_ACTIVITY_DATA_KEYS
+
 
 class UpdateMixin(UpdateModelMixin):
     def perform_update(self, serializer):
+        super().perform_update(serializer)
+        instance = serializer.instance
         request = self.request
-        initial_instance_data = self.get_serializer_class()(serializer.instance).data
+        lastest_activity_data = getattr(
+            self.activity_class.objects.filter(object_id=instance.id)
+            .order_by("-id")
+            .first(),
+            "data",
+            {},
+        )
         data = {
             key: value
             for key, value in request.data.items()
-            if value != str(initial_instance_data.get(key))
+            if key not in OBSCURE_ACTIVITY_DATA_KEYS
+            and (
+                key not in lastest_activity_data or value != lastest_activity_data[key]
+            )
         }
-        super().perform_update(serializer)
-        instance = serializer.instance
         self.activity_class.objects.create(
             creator_id=getattr(request.user, "id", None),
             creator_organization_id=self.kwargs.get("organization_id"),

@@ -16,6 +16,21 @@ class OrderViewSetTestCaseMixin:
     basename = "order"
     view_set = OrderViewSet
 
+    def _assert_and_get_saved_object(self, data, filter_):
+        order_shipping_item_filters = filter_.pop("ordershippingitem_set")
+        product_item_filters = filter_.pop("productitem_set")
+        orders = list(Order.objects.filter(**filter_))
+        self.assertEqual(len(orders), 1)
+        for order_shipping_item_filter in order_shipping_item_filters:
+            self._assert_saved_order_shipping_item({
+                **order_shipping_item_filter, "order_id": orders[0].id
+            })
+        for product_item_filter in product_item_filters:
+            self._assert_saved_product_item({
+                **product_item_filter, "order_id": orders[0].id
+            })
+        return orders[0]
+
     def _assert_destroyed_object(self, order):
         self.assertIsNone(Order.objects.filter(id=order.id).first())
         self._assert_destroyed_order_shipping_item(order.cached_product_items)
@@ -52,20 +67,6 @@ class OrderViewSetTestCaseMixin:
                 ]
             ).first()
         )
-
-    def _assert_saved_object(self, filter_):
-        order_shipping_item_filters = filter_.pop("ordershippingitem_set")
-        product_item_filters = filter_.pop("productitem_set")
-        orders = list(Order.objects.filter(**filter_))
-        self.assertEqual(len(orders), 1)
-        for order_shipping_item_filter in order_shipping_item_filters:
-            self._assert_saved_order_shipping_item({
-                **order_shipping_item_filter, "order_id": orders[0].id
-            })
-        for product_item_filter in product_item_filters:
-            self._assert_saved_product_item({
-                **product_item_filter, "order_id": orders[0].id
-            })
 
     def _assert_saved_order_shipping_item(self, order_shipping_item_filter):
         self.assertEqual(
