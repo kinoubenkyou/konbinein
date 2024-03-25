@@ -121,11 +121,12 @@ class PublicUserViewSetTestCase(ViewSetTestCase):
             user.id,
         )
 
-    def _assert_saved_object(self, filter_):
+    def _assert_and_get_saved_object(self, data, filter_):
         password = filter_.pop("password")
         users = list(User.objects.filter(**filter_))
         self.assertEqual(len(users), 1)
         self.assertTrue(check_password(password, users[0].hashed_password))
+        return users[0]
 
     @staticmethod
     def _deserializer_data():

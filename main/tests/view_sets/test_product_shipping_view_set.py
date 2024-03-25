@@ -222,7 +222,7 @@ class ProductShippingViewSetTestCase(OrganizationTestCase):
         filter_ = {**data, "organization_id": self.organization.id}
         self._act_and_assert_update_test(data, filter_, product_shipping.id)
 
-    def _assert_saved_object(self, filter_):
+    def _assert_and_get_saved_object(self, data, filter_):
         product_ids = filter_.pop("products")
         product_shippings = list(ProductShipping.objects.filter(**filter_))
         self.assertEqual(len(product_shippings), 1)
@@ -232,6 +232,7 @@ class ProductShippingViewSetTestCase(OrganizationTestCase):
             ),
             product_ids,
         )
+        return product_shippings[0]
 
     @staticmethod
     def _serializer_data(product_shipping):

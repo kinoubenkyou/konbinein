@@ -78,15 +78,8 @@ class ProductViewSetTestCase(OrganizationTestCase):
     def test_update(self):
         product = ProductFactory.create(organization_id=self.organization.id)
         data = self._deserializer_data()
-        filter_ = {
-            **data,
-            "organization_id": self.organization.id,
-        }
-        self._act_and_assert_update_test(
-            data,
-            filter_,
-            product.id,
-        )
+        filter_ = {**data, "organization_id": self.organization.id}
+        self._act_and_assert_update_test(data, filter_, product.id)
 
     @staticmethod
     def _deserializer_data():
