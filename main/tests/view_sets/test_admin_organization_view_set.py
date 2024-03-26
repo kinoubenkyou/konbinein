@@ -8,13 +8,13 @@ class AdminOrganizationViewSetTestCase(AdminTestCase):
     view_set = AdminOrganizationViewSet
 
     def test_create(self):
-        data = self._deserializer_data()
+        data = self._get_deserializer_data()
         filter_ = {**data}
         del filter_["user"]
         self._act_and_assert_create_test(data, filter_)
 
     @classmethod
-    def _deserializer_data(cls):
+    def _get_deserializer_data(cls):
         organization = OrganizationFactory.build()
         return {
             "code": organization.code,

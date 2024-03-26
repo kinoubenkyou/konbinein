@@ -12,7 +12,7 @@ from main.tests.view_sets.organization_test_case import OrganizationTestCase
 from main.view_sets.order_view_set import OrderViewSet
 
 
-class OrderViewSetTestCaseMixin:
+class OrderViewSetTestCase(OrganizationTestCase):
     basename = "order"
     view_set = OrderViewSet
 
@@ -70,7 +70,7 @@ class OrderViewSetTestCaseMixin:
 
     def _assert_saved_order_shipping_item(self, order_shipping_item_filter):
         self.assertEqual(
-            len(OrderShippingItem.objects.filter(**order_shipping_item_filter)), 1
+            OrderShippingItem.objects.filter(**order_shipping_item_filter).count(), 1
         )
 
     def _assert_saved_product_item(self, product_item_filter):
@@ -86,12 +86,41 @@ class OrderViewSetTestCaseMixin:
 
     def _assert_saved_product_shipping_item(self, product_item_shipping_filter):
         self.assertEqual(
-            len(ProductShippingItem.objects.filter(**product_item_shipping_filter)), 1
+            ProductShippingItem.objects.filter(**product_item_shipping_filter).count(),
+            1,
         )
 
     @staticmethod
     def _increment_string(data, field, increment):
         data[field] = str(Decimal(data[field]) + increment)
+
+    @classmethod
+    def _get_serializer_data(cls, order):
+        order_shipping_item_data_list = [
+            cls._order_shipping_item_data(order_shipping_item)
+            for order_shipping_item in order.ordershippingitem_set.all()
+        ]
+        order_shipping_item_data_list.sort(
+            key=lambda order_shipping_item_data: order_shipping_item_data["id"]
+        )
+        product_item_data_list = [
+            cls._product_item_data(product_item)
+            for product_item in order.productitem_set.all()
+        ]
+        product_item_data_list.sort(
+            key=lambda product_item_data: product_item_data["id"]
+        )
+        return {
+            "code": order.code,
+            "created_at": order.created_at.isoformat(),
+            "id": order.id,
+            "order_shipping_total": str(order.order_shipping_total),
+            "ordershippingitem_set": order_shipping_item_data_list,
+            "product_shipping_total": str(order.product_shipping_total),
+            "product_total": str(order.product_total),
+            "productitem_set": product_item_data_list,
+            "total": str(order.total),
+        }
 
     @classmethod
     def _order_shipping_item_data(cls, order_shipping_item):
@@ -134,102 +163,8 @@ class OrderViewSetTestCaseMixin:
             "unit_fee": str(product_shipping_item.unit_fee),
         }
 
-    @classmethod
-    def _serializer_data(cls, order):
-        order_shipping_item_data_list = [
-            cls._order_shipping_item_data(order_shipping_item)
-            for order_shipping_item in order.ordershippingitem_set.all()
-        ]
-        order_shipping_item_data_list.sort(
-            key=lambda order_shipping_item_data: order_shipping_item_data["id"]
-        )
-        product_item_data_list = [
-            cls._product_item_data(product_item)
-            for product_item in order.productitem_set.all()
-        ]
-        product_item_data_list.sort(
-            key=lambda product_item_data: product_item_data["id"]
-        )
-        return {
-            "code": order.code,
-            "created_at": order.created_at.isoformat(),
-            "id": order.id,
-            "order_shipping_total": str(order.order_shipping_total),
-            "ordershippingitem_set": order_shipping_item_data_list,
-            "product_shipping_total": str(order.product_shipping_total),
-            "product_total": str(order.product_total),
-            "productitem_set": product_item_data_list,
-            "total": str(order.total),
-        }
 
-
-class OrderValidationTestCase(OrderViewSetTestCaseMixin, OrganizationTestCase):
-    def test_create__code_already_in_another_order(self):
-        order = OrderWithRelatedFactory(
-            order_kwargs={"organization": self.organization},
-        ).create()
-        data = OrderWithRelatedFactory(
-            order_kwargs={"organization": self.organization},
-            product_item_count=1,
-            product_kwargs={"organization": self.organization},
-        ).get_deserializer_data()
-        data["code"] = order.code
-        self._act_and_assert_create_validation_test(
-            data, {"code": ["Code is already in another order."]}
-        )
-
-    def test_create__order_shipping_total_incorrect(self):
-        data = OrderWithRelatedFactory(
-            order_kwargs={"organization": self.organization},
-            order_shipping_item_count=1,
-            order_shipping_kwargs={"organization": self.organization},
-            product_item_count=1,
-            product_kwargs={"organization": self.organization},
-        ).get_deserializer_data()
-        self._increment_string(data, "order_shipping_total", 1)
-        self._act_and_assert_create_validation_test(
-            data, {"non_field_errors": ["Order shipping total is incorrect."]}
-        )
-
-    def test_create__product_total_incorrect(self):
-        data = OrderWithRelatedFactory(
-            order_kwargs={"organization": self.organization},
-            product_item_count=1,
-            product_kwargs={"organization": self.organization},
-        ).get_deserializer_data()
-        self._increment_string(data, "product_total", 1)
-        self._act_and_assert_create_validation_test(
-            data, {"non_field_errors": ["Product total is incorrect."]}
-        )
-
-    def test_create__product_shipping_total_incorrect(self):
-        data = OrderWithRelatedFactory(
-            order_kwargs={"organization": self.organization},
-            product_item_count=1,
-            product_kwargs={"organization": self.organization},
-            product_shipping_item_count=1,
-            product_shipping_kwargs={"organization": self.organization},
-        ).get_deserializer_data()
-        self._increment_string(data, "product_shipping_total", 1)
-        self._act_and_assert_create_validation_test(
-            data, {"non_field_errors": ["Product shipping total is incorrect."]}
-        )
-
-    def test_create__total_incorrect(self):
-        data = OrderWithRelatedFactory(
-            order_kwargs={"organization": self.organization},
-            product_item_count=1,
-            product_kwargs={"organization": self.organization},
-            product_shipping_item_count=1,
-            product_shipping_kwargs={"organization": self.organization},
-        ).get_deserializer_data()
-        self._increment_string(data, "total", 1)
-        self._act_and_assert_create_validation_test(
-            data, {"non_field_errors": ["Total is incorrect."]}
-        )
-
-
-class OrderViewSetTestCase(OrderViewSetTestCaseMixin, OrganizationTestCase):
+class OrderNonValidationTestCase(OrderViewSetTestCase):
     def test_create(self):
         data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
@@ -466,7 +401,7 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, OrganizationTestCase):
             order_shipping_kwargs={"organization": self.organization},
             product_item_count=2,
             product_kwargs={"organization": self.organization},
-        ).create_batch(2)
+        ).create_batch(10)
         self._act_and_assert_list_test({"ordering": "order_shipping_total"})
 
     def test_list__sort__product_shipping_total(self):
@@ -544,9 +479,7 @@ class OrderViewSetTestCase(OrderViewSetTestCaseMixin, OrganizationTestCase):
         self._act_and_assert_update_test(data, filter_, order.id)
 
 
-class OrderShippingItemValidationTestCase(
-    OrderViewSetTestCaseMixin, OrganizationTestCase
-):
+class OrderShippingItemValidationTestCase(OrderViewSetTestCase):
     def test_create__item_total_incorrect(self):
         data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
@@ -609,7 +542,73 @@ class OrderShippingItemValidationTestCase(
         )
 
 
-class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, OrganizationTestCase):
+class OrderValidationTestCase(OrderViewSetTestCase):
+    def test_create__code_already_in_another_order(self):
+        order = OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+        ).create()
+        data = OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+        ).get_deserializer_data()
+        data["code"] = order.code
+        self._act_and_assert_create_validation_test(
+            data, {"code": ["Code is already in another order."]}
+        )
+
+    def test_create__order_shipping_total_incorrect(self):
+        data = OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+            order_shipping_item_count=1,
+            order_shipping_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+        ).get_deserializer_data()
+        self._increment_string(data, "order_shipping_total", 1)
+        self._act_and_assert_create_validation_test(
+            data, {"non_field_errors": ["Order shipping total is incorrect."]}
+        )
+
+    def test_create__product_total_incorrect(self):
+        data = OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+        ).get_deserializer_data()
+        self._increment_string(data, "product_total", 1)
+        self._act_and_assert_create_validation_test(
+            data, {"non_field_errors": ["Product total is incorrect."]}
+        )
+
+    def test_create__product_shipping_total_incorrect(self):
+        data = OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+            product_shipping_item_count=1,
+            product_shipping_kwargs={"organization": self.organization},
+        ).get_deserializer_data()
+        self._increment_string(data, "product_shipping_total", 1)
+        self._act_and_assert_create_validation_test(
+            data, {"non_field_errors": ["Product shipping total is incorrect."]}
+        )
+
+    def test_create__total_incorrect(self):
+        data = OrderWithRelatedFactory(
+            order_kwargs={"organization": self.organization},
+            product_item_count=1,
+            product_kwargs={"organization": self.organization},
+            product_shipping_item_count=1,
+            product_shipping_kwargs={"organization": self.organization},
+        ).get_deserializer_data()
+        self._increment_string(data, "total", 1)
+        self._act_and_assert_create_validation_test(
+            data, {"non_field_errors": ["Total is incorrect."]}
+        )
+
+
+class ProductItemValidationTestCase(OrderViewSetTestCase):
     def test_create__item_total_incorrect(self):
         data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},
@@ -659,9 +658,7 @@ class ProductItemValidationTestCase(OrderViewSetTestCaseMixin, OrganizationTestC
         )
 
 
-class ProductShippingItemValidationTestCase(
-    OrderViewSetTestCaseMixin, OrganizationTestCase
-):
+class ProductShippingItemValidationTestCase(OrderViewSetTestCase):
     def test_create__item_total_incorrect(self):
         data = OrderWithRelatedFactory(
             order_kwargs={"organization": self.organization},

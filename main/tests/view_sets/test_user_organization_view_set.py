@@ -32,7 +32,7 @@ class UserOrganizationViewSetTestCase(UserTestCase):
         self._act_and_assert_list_test({"ordering": "code"})
 
     @staticmethod
-    def _serializer_data(organization):
+    def _get_serializer_data(organization):
         return {
             "code": organization.code,
             "id": organization.id,

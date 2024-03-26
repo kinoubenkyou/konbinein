@@ -235,7 +235,7 @@ class ProductShippingViewSetTestCase(OrganizationTestCase):
         return product_shippings[0]
 
     @staticmethod
-    def _serializer_data(product_shipping):
+    def _get_serializer_data(product_shipping):
         product_ids = [product.id for product in product_shipping.products.all()]
         product_ids.sort()
         return {

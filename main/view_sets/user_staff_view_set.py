@@ -40,7 +40,7 @@ class UserStaffViewSet(
 
     @extend_schema(request=None, responses={204: None})
     @action(detail=True, methods=("post",))
-    def agreeing(self, request, *args, **kwargs):
+    def agreeing(self, _request, *_args, **_kwargs):
         staff = self.get_object()
         staff.does_user_agree = True
         staff.save()

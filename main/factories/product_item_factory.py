@@ -20,4 +20,4 @@ class ProductItemFactory(DjangoModelFactory):
     order = SubFactory(OrderFactory)
     price = Faker("pydecimal", left_digits=2, positive=True, right_digits=4)
     product = SubFactory(ProductFactory)
-    quantity = Faker("pyint", max_value=100, min_value=1)
+    quantity = Faker("pyint")

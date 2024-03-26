@@ -13,13 +13,13 @@ class OrderShippingViewSetTestCase(OrganizationTestCase):
     view_set = OrderShippingViewSet
 
     def test_create(self):
-        data = self._deserializer_data()
+        data = self._get_deserializer_data()
         filter_ = {**data, "organization_id": self.organization.id}
         self._act_and_assert_create_test(data, filter_)
 
     def test_create__code_already_in_another_product_shipping(self):
         order_shipping = OrderShippingFactory.create(organization=self.organization)
-        data = {**self._deserializer_data(), "code": order_shipping.code}
+        data = {**self._get_deserializer_data(), "code": order_shipping.code}
         self._act_and_assert_create_validation_test(
             data, {"code": ["Code is already in another order shipping."]}
         )
@@ -132,7 +132,7 @@ class OrderShippingViewSetTestCase(OrganizationTestCase):
             organization=self.organization,
             zones=zones[1:3],
         )
-        data = {**self._deserializer_data(), "zones": zones[0:2]}
+        data = {**self._get_deserializer_data(), "zones": zones[0:2]}
         filter_ = {
             **data,
             "organization_id": self.organization.id,
@@ -144,7 +144,7 @@ class OrderShippingViewSetTestCase(OrganizationTestCase):
         )
 
     @staticmethod
-    def _deserializer_data():
+    def _get_deserializer_data():
         order_shipping = OrderShippingFactory.build()
         return {
             "code": order_shipping.code,
@@ -155,7 +155,7 @@ class OrderShippingViewSetTestCase(OrganizationTestCase):
         }
 
     @staticmethod
-    def _serializer_data(order_shipping):
+    def _get_serializer_data(order_shipping):
         return {
             "code": order_shipping.code,
             "fixed_fee": str(order_shipping.fixed_fee),

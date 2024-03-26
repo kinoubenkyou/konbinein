@@ -43,7 +43,7 @@ class PublicUserViewSetTestCase(ViewSetTestCase):
 
     @override_settings(task_always_eager=True)
     def test_create(self):
-        data = self._deserializer_data()
+        data = self._get_deserializer_data()
         filter_ = {**data, "is_system_administrator": False}
         self._act_and_assert_create_test(data, filter_)
         user = User.objects.filter(**filter_).first()
@@ -129,6 +129,6 @@ class PublicUserViewSetTestCase(ViewSetTestCase):
         return users[0]
 
     @staticmethod
-    def _deserializer_data():
+    def _get_deserializer_data():
         user = UserFactory.build()
         return {"email": user.email, "name": user.name, "password": user.password}

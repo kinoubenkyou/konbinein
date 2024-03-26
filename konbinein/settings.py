@@ -163,7 +163,7 @@ REST_FRAMEWORK = {
         "rest_framework.filters.OrderingFilter",
         "main.filter_backends.filter_backend.FilterBackend",
     ),
-    "DEFAULT_PAGINATION_CLASS": "main.paginations.default_pagination.DefaultPagination",
+    "DEFAULT_PAGINATION_CLASS": "main.paginations.pagination.Pagination",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "UNAUTHENTICATED_USER": None,
 }

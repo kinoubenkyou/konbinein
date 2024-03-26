@@ -1,9 +1,7 @@
-from factory.django import DjangoModelFactory
-
-from main.factories.shipping_factory import ShippingFactoryMixin
+from main.factories.shipping_factory import ShippingFactory
 from main.models.product_shipping import ProductShipping
 
 
-class ProductShippingFactory(ShippingFactoryMixin, DjangoModelFactory):
+class ProductShippingFactory(ShippingFactory):
     class Meta:
         model = ProductShipping

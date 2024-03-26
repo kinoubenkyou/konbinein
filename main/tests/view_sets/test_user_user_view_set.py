@@ -38,7 +38,7 @@ class UserUserViewSetTestCase(UserTestCase):
     def test_update(self):
         set_email_verifying_token(self.user.id)
         data = {
-            **self._deserializer_data(),
+            **self._get_deserializer_data(),
             "current_password": self.user.password,
             "password": "password",
         }
@@ -54,7 +54,7 @@ class UserUserViewSetTestCase(UserTestCase):
         self._assert_email(body, "Konbinein Email Verification", [user.email])
 
     def test_update__current_password_required(self):
-        data = {**self._deserializer_data(), "password": "password"}
+        data = {**self._get_deserializer_data(), "password": "password"}
         self._act_and_assert_update_validation_test(
             data,
             {
@@ -66,7 +66,7 @@ class UserUserViewSetTestCase(UserTestCase):
 
     def test_update__current_password_incorrect(self):
         data = {
-            **self._deserializer_data(),
+            **self._get_deserializer_data(),
             "current_password": "password",
             "password": "password",
         }
@@ -82,10 +82,10 @@ class UserUserViewSetTestCase(UserTestCase):
         return users[0]
 
     @staticmethod
-    def _deserializer_data():
+    def _get_deserializer_data():
         user = UserFactory.build()
         return {"email": user.email, "name": user.name}
 
     @staticmethod
-    def _serializer_data(user):
+    def _get_serializer_data(user):
         return {"email": user.email, "id": user.id, "name": user.name}

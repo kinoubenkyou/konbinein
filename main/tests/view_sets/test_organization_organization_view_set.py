@@ -16,17 +16,17 @@ class OrganizationOrganizationViewSetTestCase(OrganizationTestCase):
         self._act_and_assert_retrieve_test(self.organization.id)
 
     def test_update(self):
-        data = self._deserializer_data()
+        data = self._get_deserializer_data()
         filter_ = {**data}
         self._act_and_assert_update_test(data, filter_, self.organization.id)
 
     @staticmethod
-    def _deserializer_data():
+    def _get_deserializer_data():
         organization = OrganizationFactory.build()
         return {"code": organization.code, "name": organization.name}
 
     @staticmethod
-    def _serializer_data(organization):
+    def _get_serializer_data(organization):
         return {
             "code": organization.code,
             "id": organization.id,
