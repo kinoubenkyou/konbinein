@@ -10,13 +10,13 @@ class ProductViewSetTestCase(OrganizationTestCase):
     view_set = ProductViewSet
 
     def test_create(self):
-        data = self._deserializer_data()
+        data = self._get_deserializer_data()
         filter_ = {**data, "organization_id": self.organization.id}
         self._act_and_assert_create_test(data, filter_)
 
     def test_create__code_already_in_another_product(self):
         product = ProductFactory.create(organization=self.organization)
-        data = {**self._deserializer_data(), "code": product.code}
+        data = {**self._get_deserializer_data(), "code": product.code}
         self._act_and_assert_create_validation_test(
             data, {"code": ["Code is already in another product."]}
         )
@@ -77,12 +77,12 @@ class ProductViewSetTestCase(OrganizationTestCase):
 
     def test_update(self):
         product = ProductFactory.create(organization_id=self.organization.id)
-        data = self._deserializer_data()
+        data = self._get_deserializer_data()
         filter_ = {**data, "organization_id": self.organization.id}
         self._act_and_assert_update_test(data, filter_, product.id)
 
     @staticmethod
-    def _deserializer_data():
+    def _get_deserializer_data():
         product = ProductFactory.build()
         return {
             "code": product.code,
@@ -91,7 +91,7 @@ class ProductViewSetTestCase(OrganizationTestCase):
         }
 
     @staticmethod
-    def _serializer_data(product):
+    def _get_serializer_data(product):
         return {
             "code": product.code,
             "id": product.id,

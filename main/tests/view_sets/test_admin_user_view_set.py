@@ -36,5 +36,5 @@ class AdminUserViewSetTestCase(AdminTestCase):
         self._act_and_assert_list_test({"ordering": "name"})
 
     @staticmethod
-    def _serializer_data(user):
+    def _get_serializer_data(user):
         return {"email": user.email, "id": user.id, "name": user.name}

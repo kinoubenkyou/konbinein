@@ -53,11 +53,11 @@ class ViewSetTestCase(APITestCase):
         response = self.client.delete(self._detail_path(pk), format="json")
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
 
-    def _act_and_assert_list_test(self, data):
-        response = self.client.get(self._list_path(), data, format="json")
+    def _act_and_assert_list_test(self, request_query):
+        response = self.client.get(self._list_path(), request_query, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertCountEqual(
-            response.json()["results"], self._expected_data_list(data)
+            response.json()["results"], self._expected_data_list(request_query)
         )
 
     def _act_and_assert_retrieve_test(self, pk):
@@ -134,16 +134,12 @@ class ViewSetTestCase(APITestCase):
             query_set = query_set.distinct()
         if "ordering" in request_query:
             query_set = query_set.order_by(request_query["ordering"])
-        offset = request_query.get("offset", 0)
+        start_at = request_query.get("offset", 0)
+        end_at = (
+            (start_at + request_query["limit"]) if "limit" in request_query else None
+        )
         return [
-            cls._serializer_data(object_)
-            for object_ in query_set[
-                offset : (
-                    (request_query["limit"] + offset)
-                    if "limit" in request_query
-                    else None
-                )
-            ]
+            cls._get_serializer_data(object_) for object_ in query_set[start_at:end_at]
         ]
 
     def _list_path(self):

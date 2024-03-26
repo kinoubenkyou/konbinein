@@ -8,7 +8,10 @@ from main.factories.organization_factory import OrganizationFactory
 from main.models import ZONE_CHOICES
 
 
-class ShippingFactoryMixin(DjangoModelFactory):
+class ShippingFactory(DjangoModelFactory):
+    class Meta:
+        abstract = True
+
     code = Sequence(lambda n: f"code-{choice(ascii_uppercase)}{n}")
     fixed_fee = Faker("pydecimal", left_digits=2, positive=True, right_digits=4)
     name = Sequence(lambda n: f"name-{choice(ascii_uppercase)}{n}")

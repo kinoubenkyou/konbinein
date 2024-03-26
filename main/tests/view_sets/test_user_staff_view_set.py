@@ -23,7 +23,7 @@ class UserStaffViewSetTestCase(UserTestCase):
         self.assertTrue(Staff.objects.filter(id=staff.id).get().does_user_agree)
 
     def test_create(self):
-        data = self._deserializer_data()
+        data = self._get_deserializer_data()
         filter_ = {
             **data,
             "does_organization_agree": False,
@@ -34,7 +34,7 @@ class UserStaffViewSetTestCase(UserTestCase):
 
     def test_create__staff_already_created(self):
         staff = StaffFactory.create(user=self.user)
-        data = {**self._deserializer_data(), "organization": staff.organization.id}
+        data = {**self._get_deserializer_data(), "organization": staff.organization.id}
         self._act_and_assert_create_validation_test(
             data, {"organization": ["Staff is already created."]}
         )
@@ -85,13 +85,13 @@ class UserStaffViewSetTestCase(UserTestCase):
         self._act_and_assert_retrieve_test(StaffFactory.create(user=self.user).id)
 
     @staticmethod
-    def _deserializer_data():
+    def _get_deserializer_data():
         staff = StaffFactory.build()
         staff.organization.save()
         return {"organization": staff.organization.id}
 
     @staticmethod
-    def _serializer_data(staff):
+    def _get_serializer_data(staff):
         return {
             "does_organization_agree": staff.does_organization_agree,
             "does_user_agree": staff.does_user_agree,

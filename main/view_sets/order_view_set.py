@@ -28,7 +28,8 @@ class OrderViewSet(
         "code",
         "created_at",
         "id",
-        "order_shipping_totalproduct_shipping_total",
+        "order_shipping_total",
+        "product_shipping_total",
         "product_total",
         "total",
     )
