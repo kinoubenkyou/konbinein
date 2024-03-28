@@ -1,4 +1,5 @@
 from main.factories.organization_factory import OrganizationFactory
+from main.models.organization import Organization
 from main.tests.view_sets.organization_test_case import OrganizationTestCase
 from main.view_sets.organization_organization_view_set import (
     OrganizationOrganizationViewSet,
@@ -24,6 +25,9 @@ class OrganizationOrganizationViewSetTestCase(OrganizationTestCase):
     def _get_deserializer_data():
         organization = OrganizationFactory.build()
         return {"code": organization.code, "name": organization.name}
+
+    def _get_query_set(self):
+        return Organization.objects.filter(id=self.organization.id)
 
     @staticmethod
     def _get_serializer_data(organization):

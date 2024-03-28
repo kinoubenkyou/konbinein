@@ -19,7 +19,7 @@ class OrderViewSetTestCase(OrganizationTestCase):
     def _assert_and_get_saved_object(self, data, filter_):
         order_shipping_item_filters = filter_.pop("ordershippingitem_set")
         product_item_filters = filter_.pop("productitem_set")
-        orders = list(Order.objects.filter(**filter_))
+        orders = list(self._get_query_set().filter(**filter_))
         self.assertEqual(len(orders), 1)
         for order_shipping_item_filter in order_shipping_item_filters:
             self._assert_saved_order_shipping_item({
@@ -93,6 +93,11 @@ class OrderViewSetTestCase(OrganizationTestCase):
     @staticmethod
     def _increment_string(data, field, increment):
         data[field] = str(Decimal(data[field]) + increment)
+
+    def _get_query_set(self):
+        return Order.objects.prefetch_related(
+            "productitem_set__productshippingitem_set"
+        ).filter(organization=self.organization.id)
 
     @classmethod
     def _get_serializer_data(cls, order):
@@ -175,8 +180,7 @@ class OrderNonValidationTestCase(OrderViewSetTestCase):
             product_shipping_item_count=2,
             product_shipping_kwargs={"organization": self.organization},
         ).get_deserializer_data()
-        filter_ = {**data, "organization_id": self.organization.id}
-        self._act_and_assert_create_test(data, filter_)
+        self._act_and_assert_create_test(data, {**data})
 
     def test_destroy(self):
         order = OrderWithRelatedFactory(

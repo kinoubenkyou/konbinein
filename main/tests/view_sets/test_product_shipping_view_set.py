@@ -23,8 +23,7 @@ class ProductShippingViewSetTestCase(OrganizationTestCase):
             product_kwargs={"organization_id": self.organization.id},
             product_shipping_kwargs={"organization_id": self.organization.id},
         ).get_deserializer_data()
-        filter_ = {**data, "organization_id": self.organization.id}
-        self._act_and_assert_create_test(data, filter_)
+        self._act_and_assert_create_test(data, {**data})
 
     def test_create__code_already_in_another_product_shipping(self):
         product_shipping = ProductShippingWithRelatedFactory(
@@ -224,7 +223,7 @@ class ProductShippingViewSetTestCase(OrganizationTestCase):
 
     def _assert_and_get_saved_object(self, data, filter_):
         product_ids = filter_.pop("products")
-        product_shippings = list(ProductShipping.objects.filter(**filter_))
+        product_shippings = list(self._get_query_set().filter(**filter_))
         self.assertEqual(len(product_shippings), 1)
         self.assertCountEqual(
             Product.objects.filter(productshipping=product_shippings[0].id).values_list(
@@ -233,6 +232,9 @@ class ProductShippingViewSetTestCase(OrganizationTestCase):
             product_ids,
         )
         return product_shippings[0]
+
+    def _get_query_set(self):
+        return ProductShipping.objects.filter(organization=self.organization.id)
 
     @staticmethod
     def _get_serializer_data(product_shipping):

@@ -28,3 +28,8 @@ class ProductShippingViewSet(
     permission_classes = (OrganizationPermission,)
     queryset = ProductShipping.objects.all()
     serializer_class = ProductShippingSerializer
+
+    def get_queryset(self):
+        return (
+            super().get_queryset().filter(organization=self.kwargs["organization_id"])
+        )

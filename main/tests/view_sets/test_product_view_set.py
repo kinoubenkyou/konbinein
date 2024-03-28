@@ -1,6 +1,7 @@
 from factory import Iterator
 
 from main.factories.product_factory import ProductFactory
+from main.models.product import Product
 from main.tests.view_sets.organization_test_case import OrganizationTestCase
 from main.view_sets.product_view_set import ProductViewSet
 
@@ -11,8 +12,7 @@ class ProductViewSetTestCase(OrganizationTestCase):
 
     def test_create(self):
         data = self._get_deserializer_data()
-        filter_ = {**data, "organization_id": self.organization.id}
-        self._act_and_assert_create_test(data, filter_)
+        self._act_and_assert_create_test(data, {**data})
 
     def test_create__code_already_in_another_product(self):
         product = ProductFactory.create(organization=self.organization)
@@ -89,6 +89,9 @@ class ProductViewSetTestCase(OrganizationTestCase):
             "name": product.name,
             "price": str(product.price),
         }
+
+    def _get_query_set(self):
+        return Product.objects.filter(organization=self.organization.id)
 
     @staticmethod
     def _get_serializer_data(product):

@@ -16,7 +16,6 @@ from main.view_sets.user_user_view_set import UserUserViewSet
 
 class UserUserViewSetTestCase(UserTestCase):
     basename = "user-user"
-    query_set = User.objects.all()
     view_set = UserUserViewSet
 
     def test_de_authenticating(self):
@@ -76,7 +75,7 @@ class UserUserViewSetTestCase(UserTestCase):
 
     def _assert_and_get_saved_object(self, data, filter_):
         password = filter_.pop("password")
-        users = list(User.objects.filter(**filter_))
+        users = list(self._get_query_set().filter(**filter_))
         self.assertEqual(len(users), 1)
         self.assertTrue(check_password(password, users[0].hashed_password))
         return users[0]
@@ -85,6 +84,9 @@ class UserUserViewSetTestCase(UserTestCase):
     def _get_deserializer_data():
         user = UserFactory.build()
         return {"email": user.email, "name": user.name}
+
+    def _get_query_set(self):
+        return User.objects.filter(id=self.user.id)
 
     @staticmethod
     def _get_serializer_data(user):
