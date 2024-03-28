@@ -56,14 +56,19 @@ class ViewSetTestCase(APITestCase):
     def _act_and_assert_list_test(self, request_query):
         response = self.client.get(self._list_path(), request_query, format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertCountEqual(
-            response.json()["results"], self._expected_data_list(request_query)
-        )
+        if "ordering" in request_query:
+            self.assertEqual(
+                response.json()["results"], self._expected_data_list(request_query)
+            )
+        else:
+            self.assertCountEqual(
+                response.json()["results"], self._expected_data_list(request_query)
+            )
 
     def _act_and_assert_retrieve_test(self, pk):
         response = self.client.get(self._detail_path(pk), format="json")
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertCountEqual(response.json(), self._expected_data_list({"id": pk})[0])
+        self.assertEqual(response.json(), self._expected_data_list({"id": pk})[0])
 
     def _act_and_assert_update_test(self, data, filter_, pk):
         self._act_and_assert_update_test_response_status(data, pk)
