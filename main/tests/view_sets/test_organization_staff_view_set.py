@@ -24,12 +24,7 @@ class OrganizationStaffViewSetTestCase(OrganizationTestCase):
 
     def test_create(self):
         data = self._get_deserializer_data()
-        filter_ = {
-            **data,
-            "does_organization_agree": True,
-            "does_user_agree": False,
-            "organization_id": self.organization.id,
-        }
+        filter_ = {**data, "does_organization_agree": True, "does_user_agree": False}
         self._act_and_assert_create_test(data, filter_)
 
     def test_create__staff_already_created(self):
@@ -99,6 +94,9 @@ class OrganizationStaffViewSetTestCase(OrganizationTestCase):
         staff = StaffFactory.build()
         staff.user.save()
         return {"user": staff.user.id}
+
+    def _get_query_set(self):
+        return Staff.objects.filter(organization=self.organization.id)
 
     @staticmethod
     def _get_serializer_data(staff):

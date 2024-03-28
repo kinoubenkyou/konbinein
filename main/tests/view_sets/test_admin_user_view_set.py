@@ -1,6 +1,7 @@
 from factory import Iterator
 
 from main.factories.user_factory import UserFactory
+from main.models.user import User
 from main.tests.view_sets.admin_test_case import AdminTestCase
 from main.view_sets.admin_user_view_set import AdminUserViewSet
 
@@ -34,6 +35,9 @@ class AdminUserViewSetTestCase(AdminTestCase):
     def test_list__sort__name(self):
         UserFactory.create_batch(2)
         self._act_and_assert_list_test({"ordering": "name"})
+
+    def _get_query_set(self):
+        return User.objects.all()
 
     @staticmethod
     def _get_serializer_data(user):

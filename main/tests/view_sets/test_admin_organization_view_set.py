@@ -1,4 +1,5 @@
 from main.factories.organization_factory import OrganizationFactory
+from main.models.organization import Organization
 from main.tests.view_sets.admin_test_case import AdminTestCase
 from main.view_sets.admin_organization_view_set import AdminOrganizationViewSet
 
@@ -21,3 +22,6 @@ class AdminOrganizationViewSetTestCase(AdminTestCase):
             "name": organization.name,
             "user": cls.user.id,
         }
+
+    def _get_query_set(self):
+        return Organization.objects.all()

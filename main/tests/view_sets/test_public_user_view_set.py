@@ -123,7 +123,7 @@ class PublicUserViewSetTestCase(ViewSetTestCase):
 
     def _assert_and_get_saved_object(self, data, filter_):
         password = filter_.pop("password")
-        users = list(User.objects.filter(**filter_))
+        users = list(self._get_query_set().filter(**filter_))
         self.assertEqual(len(users), 1)
         self.assertTrue(check_password(password, users[0].hashed_password))
         return users[0]
@@ -132,3 +132,6 @@ class PublicUserViewSetTestCase(ViewSetTestCase):
     def _get_deserializer_data():
         user = UserFactory.build()
         return {"email": user.email, "name": user.name, "password": user.password}
+
+    def _get_query_set(self):
+        return User.objects.all()

@@ -10,7 +10,6 @@ from main.view_sets.user_staff_view_set import UserStaffViewSet
 
 class UserStaffViewSetTestCase(UserTestCase):
     basename = "user-staff"
-    query_set = Staff.objects.all()
     view_set = UserStaffViewSet
 
     def test_agreeing(self):
@@ -24,12 +23,7 @@ class UserStaffViewSetTestCase(UserTestCase):
 
     def test_create(self):
         data = self._get_deserializer_data()
-        filter_ = {
-            **data,
-            "does_organization_agree": False,
-            "does_user_agree": True,
-            "user_id": self.user.id,
-        }
+        filter_ = {**data, "does_organization_agree": False, "does_user_agree": True}
         self._act_and_assert_create_test(data, filter_)
 
     def test_create__staff_already_created(self):
@@ -89,6 +83,9 @@ class UserStaffViewSetTestCase(UserTestCase):
         staff = StaffFactory.build()
         staff.organization.save()
         return {"organization": staff.organization.id}
+
+    def _get_query_set(self):
+        return Staff.objects.filter(user=self.user.id)
 
     @staticmethod
     def _get_serializer_data(staff):

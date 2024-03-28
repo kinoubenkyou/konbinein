@@ -92,12 +92,12 @@ class ViewSetTestCase(APITestCase):
         return self._path(action, kwargs)
 
     def _assert_and_get_saved_object(self, data, filter_):
-        objects = list(self.view_set.queryset.filter(**filter_))
+        objects = list(self._get_query_set().filter(**filter_))
         self.assertEqual(len(objects), 1)
         return objects[0]
 
     def _assert_destroyed_object(self, object_):
-        self.assertFalse(self.view_set.queryset.filter(id=object_.id).exists())
+        self.assertFalse(self._get_query_set().filter(id=object_.id).exists())
 
     def _assert_email(self, body, subject, to):
         dict_ = mail.outbox[0].__dict__
@@ -127,14 +127,13 @@ class ViewSetTestCase(APITestCase):
     def _detail_path(self, pk):
         return self._path("detail", {"pk": pk})
 
-    @classmethod
-    def _expected_data_list(cls, request_query):
+    def _expected_data_list(self, request_query):
         filter_ = {
             key: value
             for key, value in request_query.items()
             if key not in ["limit", "offset", "ordering"]
         }
-        query_set = cls.view_set.queryset.filter(**filter_)
+        query_set = self._get_query_set().filter(**filter_)
         if isinstance(query_set, QuerySet):
             query_set = query_set.distinct()
         if "ordering" in request_query:
@@ -144,7 +143,7 @@ class ViewSetTestCase(APITestCase):
             (start_at + request_query["limit"]) if "limit" in request_query else None
         )
         return [
-            cls._get_serializer_data(object_) for object_ in query_set[start_at:end_at]
+            self._get_serializer_data(object_) for object_ in query_set[start_at:end_at]
         ]
 
     def _list_path(self):

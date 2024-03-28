@@ -4,6 +4,7 @@ from factory import Iterator
 
 from main.factories.order_shipping_factory import OrderShippingFactory
 from main.models import ZONE_CHOICES
+from main.models.order_shipping import OrderShipping
 from main.tests.view_sets.organization_test_case import OrganizationTestCase
 from main.view_sets.order_shipping_view_set import OrderShippingViewSet
 
@@ -14,8 +15,7 @@ class OrderShippingViewSetTestCase(OrganizationTestCase):
 
     def test_create(self):
         data = self._get_deserializer_data()
-        filter_ = {**data, "organization_id": self.organization.id}
-        self._act_and_assert_create_test(data, filter_)
+        self._act_and_assert_create_test(data, {**data})
 
     def test_create__code_already_in_another_product_shipping(self):
         order_shipping = OrderShippingFactory.create(organization=self.organization)
@@ -153,6 +153,9 @@ class OrderShippingViewSetTestCase(OrganizationTestCase):
             "unit_fee": str(order_shipping.unit_fee),
             "zones": order_shipping.zones,
         }
+
+    def _get_query_set(self):
+        return OrderShipping.objects.filter(organization=self.organization.id)
 
     @staticmethod
     def _get_serializer_data(order_shipping):
